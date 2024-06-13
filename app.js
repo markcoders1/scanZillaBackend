@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:'http://localhost:5173',
+    origin:'*',
     credentials:true
   })
 );
@@ -34,7 +34,7 @@ app.use(express.static("public"));
 
 //rate limits
 
-app.use('/',defaultLimiter)
+// app.use('/',defaultLimiter)
 
 // routes declaration
 

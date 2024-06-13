@@ -62,15 +62,16 @@ export const loginUser=async (req,res)=>{
     try{
         const {email,password} = req.body
         
+        console.log(req.body)
 
         const user = await User.findOne({email:email});
         if (!user) {
-         return res.status(400).json({message:"user not found"})
+         return res.status(400).send({message:"user not found",success:false,errorType:"email"})
         }
 
         const isPasswordValid = await user.isPasswordCorrect(password);
         if (!isPasswordValid) {
-            return res.status(400).json({message:"email or password incorrect"})
+            return res.status(400).json({message:"email or password incorrect",success:false,errorType:"password"})
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -82,19 +83,12 @@ export const loginUser=async (req,res)=>{
             .json({
                "message":"logged in successfully",
                accessToken,
-               refreshToken
+               refreshToken,
+               success:true
             })
 
     }catch(err){
-        return res.status(400).json({message:"error",err})
-    }
-}
-
-export const adminLogin=(req,res)=>{
-    try{
-
-    }catch(err){
-        return res.status(400).json({message:"error",err})
+        return res.status(400).json({message:"error",err,success:false,errorType:"unexpected"})
     }
 }
 

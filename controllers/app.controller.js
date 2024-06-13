@@ -1,33 +1,32 @@
 import Joi from "joi"
 
 const verifyTextJoi = Joi.object({
-    title: Joi.string().regex(/^[a-zA-Z0-9,.: ]*$/).messages({
+    title: Joi.string().regex(/^[a-zA-Z0-9,.: ]*$/).min(0).max(200).messages({
         "string.pattern.base":"must be standard ASCII characters only"
     }),
   
-    description: Joi.string().regex(/^[ -~]*$/).messages({
+    description: Joi.string().regex(/^[ -~]*$/).min(0).max(1000).messages({
 
     }),
 
-    bulletpoints: Joi.string().messages({
+    bulletpoints: Joi.string().min(0).messages({
 
     })
 });
 
-const verifyText =(req,res)=>{
-    const {title,description,bulletpoints}=req.body
-    console.log(title)
-    console.log(description)
-    console.log(bulletpoints)
-    const {error} = verifyTextJoi.validate(req.body);
-    if (error) {
-      console.log(error);
-      return res.status(400).json({ message: error.details });
-    } else {
+export const verifyText =async (req,res)=>{
+    try {
+        const {title,description,bulletpoints}=req.body
+        const {error} = verifyTextJoi.validate(req.body,{abortEarly:true});
+        
+        if (error) {
+          console.log(error);
+          return res.status(400).json({ message: error.details.message });
+        }
+        
+        return res.status(200).json({message: "text verified"});
 
-      return res.status(200).json({message: "User registered Successfully"});
+    } catch (error) {
+        console.log(error)
     }
-
 }
-
-export default verifyText
