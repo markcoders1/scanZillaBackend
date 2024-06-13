@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import appRoutes from "./routes/app.routes.js"
+import authRouter from "./routes/auth.routes.js"
+import appRouter from "./routes/app/routes.js"
 import { defaultLimiter } from "./middleware/limit.middleware.js";
 
 const app = express();
@@ -37,7 +38,8 @@ app.use('/',defaultLimiter)
 
 // routes declaration
 
-app.use("/", appRoutes);
+app.use("/", authRouter);
+app.use("/", appRouter)
 app.use("*",(req,res)=>res.status(404).json({error:"route not found",code:404}))
 
 
