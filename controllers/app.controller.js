@@ -34,9 +34,9 @@ const loginUserJoi = Joi.object({
       "string.email": "Invalid email format.",
     }),
   
-    password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9@]{5,30}$")).messages({
-      "string.pattern.base":
-        'Password must contain only letters, numbers, or "@" and be between 5 and 30 characters long.',
+    password: Joi.string().required().messages({
+        "any.required": "password is required.",
+        "string.empty":"password Cannot be empty"
     })
 });
 
@@ -61,7 +61,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 export const loginUser=async (req,res)=>{
     try{
         const {email,password} = req.body
-        const {error} = loginUserJoi.validate(req.body);
+        const {error} = loginUserJoi.validate(req.body,{abortEarly:true});
         if (error) {
             console.log(error);
             return res.status(400).json({ message: error.details});
@@ -71,9 +71,6 @@ export const loginUser=async (req,res)=>{
         const user = await User.findOne({email:email});
         if (!user) {
          return res.status(400).json({message:"user not found"})
-        }
-        if(!user.active){
-         return res.status(400).json({message:"your account has been deactivated"})
         }
 
         const isPasswordValid = await user.isPasswordCorrect(password);
