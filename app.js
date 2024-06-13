@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import authRouter from "./routes/auth.routes.js"
-import appRouter from "./routes/app/routes.js"
+import appRouter from "./routes/app.routes.js"
 import { defaultLimiter } from "./middleware/limit.middleware.js";
 
 const app = express();
