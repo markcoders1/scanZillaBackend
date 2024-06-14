@@ -1,8 +1,8 @@
 import Joi from "joi"
-import OpenAI from "openai";
+
 
 const verifyTextJoi = Joi.object({
-    title: Joi.string().regex(/^[a-zA-Z0-9,.: ]*$/).min(0).max(200).messages({
+    title: Joi.string().regex(/^[a-zA-Z0-9,– .:\-\\/&]*$/).min(0).max(200).messages({
         "string.pattern.base":"must be standard ASCII characters only T"
     }),
   

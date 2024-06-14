@@ -50,7 +50,7 @@ userSchema.methods.generateAccessToken = function () {
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: "15m",
+            expiresIn: "6h",
         }
     );
 };
@@ -61,7 +61,7 @@ userSchema.methods.generateRefreshToken = function () {
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: "12h",
+            expiresIn: "1m",
         }
     );
 };
