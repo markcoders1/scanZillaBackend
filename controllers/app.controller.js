@@ -13,6 +13,19 @@ const assId = "asst_3nOxuR6z7N3xY1ZC1WKYAIhe"
 const threadId ="thread_cuNmAqEYVTk0nGRh8yeGrQuu"
 const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
+function findInvalidCharacters(input,regex) {
+    let invalidChars = [];
+  
+    for (let char of input) {
+      if (!regex.test(char) && !invalidChars.includes(char)) {
+        invalidChars.push(char);
+      }
+    }
+  
+    // Join the unique invalid characters with commas
+    return invalidChars.join(', ');
+}
+
 const verifyTextJoi = Joi.object({
     title: Joi.string().regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
         "string.pattern.base":"must be standard ASCII characters or generic symbols"
@@ -38,11 +51,12 @@ export const verifyText =async (req,res)=>{
             let err=error.details.map((field)=>{
                 console.log(field)
                 if(field.context.label=="title"){
-                    return {error:field.message,field:"TE"}
+
+                    return {error:`${field.message}: ${findInvalidCharacters(field.context.value,field.context.regex)}`,field:"TE"}
                 }else if(field.context.label=="description"){
-                    return {error:field.message,field:"DE"}
+                    return {error:`${field.message}: ${findInvalidCharacters(field.context.value,field.context.regex)}`,field:"DE"}
                 }else if(field.context.label=="bulletpoints"){
-                    return {error:field.message,field:"BE"}
+                    return {error:`${field.message}: ${findInvalidCharacters(field.context.value,field.context.regex)}`,field:"BE"}
                 }
             })
               
