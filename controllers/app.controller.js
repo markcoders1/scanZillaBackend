@@ -23,7 +23,7 @@ function findInvalidCharacters(input,regex) {
     }
   
     // Join the unique invalid characters with commas
-    return invalidChars.join(', ');
+    return invalidChars.join(' ');
 }
 
 const verifyTextJoi = Joi.object({
