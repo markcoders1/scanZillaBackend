@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyTex} from "../controllers/app.controller.js";
+import { verifyText} from "../controllers/app.controller.js";
 import { verifyJWT } from "../middleware/app.middleware.js";
 
 const router = Router();
