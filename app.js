@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:'https://scan-zilla-frontend.vercel.app/',
+    origin:'https://scan-zilla-frontend.vercel.app',
     credentials:true
   })
 );
