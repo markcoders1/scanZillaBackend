@@ -15,15 +15,15 @@ const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
 const verifyTextJoi = Joi.object({
     title: Joi.string().regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-        "string.pattern.base":"must be standard ASCII characters only T"
+        "string.pattern.base":"must be standard ASCII characters or generic symbols"
     }),
   
     description: Joi.string().regex(/^[ -~]*$/).min(0).max(1000).messages({
-        "string.pattern.base":"must be standard ASCII characters only D"
+        "string.pattern.base":"must be standard ASCII characters only"
     }),
 
     bulletpoints: Joi.string().regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
-        "string.pattern.base":"must be standard ASCII characters only B"
+        "string.pattern.base":"must be standard ASCII characters only or generic symbols"
     })
 });
 
@@ -35,16 +35,32 @@ export const verifyText =async (req,res)=>{
         const {error} = verifyTextJoi.validate(req.body,{abortEarly:false});
         
         if (error) {
-          console.log(error);
-          return res.status(200).json({ message: error.details ,success:false});
+            let err=error.details.map((field)=>{
+                console.log(field)
+                if(field.context.label=="title"){
+                    return {error:field.message,field:"TE"}
+                }else if(field.context.label=="description"){
+                    return {error:field.message,field:"DE"}
+                }else if(field.context.label=="bulletpoints"){
+                    return {error:field.message,field:"BE"}
+                }
+            })
+              
+            const errObj= err.reduce((acc, current) => {
+                acc[current.field] = current.error;
+                return acc;
+            }, {});
+
+            console.log("err",errObj)
+          return res.status(200).json({ message: errObj ,success:false});
         }
+
 
 
         const message = await createMessage(threadId,"user",`TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints}`);
 
 
         let run = await createRun(threadId, assId);
-        console.log(run);
         console.log(`run created: ${run.id}`);
     
 
@@ -73,7 +89,7 @@ export const verifyText =async (req,res)=>{
         latest_message = latest_message.replace("```json","").replace("```","").replace("\\n","").replace("\\","")
 
         
-        return res.status(200).json({message: "text verified",latest_message:JSON.parse(latest_message),success:true});
+        return res.status(200).json({message: "text verified",message:JSON.parse(latest_message),success:true});
 
     } catch (error) {
         console.log(error)

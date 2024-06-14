@@ -4,7 +4,7 @@ import { verifyJWT } from "../middleware/app.middleware.js";
 
 const router = Router();
 
-router.route("/verifyText").post(verifyJWT,verifyText)
+router.route("/verifyText").post(verifyText)
 
 // router.route("/gen").post(getMessages)
 
