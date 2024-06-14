@@ -44,7 +44,10 @@ const verifyTextJoi = Joi.object({
 
 export const verifyText =async (req,res)=>{
     try {
-        const {title,description,bulletpoints}=req.body
+        let {title,description,bulletpoints}=req.body
+        req.body.title=title.replace(/[\x00-\x1F]/g, "");
+        req.body.description=description.replace(/[\x00-\x1F]/g, "");
+        req.body.bulletpoints=bulletpoints.replace(/[\x00-\x1F]/g, "");
         const {error} = verifyTextJoi.validate(req.body,{abortEarly:false});
         
         if (error) {
@@ -96,11 +99,11 @@ export const verifyText =async (req,res)=>{
         console.log(message_response);
         const messages = message_response.data;
     
-        let latest_message = messages[0].content[0].text.value;
+        let latest_message = messages[0]?.content[0]?.text?.value;
 
         console.log(latest_message)
 
-        latest_message = latest_message.replace("```json","").replace("```","").replace("\\n","").replace("\\","")
+        latest_message = latest_message?.replace("```json","")?.replace("```","")?.replace("\\n","")?.replace("\\","")
 
         
         return res.status(200).json({message: "text verified",message:JSON.parse(latest_message),success:true});
