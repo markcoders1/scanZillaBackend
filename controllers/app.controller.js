@@ -150,7 +150,7 @@ export const verifyText = async (req, res) => {
         }
 
         
-/*
+
         const {thread_id,id} = await openai.beta.threads.createAndRun({
             assistant_id:assId,
         })
@@ -193,8 +193,6 @@ export const verifyText = async (req, res) => {
 
         // Parse the cleaned string
         return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
-*/
-        return res.status(200).json({ message: "text verified", success: true });
         
     } catch (error) {
         console.log(error);
