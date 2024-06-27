@@ -36,17 +36,22 @@ function findInvalidCharacters(input,regex) {
 
 
 const containsBlacklistedWord = (paragraph) => {
-    const words = paragraph.toLowerCase().split(/\W+/); // Split paragraph into words
-    let usedwords=[]
-    let containsWords = false
-    for (const word of words) {
-        if (blacklistedWords.has(word)) {
-            usedwords.push(word)
-            containsWords=true
+    const lowerCaseParagraph = paragraph.toLowerCase();
+    let usedWords = [];
+    let containsWords = false;
+
+    // Check each blacklisted word or phrase
+    for (const phrase of blacklistedWords) {
+        if (lowerCaseParagraph.includes(phrase.toLowerCase())) {
+            usedWords.push(phrase);
+            containsWords = true;
         }
     }
-    usedwords=[... new Set(usedwords)]
-    return {containsWords,usedwords};
+
+    // Remove duplicates
+    usedWords = [...new Set(usedWords)];
+    
+    return { containsWords, usedWords };
 };
 
 // function detectNumberWords(text) {
@@ -71,9 +76,9 @@ const containsBlacklistedWord = (paragraph) => {
 
 const verifyTextJoi = Joi.object({
     title: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedwords}=containsBlacklistedWord(value)
+        const {containsWords,usedWords}=containsBlacklistedWord(value)
         if (containsWords){
-            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
+            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
         }
         return value
     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
@@ -81,9 +86,9 @@ const verifyTextJoi = Joi.object({
     }),
   
     description: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedwords}=containsBlacklistedWord(value)
+        const {containsWords,usedWords}=containsBlacklistedWord(value)
         if (containsWords){
-            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
+            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
         }
         return value
     }).regex(/^[ -~]*$/).min(0).max(1000).messages({
@@ -91,9 +96,9 @@ const verifyTextJoi = Joi.object({
     }),
 
     bulletpoints: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedwords}=containsBlacklistedWord(value)
+        const {containsWords,usedWords}=containsBlacklistedWord(value)
         if (containsWords){
-            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
+            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
         }
         return value
     }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
