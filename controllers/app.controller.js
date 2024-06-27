@@ -1,6 +1,7 @@
 import Joi from "joi"
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import fs from 'fs'
 
 dotenv.config({
     path: "./.env",
@@ -12,6 +13,16 @@ const openai = new OpenAI(process.env.OPENAI_API_KEY)
 const assId = "asst_3nOxuR6z7N3xY1ZC1WKYAIhe"
 const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
+const loadBlacklistedWords = () => {
+    const data = fs.readFileSync("blacklistedWords.txt", 'utf-8');
+    const words = new Set(data.split(/\r?\n/).map(word => word.toLowerCase()));
+    return words;
+};
+
+
+const blacklistedWords= loadBlacklistedWords();
+
+
 function findInvalidCharacters(input,regex) {
     let invalidChars = [];
   
@@ -20,13 +31,48 @@ function findInvalidCharacters(input,regex) {
         invalidChars.push(char);
       }
     }
-  
-    // Join the unique invalid characters with commas
     return invalidChars.join(' ');
 }
 
+
+const containsBlacklistedWord = (paragraph) => {
+    const words = paragraph.toLowerCase().split(/\W+/); // Split paragraph into words
+    for (const word of words) {
+        if (blacklistedWords.has(word)) {
+            return {containsWords:true,word};
+        }
+    }
+    return {containsWords:false};
+};
+
+// function detectNumberWords(text) {
+//     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+//     const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+//     const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+//     const hundreds = ["hundred"];
+//     const thousands = ["thousand"];
+
+//     const allNumberWords = [...singleDigits, ...teens, ...tens, ...hundreds, ...thousands];
+
+//     const lowerText = text.toLowerCase();
+
+//     const numberWordPattern = new RegExp(`\\b(${allNumberWords.join("|")})\\b`, "gi");
+
+//     const matches = lowerText.match(numberWordPattern);
+
+//     return matches !== null;
+// }
+
+
+
 const verifyTextJoi = Joi.object({
-    title: Joi.string().regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+    title: Joi.string().custom((value,helper)=>{
+        const {containsWords,word}=containsBlacklistedWord(value)
+        if (containsWords){
+            return helper.message(`this text contains the word ${word} which is blacklisted`)
+        }
+        return value
+    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
         "string.pattern.base":"must be standard ASCII characters or generic symbols"
     }),
   
@@ -39,29 +85,40 @@ const verifyTextJoi = Joi.object({
     })
 });
 
-
-
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints } = req.body;
         req.body.title = title.replace(/[\x00-\x1F]/g, "");
         req.body.description = description.replace(/[\x00-\x1F]/g, "");
         req.body.bulletpoints = bulletpoints.replace(/[\x00-\x1F]/g, "");
+
         const { error } = verifyTextJoi.validate(req.body, { abortEarly: false });
+
+        console.log(error)
+
 
         if (error) {
             let err = error.details.map((field) => {
-                console.log(field?.context?.regex)
-                const potato = findInvalidCharacters(field?.context?.value, field?.context?.regex)
-                if (field.context.label == "title") {
-                    return { error: `${field.message}: ${potato}`, field: "TE" };
-                } else if (field.context.label == "description") {
-                    return { error: `${field.message}: ${potato}`, field: "DE" };
-                } else if (field.context.label == "bulletpoints") {
-                    return { error: `${field.message}: ${potato}`, field: "BE" };
+                if (field.type=="string.pattern.base"){
+                    const potato = findInvalidCharacters(field?.context?.value, field?.context?.regex)
+                    if (field.context.label == "title") {
+                        return { error: `${field.message}: ${potato}`, field: "TE" };
+                    } else if (field.context.label == "description") {
+                        return { error: `${field.message}: ${potato}`, field: "DE" };
+                    } else if (field.context.label == "bulletpoints") {
+                        return { error: `${field.message}: ${potato}`, field: "BE" };
+                    }
+                }else if(field.type=="custom"){
+                    if (field.context.label == "title") {
+                        return { error: field.message, field: "TE" };
+                    } else if (field.context.label == "description") {
+                        return { error: field.message, field: "DE" };
+                    } else if (field.context.label == "bulletpoints") {
+                        return { error: field.message, field: "BE" };
+                    }
                 }
             });
-
+            
             const errObj = err.reduce((acc, current) => {
                 acc[current.field] = current.error;
                 return acc;
@@ -70,6 +127,8 @@ export const verifyText = async (req, res) => {
             console.log("err", errObj);
             return res.status(200).json({ message: errObj, success: false });
         }
+
+        
 
         const {thread_id,id} = await openai.beta.threads.createAndRun({
             assistant_id:assId,
