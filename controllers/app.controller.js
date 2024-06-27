@@ -37,12 +37,16 @@ function findInvalidCharacters(input,regex) {
 
 const containsBlacklistedWord = (paragraph) => {
     const words = paragraph.toLowerCase().split(/\W+/); // Split paragraph into words
+    let usedwords=[]
+    let containsWords = false
     for (const word of words) {
         if (blacklistedWords.has(word)) {
-            return {containsWords:true,word};
+            usedwords.push(word)
+            containsWords=true
         }
     }
-    return {containsWords:false};
+    usedwords=[... new Set(usedwords)]
+    return {containsWords,usedwords};
 };
 
 // function detectNumberWords(text) {
@@ -67,20 +71,32 @@ const containsBlacklistedWord = (paragraph) => {
 
 const verifyTextJoi = Joi.object({
     title: Joi.string().custom((value,helper)=>{
-        const {containsWords,word}=containsBlacklistedWord(value)
+        const {containsWords,usedwords}=containsBlacklistedWord(value)
         if (containsWords){
-            return helper.message(`this text contains the word ${word} which is blacklisted`)
+            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
         }
         return value
     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
         "string.pattern.base":"must be standard ASCII characters or generic symbols"
     }),
   
-    description: Joi.string().regex(/^[ -~]*$/).min(0).max(1000).messages({
+    description: Joi.string().custom((value,helper)=>{
+        const {containsWords,usedwords}=containsBlacklistedWord(value)
+        if (containsWords){
+            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
+        }
+        return value
+    }).regex(/^[ -~]*$/).min(0).max(1000).messages({
         "string.pattern.base":"must be standard ASCII characters only"
     }),
 
-    bulletpoints: Joi.string().regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
+    bulletpoints: Joi.string().custom((value,helper)=>{
+        const {containsWords,usedwords}=containsBlacklistedWord(value)
+        if (containsWords){
+            return helper.message(`this text contains the words: (${usedwords.map(word=>" "+word)} ) which are blacklisted`)
+        }
+        return value
+    }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
         "string.pattern.base":"must be standard ASCII characters only or generic symbols"
     })
 });
@@ -129,7 +145,7 @@ export const verifyText = async (req, res) => {
         }
 
         
-
+/*
         const {thread_id,id} = await openai.beta.threads.createAndRun({
             assistant_id:assId,
         })
@@ -172,7 +188,9 @@ export const verifyText = async (req, res) => {
 
         // Parse the cleaned string
         return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
-
+*/
+        return res.status(200).json({ message: "text verified", success: true });
+        
     } catch (error) {
         console.log(error);
         return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
