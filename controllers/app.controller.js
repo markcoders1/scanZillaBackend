@@ -2,6 +2,7 @@ import Joi from "joi"
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import fs from 'fs'
+import { History } from "../models/history.model.js";
 
 dotenv.config({
     path: "./.env",
@@ -10,7 +11,8 @@ dotenv.config({
 const openai = new OpenAI(process.env.OPENAI_API_KEY)
 
 
-const assId = "asst_3nOxuR6z7N3xY1ZC1WKYAIhe"
+// const assId = "asst_3nOxuR6z7N3xY1ZC1WKYAIhe"
+const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
 const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
 const loadBlacklistedWords = () => {
@@ -149,50 +151,57 @@ export const verifyText = async (req, res) => {
             return res.status(200).json({ message: errObj, success: false });
         }
 
-        
+        History.create({
+            userID:req.user.id,
+            title,
+            description,
+            bullets:bulletpoints
 
-        const {thread_id,id} = await openai.beta.threads.createAndRun({
-            assistant_id:assId,
         })
 
-        let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+        // const {thread_id,id} = await openai.beta.threads.createAndRun({
+        //     assistant_id:assId,
+        // })
+        // console.log("threadId",thread_id)
+        // let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
 
-        while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-            console.log("waiting for completion");
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-            console.log(`threadrun status: ${threadrun.status}`);
-        }
+        // while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+        //     console.log("waiting for completion");
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+        //     console.log(`threadrun status: ${threadrun.status}`);
+        // }
 
-        const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints}`);
+        // const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints}`);
 
-        let run = await createRun(thread_id, assId);
-        console.log(`run created: ${run.id}`);
+        // let run = await createRun(thread_id, assId);
+        // console.log(`run created: ${run.id}`);
 
-        while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-            console.log("waiting for completion");
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-            console.log(`run status: ${run.status}`);
-        }
-        console.log(`run completed: ${run.id}`);
+        // while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+        //     console.log("waiting for completion");
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        //     console.log(`run status: ${run.status}`);
+        // }
+        // console.log(`run completed: ${run.id}`);
 
-        const message_response = await openai.beta.threads.messages.list(thread_id);
-        const messages = message_response.data;
+        // const message_response = await openai.beta.threads.messages.list(thread_id);
+        // const messages = message_response.data;
 
-        let latest_message = messages[0]?.content[0]?.text?.value;
+        // let latest_message = messages[0]?.content[0]?.text?.value;
 
-        // Clean the JSON string properly
-        latest_message = latest_message
-            ?.replace(/```json/g, "")
-            ?.replace(/```/g, "")
-            ?.replace(/\\n/g, "")
-            ?.trim();
+        // // Clean the JSON string properly
+        // latest_message = latest_message
+        //     ?.replace(/```json/g, "")
+        //     ?.replace(/```/g, "")
+        //     ?.replace(/\\n/g, "")
+        //     ?.trim();
 
-        console.log("msg", latest_message);
+        // console.log("msg", latest_message);
 
-        // Parse the cleaned string
-        return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
+        // // Parse the cleaned string
+        // return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
+        return res.status(200).json({ message: "text verified", success: true });
         
     } catch (error) {
         console.log(error);
@@ -238,3 +247,12 @@ async function createMessage(thread_id, role, content) {
 }
 
 
+export const getUserHistory = async (req,res)=>{
+    try {
+        const Histories = await History.find({userID:req.user.id})
+
+        res.status(200).json({success:true,Histories})
+    } catch (error) {
+       console.log(error) 
+    }
+}

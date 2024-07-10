@@ -1,8 +1,10 @@
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import Joi from "joi";
+import { transporterConstructor,generateOTP } from "../utils/email.js";
+const transporter = transporterConstructor()
 
-export const test=(req,res)=>{
+export const test = (req,res)=>{
     try{
         return res.status(200).json({message:req.world})
     }catch(err){
@@ -11,7 +13,7 @@ export const test=(req,res)=>{
     }
 }
 
-export const createUser=async (req,res)=>{
+export const createUser = async (req,res)=>{
     try{
         const {email,password,userName}=req.body
         const userSearch = await User.findOne({$or: [ { email: email }, { userName: userName }]})
@@ -58,7 +60,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
   };
 
-export const loginUser=async (req,res)=>{
+export const loginUser = async (req,res)=>{
     try{
         const {email,password} = req.body
         
@@ -92,7 +94,7 @@ export const loginUser=async (req,res)=>{
     }
 }
 
-export const refreshAccessToken=(req,res)=>{
+export const refreshAccessToken = (req,res)=>{
     try{
         const {refreshToken} =req.body
         
@@ -113,7 +115,7 @@ export const refreshAccessToken=(req,res)=>{
     }
 }
 
-export const logoutUser=(req,res)=>{
+export const logoutUser = (req,res)=>{
     try{
         const {refreshToken} = req.body
         jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,async (err,decoded)=>{
@@ -129,3 +131,49 @@ export const logoutUser=(req,res)=>{
     }
 }
 
+export const changePassword = async (req,res)=>{
+    try{
+
+        const {otp,password,email} = req.body
+
+        const user = await User.findOne({email})
+
+        if (user.isotpCorrect(otp) && user.otpExpiry>=Date.now()){
+            user.password=password
+            user.save()
+            return res.status(200).json({message:"password changed successfully"})
+        }else{
+            return res.status(400).json({message:"otp incorrect or expired"})
+        }
+
+    }catch(err){
+        console.log(err)
+    }
+}
+
+export const genOTP = async (req,res) =>{
+    try{
+
+        const {email} = req.body
+
+        const otp = generateOTP()
+
+        const user = await User.findOne({email})
+
+        user.otp = otp
+        user.otpExpiry = Date.now() + 1000*60*5
+
+        user.save()
+
+        transporter.sendMail({
+			from: process.env.APP_EMAIL,
+			to: email,
+			subject: "OTP",
+			text: `${otp}`,
+		})
+        res.status(200).json({message:"mail sent"})
+    }catch(err){
+        res.status(400).json({message:"mail not sent"})
+        console.log(err)
+    }
+}

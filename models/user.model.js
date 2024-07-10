@@ -21,6 +21,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Password is required"],
     },
+    otp:{
+        type:String,
+        required:false
+    },
+    otpExpiry:{
+        type:Number,
+        required:false
+    },
     refreshToken: {
         type: String,
     }
@@ -34,10 +42,21 @@ userSchema.pre('save', async function(next) {
     next();
 });
 
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('otp')) return next();
+    const salt = await bcrypt.genSalt(10);
+    this.otp = await bcrypt.hash(this.otp, salt);
+    next();
+});
+
 
 //custom method banaya hai
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.isotpCorrect = async function (otp) {
+    return await bcrypt.compare(password, this.otp);
 };
 
 
