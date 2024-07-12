@@ -7,7 +7,7 @@ import { getAuth } from "firebase-admin/auth";
 import admin from 'firebase-admin'
 
 
-import serviceAccount from '../utils/serviceAccountKey.json' with {type:"json"}
+import serviceAccount from '../utils/serviceAccountKey.json' assert {type:"json"}
 
 
 admin.initializeApp({
