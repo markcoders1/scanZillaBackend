@@ -3,6 +3,8 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 import fs from 'fs'
 import { History } from "../models/history.model.js";
+import Stripe from "stripe";
+const stripe = new Stripe('sk_test_51PZF1RRpAMX87OfFrUvaU9HLtoFaVNiB8fKMfOY6eNAcPP1rKQJOrFq8tpcv8Lgv7IYfgMuOwCbRP587UMCCkSvw008e5AK9cU')
 
 dotenv.config({
     path: "./.env",
@@ -255,4 +257,27 @@ export const getUserHistory = async (req,res)=>{
     } catch (error) {
        console.log(error) 
     }
+}
+
+export const buyCredits = async (req,res) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            line_items: [
+              {
+                price: 'price_1Pb7uSRpAMX87OfFrtvBtfEu',
+                quantity: 1,
+              },
+            ],
+            mode: 'payment',
+            success_url: `https://example.com`,
+            cancel_url: `https://google.com`,
+          });
+          res.send(session)
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const getHistory = (req,res) => {
+
 }

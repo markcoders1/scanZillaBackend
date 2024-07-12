@@ -2,6 +2,20 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import Joi from "joi";
 import { transporterConstructor,generateOTP } from "../utils/email.js";
+import { getAuth } from "firebase-admin/auth";
+
+import admin from 'firebase-admin'
+
+
+import serviceAccount from '../utils/serviceAccountKey.json' with {type:"json"}
+
+
+admin.initializeApp({
+
+  credential: admin.credential.cert(serviceAccount)
+
+});
+
 const transporter = transporterConstructor()
 
 export const test = (req,res)=>{
@@ -91,6 +105,43 @@ export const loginUser = async (req,res)=>{
 
     }catch(err){
         return res.status(400).json({message:"error",err,success:false,errorType:"unexpected"})
+    }
+}
+
+export const Oauth = async (req,res)=>{
+    try {
+        const {idToken} = req.body
+
+        const decodedToken = await getAuth().verifyIdToken(idToken);
+
+        console.log(decodedToken)
+
+        let user = await User.findOne({email:decodedToken.email})
+
+        if (!user){
+            user = await User.create({
+                userName:decodedToken.name,
+                email:decodedToken.email,
+                password: `!${Date.now()}! !${Math.floor(Math.random() * 100)}!`
+            })
+
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+            user._id
+        );
+
+        return res
+            .status(200)
+            .json({
+               "message":"logged in successfully",
+               accessToken,
+               refreshToken,
+               success:true
+            })
+
+    } catch (error) {
+        console.log(error)
     }
 }
 
