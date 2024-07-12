@@ -9,7 +9,7 @@ router.route("/verifyText").post(verifyJWT,verifyText)
 
 router.route("/getUserHistory").get(verifyJWT,getUserHistory)
 
-router.route('/buycredits').post(buyCredits)
+router.route('/buycredits').post(verifyJWT,buyCredits)
 
 router.route('/getHistory').get(getHistory)
 

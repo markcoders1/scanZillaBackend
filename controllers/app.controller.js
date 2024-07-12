@@ -259,24 +259,25 @@ export const getUserHistory = async (req,res)=>{
     }
 }
 
-export const buyCredits = async (req,res) => {
-    try {
-        const session = await stripe.checkout.sessions.create({
-            line_items: [
-              {
-                price: 'price_1Pb7uSRpAMX87OfFrtvBtfEu',
-                quantity: 1,
-              },
-            ],
-            mode: 'payment',
-            success_url: `https://example.com`,
-            cancel_url: `https://google.com`,
-          });
-          res.send(session)
-    } catch (error) {
-        console.log(error)
-    }
-}
+const calculateOrderAmount = (quantity) => {
+    return Math.floor(Number(quantity))
+};
+  
+export const buyCredits = async (req, res) => {
+  const { quantity } = req.body;
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: calculateOrderAmount(quantity),
+    currency: "usd",
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+};
 
 export const getHistory = (req,res) => {
 
