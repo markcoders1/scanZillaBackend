@@ -110,6 +110,10 @@ const verifyTextJoi = Joi.object({
     })
 });
 
+
+
+
+
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints } = req.body;
@@ -290,7 +294,8 @@ export const buyCredits = async (req, res) => {
         automatic_payment_methods: {
         enabled: true,
         },
-        customer:req.user.customerId
+        customer:req.user.customerId,
+        metadata:{variant}
     });
 
     res.status(200).json({
@@ -304,7 +309,12 @@ export const buyCredits = async (req, res) => {
 
 export const BuyCreditWebhook = async (req,res)=>{
     try {
-        console.log('hi')
+        const details = req.body.data.object
+        console.log(details)
+        const user = await User.find({customerId:details.customer})
+        
+        console.log(details.metadata)
+
         res.status(200).json({success:true})
     } catch (error) {
         console.log(error)
