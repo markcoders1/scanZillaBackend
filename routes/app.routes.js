@@ -13,6 +13,8 @@ router.route('/buycredits').post(verifyJWT,buyCredits)
 
 router.route('/buycreditwebhook').post(BuyCreditWebhook)
 
+router.route('/getuser').get()
+
 // router.route('/getHistory').get(getHistory)
 
 // router.route("/gen").post(retreiveRun)

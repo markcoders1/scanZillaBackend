@@ -263,6 +263,15 @@ export const getUserHistory = async (req,res)=>{
     }
 }
 
+export const getUser = async (req,res) =>{
+    try {
+        const user = User.findOne({email:req.params.email})
+        res.status(200).json({user})
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 const calculateOrderAmount = (variant) => {
     switch (variant) {
         case 1:
