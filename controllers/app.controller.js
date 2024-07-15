@@ -262,13 +262,13 @@ export const getUserHistory = async (req,res)=>{
 const calculateOrderAmount = (variant) => {
     switch (variant) {
         case 1:
-            return 10
+            return 1000
             break;
         case 2:
-            return 30
+            return 3000
             break;
         case 3:
-            return 60
+            return 6000
             break;
     
         default:
@@ -277,17 +277,22 @@ const calculateOrderAmount = (variant) => {
 };
   
 export const buyCredits = async (req, res) => {
-  const { variant,email } = req.body;
+    try{
+    const { variant,email } = req.body;
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: calculateOrderAmount(variant),
-    currency: "usd",
-    automatic_payment_methods: {
-      enabled: true,
-    },
-  });
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: calculateOrderAmount(variant),
+        currency: "usd",
+        automatic_payment_methods: {
+        enabled: true,
+        },
+    });
 
-  res.send({
-    clientSecret: paymentIntent.client_secret,
-  });
+    res.status(200).json({
+        clientSecret: paymentIntent.client_secret,
+    });
+    
+    }catch(error){
+        console.log(error)
+    }
 };
