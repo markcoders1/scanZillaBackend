@@ -310,10 +310,10 @@ export const buyCredits = async (req, res) => {
 export const BuyCreditWebhook = async (req,res)=>{
     try {
         const details = req.body.data.object
-        console.log(details)
         const user = await User.find({customerId:details.customer})
-        
-        console.log(calculateOrderAmount(details.metadata.variant).credits)
+        const res = calculateOrderAmount(details.metadata.variant)
+        console.log(res)
+        console.log(res.credits)
 
         
 
