@@ -266,13 +266,13 @@ export const getUserHistory = async (req,res)=>{
 const calculateOrderAmount = (variant) => {
     switch (variant) {
         case 1:
-            return 1000
+            return {val:1000,credits:10}
             break;
         case 2:
-            return 3000
+            return {val:3000,credits:30}
             break;
         case 3:
-            return 6000
+            return {val:6000,credits:60}
             break;
     
         default:
@@ -289,7 +289,7 @@ export const buyCredits = async (req, res) => {
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-        amount: calculateOrderAmount(variant),
+        amount: calculateOrderAmount(variant).val,
         currency: "usd",
         automatic_payment_methods: {
         enabled: true,
@@ -313,7 +313,9 @@ export const BuyCreditWebhook = async (req,res)=>{
         console.log(details)
         const user = await User.find({customerId:details.customer})
         
-        console.log(details.metadata)
+        console.log(calculateOrderAmount(details.metadata.variant).credits)
+
+        
 
         res.status(200).json({success:true})
     } catch (error) {
