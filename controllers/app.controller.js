@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import fs from 'fs'
 import { History } from "../models/history.model.js";
 import Stripe from "stripe";
+import { User } from "../models/user.model.js";
 const stripe = new Stripe('sk_test_51PZF1RRpAMX87OfFrUvaU9HLtoFaVNiB8fKMfOY6eNAcPP1rKQJOrFq8tpcv8Lgv7IYfgMuOwCbRP587UMCCkSvw008e5AK9cU')
 
 dotenv.config({
@@ -278,7 +279,3 @@ export const buyCredits = async (req, res) => {
     clientSecret: paymentIntent.client_secret,
   });
 };
-
-export const getHistory = (req,res) => {
-
-}

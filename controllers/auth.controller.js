@@ -100,6 +100,7 @@ export const loginUser = async (req,res)=>{
                "message":"logged in successfully",
                accessToken,
                refreshToken,
+               username:user.userName,
                success:true
             })
 

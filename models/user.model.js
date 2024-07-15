@@ -31,7 +31,14 @@ const userSchema = new mongoose.Schema({
     },
     refreshToken: {
         type: String,
+    },
+    credits:{
+        type: Number
+    },
+    customerId:{
+        type: String
     }
+
 },
 { timestamps: true }
 ); 
