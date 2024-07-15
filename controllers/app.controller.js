@@ -280,6 +280,10 @@ export const buyCredits = async (req, res) => {
     try{
     const { variant,email } = req.body;
 
+    if (!variant||!email){
+        return res.status(400).json({message:"data incomplete"})
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
         amount: calculateOrderAmount(variant),
         currency: "usd",
@@ -291,8 +295,16 @@ export const buyCredits = async (req, res) => {
     res.status(200).json({
         clientSecret: paymentIntent.client_secret,
     });
-    
+
     }catch(error){
         console.log(error)
     }
 };
+
+export const BuyCreditWebhook = async (req,res)=>{
+    try {
+        console.log('hi')
+    } catch (error) {
+        console.log(error)
+    }
+}
