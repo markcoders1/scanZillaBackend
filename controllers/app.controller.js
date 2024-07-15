@@ -5,11 +5,10 @@ import fs from 'fs'
 import { History } from "../models/history.model.js";
 import Stripe from "stripe";
 import { User } from "../models/user.model.js";
-const stripe = new Stripe('sk_test_51PZF1RRpAMX87OfFrUvaU9HLtoFaVNiB8fKMfOY6eNAcPP1rKQJOrFq8tpcv8Lgv7IYfgMuOwCbRP587UMCCkSvw008e5AK9cU')
 
-dotenv.config({
-    path: "./.env",
-});
+dotenv.config();
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY)
 
@@ -260,15 +259,28 @@ export const getUserHistory = async (req,res)=>{
     }
 }
 
-const calculateOrderAmount = (quantity) => {
-    return Math.floor(Number(quantity))
+const calculateOrderAmount = (variant) => {
+    switch (variant) {
+        case 1:
+            return 10
+            break;
+        case 2:
+            return 30
+            break;
+        case 3:
+            return 60
+            break;
+    
+        default:
+            break;
+    }
 };
   
 export const buyCredits = async (req, res) => {
-  const { quantity } = req.body;
+  const { variant,email } = req.body;
 
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: calculateOrderAmount(quantity),
+    amount: calculateOrderAmount(variant),
     currency: "usd",
     automatic_payment_methods: {
       enabled: true,

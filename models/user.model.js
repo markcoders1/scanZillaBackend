@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import Stripe from "stripe";
+import dotenv from "dotenv";
+dotenv.config()
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 
 const userSchema = new mongoose.Schema({
@@ -33,10 +38,11 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     credits:{
-        type: Number
+        type: Number,
+        default: 0
     },
     customerId:{
-        type: String
+        type: String,
     }
 
 },
@@ -53,6 +59,21 @@ userSchema.pre('save', async function(next) {
     if (!this.isModified('otp')) return next();
     const salt = await bcrypt.genSalt(10);
     this.otp = await bcrypt.hash(this.otp, salt);
+    next();
+});
+
+userSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        try {
+            const customer = await stripe.customers.create({
+                email: this.email,
+                name: this.userName,
+            });
+            this.customerId = customer.id;
+        } catch (error) {
+            next(error);
+        }
+    }
     next();
 });
 
