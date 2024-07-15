@@ -290,6 +290,7 @@ export const buyCredits = async (req, res) => {
         automatic_payment_methods: {
         enabled: true,
         },
+        customer:req.user.customerId
     });
 
     res.status(200).json({
@@ -304,6 +305,7 @@ export const buyCredits = async (req, res) => {
 export const BuyCreditWebhook = async (req,res)=>{
     try {
         console.log('hi')
+        res.status(200).json({success:true})
     } catch (error) {
         console.log(error)
     }
