@@ -102,6 +102,7 @@ export const loginUser = async (req,res)=>{
                refreshToken,
                username:user.userName,
                email:user.email,
+               credits:user.credits,
                success:true
             })
 

@@ -310,13 +310,11 @@ export const buyCredits = async (req, res) => {
 export const BuyCreditWebhook = async (req,res)=>{
     try {
         const details = req.body.data.object
-        const user = await User.find({customerId:details.customer})
+        const user = await User.findOne({customerId:details.customer})
         const {credits} = calculateOrderAmount(+details.metadata.variant)
 
         user.credits+=credits
         user.save()
-
-        
 
         res.status(200).json({success:true,credits:user.credits})
     } catch (error) {
