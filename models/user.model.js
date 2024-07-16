@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const userSchema = new mongoose.Schema({
     userName:{
-        type:String,
+        type: String,
         required:true,
         unique:true
     },
@@ -27,11 +27,11 @@ const userSchema = new mongoose.Schema({
         required: [true, "Password is required"],
     },
     otp:{
-        type:String,
+        type: String,
         required:false
     },
     otpExpiry:{
-        type:Number,
+        type: Number,
         required:false
     },
     refreshToken: {
@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
     },
     customerId:{
         type: String,
+    },
+    autocharge:{
+        type: Boolean,
+        default:false
     }
 
 },

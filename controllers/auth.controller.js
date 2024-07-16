@@ -140,6 +140,9 @@ export const Oauth = async (req,res)=>{
                "message":"logged in successfully",
                accessToken,
                refreshToken,
+               username:user.userName,
+               email:user.email,
+               credits:user.credits,
                success:true
             })
 
@@ -185,7 +188,7 @@ export const logoutUser = (req,res)=>{
     }
 }
 
-export const changePassword = async (req,res)=>{
+export const forgetpassword = async (req,res)=>{
     try{
 
         const {otp,password,email} = req.body
@@ -202,6 +205,26 @@ export const changePassword = async (req,res)=>{
 
     }catch(err){
         console.log(err)
+    }
+}
+
+export const changePassword = async (req,res)=>{
+    try{
+        const {oldPassword,newPassword} = req.body
+
+        const user = await User.findOne({email:req.user.email})
+
+        const changepass = await user.isPasswordCorrect(oldPassword)
+
+        if(!changepass){
+            return res.status(400).json({message:"old password incorrect"})
+        }
+
+        user.password=newPassword
+        user.save()
+        res.status(200).json({success:true,message:"password reset successfully"})
+    }catch(error){
+        console.log(error)
     }
 }
 

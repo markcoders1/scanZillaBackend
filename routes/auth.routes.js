@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { test,createUser, loginUser, refreshAccessToken, logoutUser, genOTP, changePassword, Oauth } from "../controllers/auth.controller.js";
+import { test,createUser, loginUser, refreshAccessToken, logoutUser, genOTP, forgetpassword, Oauth, changePassword } from "../controllers/auth.controller.js";
 import { testMiddleware,verifyJWT } from "../middleware/app.middleware.js";
 
 const router = Router();
@@ -16,9 +16,11 @@ router.route("/logout").post(verifyJWT,logoutUser);
 
 router.route('/genOTP').post(genOTP)
 
-router.route('/changepass').post(changePassword)
+router.route('/forgetpassword').post(forgetpassword)
 
 router.route('/oauth').post(Oauth)
+
+router.route('/changepassword').post(verifyJWT,changePassword)
 
 // router.route("/auth-status").get(verifyJWT,)
 

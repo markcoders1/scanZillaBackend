@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getUser} from "../controllers/app.controller.js";
+import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getUser, getPurchaseHistory, numberOfAnalysed, getCardInfo} from "../controllers/app.controller.js";
 import { verifyJWT } from "../middleware/app.middleware.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
@@ -14,6 +14,12 @@ router.route('/buycredits').post(verifyJWT,buyCredits)
 router.route('/buycreditwebhook').post(BuyCreditWebhook)
 
 router.route('/getuser').get(getUser)
+
+router.route('/getpurchasehistory').get(verifyJWT,getPurchaseHistory)
+
+router.route('/getAnalysedNum').get(verifyJWT,numberOfAnalysed)
+
+router.route('/getcardinfo').get(verifyJWT,getCardInfo)
 
 // router.route('/getHistory').get(getHistory)
 

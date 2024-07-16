@@ -78,83 +78,253 @@ const containsBlacklistedWord = (paragraph) => {
 
 
 
+// const verifyTextJoi = Joi.object({
+//     title: Joi.string().custom((value,helper)=>{
+//         const {containsWords,usedWords}=containsBlacklistedWord(value)
+//         if (containsWords){
+//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+//         }
+//         return value
+//     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+//         "string.pattern.base":"must be standard ASCII characters or generic symbols"
+//     }),
+  
+//     description: Joi.string().custom((value,helper)=>{
+//         const {containsWords,usedWords}=containsBlacklistedWord(value)
+//         if (containsWords){
+//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+//         }
+//         return value
+//     }).regex(/^[ -~]*$/).min(0).max(1000).messages({
+//         "string.pattern.base":"must be standard ASCII characters only"
+//     }),
+
+//     bulletpoints: Joi.array().items(
+//         Joi.string().custom((value, helper) => {
+//             const { containsWords, usedWords } = containsBlacklistedWord(value);
+//             if (containsWords) {
+//                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+//             }
+//             return value;
+//         }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
+//             "string.pattern.base": "must be standard ASCII characters only or generic symbols"
+//         })
+//     ).min(0).messages({
+//         "array.base": "bulletpoints must be an array of strings",
+//         "array.includes": "each bulletpoint must be a valid string according to the specified rules"
+//     }),
+
+//     keywords: Joi.array().items(
+//         Joi.string().custom((value, helper) => {
+//             const { containsWords, usedWords } = containsBlacklistedWord(value);
+//             if (containsWords) {
+//                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+//             }
+//             return value;
+//         }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
+//             "string.pattern.base": "must be standard ASCII characters only or generic symbols"
+//         })
+//     ).min(0).messages({
+//         "array.base": "keywords must be an array of strings",
+//         "array.includes": "each keyword must be a valid string according to the specified rules"
+//     }),
+
+//     category: Joi.string().custom((value,helper)=>{
+//         const {containsWords,usedWords}=containsBlacklistedWord(value)
+//         if (containsWords){
+//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+//         }
+//         return value
+//     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+//         "string.pattern.base":"must be standard ASCII characters or generic symbols"
+//     }),
+
+// });
+
+
+
+
+
+// export const verifyText = async (req, res) => {
+//     try {
+//         let { title, description, bulletpoints } = req.body;
+//         console.log(req.body)
+//         req.body.title = title.replace(/[\x00-\x1F]/g, "");
+//         req.body.description = description.replace(/[\x00-\x1F]/g, "");
+//         req.body.bulletpoints = bulletpoints.map(e=>e.value.replace(/[\x00-\x1F]/g, ""));
+
+//         const { error } = verifyTextJoi.validate(req.body, { abortEarly: false });
+
+
+//         if (error) {
+
+//             console.log(error)
+
+//             let err = error.details.map((field) => {
+
+//                 console.log("eeeeeeeeeeeeeeeeeeeeeeeeeee",field)
+
+//                 if (field.type=="string.pattern.base"){
+//                     const potato = findInvalidCharacters(field?.context?.value, field?.context?.regex)
+//                     if (field.context.label == "title") {
+//                         return { error: `${field.message}: ${potato}`, field: "TE" };
+//                     } else if (field.context.label == "description") {
+//                         return { error: `${field.message}: ${potato}`, field: "DE" };
+//                     } else if (field.context.label == "bulletpoints") {
+//                         return { error: `${field.message}: ${potato}`, field: "BE" };
+//                     }
+//                 }else{
+//                     if (field.context.label == "title") {
+//                         return { error: field.message, field: "TE" };
+//                     } else if (field.context.label == "description") {
+//                         return { error: field.message, field: "DE" };
+//                     } else if (field.context.label == "bulletpoints") {
+//                         return { error: field.message, field: "BE" };
+//                     }
+//                 }
+//             });
+            
+//             console.log("err",error)
+
+//             const errObj = err.reduce((acc, current) => {
+//                 acc[current.field] = current.error;
+//                 return acc;
+//             }, {});
+
+//             console.log("err", errObj);
+//             return res.status(200).json({ message: errObj, success: false });
+//         }
+
+
 const verifyTextJoi = Joi.object({
-    title: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedWords}=containsBlacklistedWord(value)
-        if (containsWords){
-            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+    title: Joi.string().custom((value, helper) => {
+        const { containsWords, usedWords } = containsBlacklistedWord(value);
+        if (containsWords) {
+            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
         }
-        return value
+        return value;
     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-        "string.pattern.base":"must be standard ASCII characters or generic symbols"
+        "string.pattern.base": "must be standard ASCII characters or generic symbols"
     }),
   
-    description: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedWords}=containsBlacklistedWord(value)
-        if (containsWords){
-            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+    description: Joi.string().custom((value, helper) => {
+        const { containsWords, usedWords } = containsBlacklistedWord(value);
+        if (containsWords) {
+            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
         }
-        return value
+        return value;
     }).regex(/^[ -~]*$/).min(0).max(1000).messages({
-        "string.pattern.base":"must be standard ASCII characters only"
+        "string.pattern.base": "must be standard ASCII characters only"
     }),
 
-    bulletpoints: Joi.string().custom((value,helper)=>{
-        const {containsWords,usedWords}=containsBlacklistedWord(value)
-        if (containsWords){
-            return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
+    bulletpoints: Joi.array().items(
+        Joi.string().custom((value, helper) => {
+            const { containsWords, usedWords } = containsBlacklistedWord(value);
+            if (containsWords) {
+                return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+            }
+            return value;
+        }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
+            "string.pattern.base": "must be standard ASCII characters only or generic symbols"
+        })
+    ).min(0).label('bulletpoints').messages({
+        "array.base": "bulletpoints must be an array of strings",
+        "array.includes": "each bulletpoint must be a valid string according to the specified rules"
+    }),
+
+    keywords: Joi.string().custom((value, helper) => {
+        const { containsWords, usedWords } = containsBlacklistedWord(value);
+        if (containsWords) {
+            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
         }
-        return value
-    }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
-        "string.pattern.base":"must be standard ASCII characters only or generic symbols"
-    })
+        return value;
+    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+        "string.pattern.base": "must be standard ASCII characters or generic symbols"
+    }),
+
+    category: Joi.string().custom((value, helper) => {
+        const { containsWords, usedWords } = containsBlacklistedWord(value);
+        if (containsWords) {
+            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+        }
+        return value;
+    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+        "string.pattern.base": "must be standard ASCII characters or generic symbols"
+    }),
 });
-
-
-
-
 
 export const verifyText = async (req, res) => {
     try {
-        let { title, description, bulletpoints } = req.body;
-        req.body.title = title.replace(/[\x00-\x1F]/g, "");
-        req.body.description = description.replace(/[\x00-\x1F]/g, "");
-        req.body.bulletpoints = bulletpoints.replace(/[\x00-\x1F]/g, "");
+        let { title, description, bulletpoints, keywords, category } = req.body;
+        bulletpoints=bulletpoints.map(e=>e.value)
+
+        title = title.replace(/[\x00-\x1F]/g, "");
+        description = description.replace(/[\x00-\x1F]/g, "");
+        bulletpoints = bulletpoints.map(e => e.replace(/[\x00-\x1F]/g, ""));
+        keywords = keywords.replace(/[\x00-\x1F]/g, "");
+        category = category.replace(/[\x00-\x1F]/g, "");
+
+
+        let collectiveString=title+description+bulletpoints.join('')+keywords
+        const creditPrice = Math.floor(collectiveString.length/4)
+
+
+
+        if(req.user.credits<creditPrice){
+            if (user.autocharge==true){
+                const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
+                const paymentId = paymentMethods.data[0].id
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: 1000,
+                    currency: 'usd',
+                    customer: user.customerId,
+                    payment_method: paymentId,
+                    off_session: true,
+                    confirm: true,
+                    metadata:{variant:1}
+                });
+
+            }else{
+                return res.status(200).json({ message: "Not enough credits, please recharge", success: false });
+            }
+        }
+
+        const user=await User.findOne({email:req.user.email})
+
+        user.credits-=creditPrice
+        user.save()
 
         const { error } = verifyTextJoi.validate(req.body, { abortEarly: false });
 
-        console.log(error)
-
-
         if (error) {
-            let err = error.details.map((field) => {
-                if (field.type=="string.pattern.base"){
-                    const potato = findInvalidCharacters(field?.context?.value, field?.context?.regex)
-                    if (field.context.label == "title") {
-                        return { error: `${field.message}: ${potato}`, field: "TE" };
-                    } else if (field.context.label == "description") {
-                        return { error: `${field.message}: ${potato}`, field: "DE" };
-                    } else if (field.context.label == "bulletpoints") {
-                        return { error: `${field.message}: ${potato}`, field: "BE" };
-                    }
-                }else if(field.type=="custom"){
-                    if (field.context.label == "title") {
-                        return { error: field.message, field: "TE" };
-                    } else if (field.context.label == "description") {
-                        return { error: field.message, field: "DE" };
-                    } else if (field.context.label == "bulletpoints") {
-                        return { error: field.message, field: "BE" };
-                    }
+            let errObj = {
+                TE: "",
+                DE: "",
+                BE: "",
+                KE: "",
+                CE: ""
+            };
+
+            error.details.forEach(field => {
+                const fieldKeyMap = {
+                    title: 'TE',
+                    description: 'DE',
+                    bulletpoints: 'BE',
+                    keywords: 'KE',
+                    category: 'CE'
+                };
+                const fieldKey = fieldKeyMap[field.path[0]];
+
+                if (field.type === "string.pattern.base") {
+                    const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
+                    errObj[fieldKey] = `${field.message}: ${invalidChars}`;
+                } else {
+                    errObj[fieldKey] = field.message;
                 }
+
             });
             
-            const errObj = err.reduce((acc, current) => {
-                acc[current.field] = current.error;
-                return acc;
-            }, {});
-
-            console.log("err", errObj);
-            return res.status(200).json({ message: errObj, success: false });
+            return res.status(200).json({ error: errObj, success: false });
         }
 
         History.create({
@@ -208,6 +378,23 @@ export const verifyText = async (req, res) => {
         // // Parse the cleaned string
         // return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
         return res.status(200).json({ message: "text verified", success: true });
+
+        /*
+        const stripe = Stripe('your_publishable_key');
+
+        async function handlePaymentIntent(paymentIntentClientSecret) {
+          const { error, paymentIntent } = await stripe.confirmCardPayment(paymentIntentClientSecret);
+            
+          if (error) {
+            console.error('Payment failed:', error);
+          } else if (paymentIntent.status === 'succeeded') {
+            console.log('Payment succeeded:', paymentIntent);
+          }
+        }
+            
+        // Call this function if the payment requires action
+        handlePaymentIntent('client_secret_from_server');
+        */
         
     } catch (error) {
         console.log(error);
@@ -253,13 +440,28 @@ async function createMessage(thread_id, role, content) {
 }
 
 
-export const getUserHistory = async (req,res)=>{
+export const getUserHistory = async (req, res) => {
     try {
-        const Histories = await History.find({userID:req.user.id})
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
 
-        res.status(200).json({success:true,Histories})
+        const Histories = await History.find({ userID: req.user.id }).skip(skip).limit(limit);
+
+        const totalHistories = await History.countDocuments({ userID: req.user.id });
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalHistories,
+            totalPages: Math.ceil(totalHistories / limit),
+            Histories
+        });
+
     } catch (error) {
-       console.log(error) 
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 }
 
@@ -273,7 +475,7 @@ export const getUser = async (req,res) =>{
 }
 
 const calculateOrderAmount = (variant) => {
-    switch (variant) {
+    switch (Number(variant)) {
         case 1:
             return {val:1000,credits:10}
             break;
@@ -282,9 +484,6 @@ const calculateOrderAmount = (variant) => {
             break;
         case 3:
             return {val:6000,credits:60}
-            break;
-    
-        default:
             break;
     }
 };
@@ -304,7 +503,12 @@ export const buyCredits = async (req, res) => {
         enabled: true,
         },
         customer:req.user.customerId,
-        metadata:{variant}
+        metadata:{variant},
+        payment_method_options:{
+            card:{
+                setup_future_usage:'off_session'
+            }
+        }
     });
 
     res.status(200).json({
@@ -330,3 +534,40 @@ export const BuyCreditWebhook = async (req,res)=>{
         console.log(error)
     }
 }
+
+export const getPurchaseHistory = async (req,res) => {
+    try{
+        const {customerId} = req.user.customerId
+        const charges = await stripe.charges.list({customer:customerId})
+        const payments = charges.data.map(e=>{
+
+            return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant),date:e.created}
+        })
+        res.status(200).json({success:true,payments})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const numberOfAnalysed = async (req,res) => {
+    try{
+        const count = await History.countDocuments({email:req.user.email})
+        res.status(200).json({success:true,count})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const getCardInfo = async (req,res) => {
+    try{
+        const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
+        const cards=paymentMethods.data.map(e=>{
+            return {expMonth:e.card.exp_month,expYear:e.card.exp_year,last4:e.card.last4}
+        })
+        res.status(200).json({cards})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+
