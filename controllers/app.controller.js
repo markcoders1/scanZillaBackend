@@ -543,20 +543,20 @@ export const buyCredits = async (req, res) => {
 export const BuyCreditWebhook = async (req, res) => {
     try {
         const details = req.body.data.object;
-
-        if (!details || !details.payment_intent) {
+        console.log(details)
+        if (!details || details.object=="charge") {
             return res.status(400).json({ message: "Invalid webhook data" });
         }
 
         console.log(details.payment_intent);
 
-        let webhookCall = await ProcessedEvent.findOne({ id: details.payment_intent });
+        let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
         if (webhookCall) {
             return res.status(200).json({ message: "webhook already called" });
         }
 
-        webhookCall = await ProcessedEvent.create({ id: details.payment_intent });
+        webhookCall = await ProcessedEvent.create({ id: details.id });
 
         const user = await User.findOne({ customerId: details.customer });
         if (!user) {
