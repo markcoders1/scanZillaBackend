@@ -275,6 +275,9 @@ export const verifyText = async (req, res) => {
             if (req.user.autocharge==true){
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
+                if (!paymentId){
+                    return res.status(200).json({ message: "Not enough credits, please recharge", success: false });
+                }
                 const paymentIntent = await stripe.paymentIntents.create({
                     amount: (creditPrice-req.user.credits)*100,
                     currency: 'usd',
