@@ -21,6 +21,7 @@ router.route('/getAnalysedNum').get(verifyJWT,numberOfAnalysed)
 
 router.route('/getcardinfo').get(verifyJWT,getCardInfo)
 
+
 // router.route('/getHistory').get(getHistory)
 
 // router.route("/gen").post(retreiveRun)

@@ -5,6 +5,7 @@ import fs from 'fs'
 import { History } from "../models/history.model.js";
 import Stripe from "stripe";
 import { User } from "../models/user.model.js";
+import {ProcessedEvent} from "../models/webhook.model.js";
 
 dotenv.config();
 
@@ -271,17 +272,17 @@ export const verifyText = async (req, res) => {
 
 
         if(req.user.credits<creditPrice){
-            if (user.autocharge==true){
+            if (req.user.autocharge==true){
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
                 const paymentIntent = await stripe.paymentIntents.create({
-                    amount: 1000,
+                    amount: (creditPrice-req.user.credits)*100,
                     currency: 'usd',
-                    customer: user.customerId,
+                    customer: req.user.customerId,
                     payment_method: paymentId,
                     off_session: true,
                     confirm: true,
-                    metadata:{variant:1}
+                    metadata:{variant:4}
                 });
 
             }else{
@@ -384,14 +385,14 @@ export const verifyText = async (req, res) => {
 
         async function handlePaymentIntent(paymentIntentClientSecret) {
           const { error, paymentIntent } = await stripe.confirmCardPayment(paymentIntentClientSecret);
-            
+
           if (error) {
             console.error('Payment failed:', error);
           } else if (paymentIntent.status === 'succeeded') {
             console.log('Payment succeeded:', paymentIntent);
           }
         }
-            
+
         // Call this function if the payment requires action
         handlePaymentIntent('client_secret_from_server');
         */
@@ -474,7 +475,7 @@ export const getUser = async (req,res) =>{
     }
 }
 
-const calculateOrderAmount = (variant) => {
+const calculateOrderAmount = (variant,amount) => {
     switch (Number(variant)) {
         case 1:
             return {val:1000,credits:10}
@@ -484,6 +485,9 @@ const calculateOrderAmount = (variant) => {
             break;
         case 3:
             return {val:6000,credits:60}
+            break;
+        case 4:
+            return {credits:amount/100}
             break;
     }
 };
@@ -522,14 +526,33 @@ export const buyCredits = async (req, res) => {
 
 export const BuyCreditWebhook = async (req,res)=>{
     try {
+        
         const details = req.body.data.object
-        const user = await User.findOne({customerId:details.customer})
-        const {credits} = calculateOrderAmount(+details.metadata.variant)
 
-        user.credits+=credits
-        user.save()
+        
+        if(!details||!details.payment_intent){
+            return res.status(400)
+        }
+        
+        console.log(details.payment_intent)
 
-        res.status(200).json({success:true,credits:user.credits})
+        let webhookCall = await ProcessedEvent.findOne({id:details.payment_intent})
+
+        if(webhookCall){
+            return res.status(200).json({message:"webhook already called"})
+        }else{
+
+            webhookCall = await ProcessedEvent.create({id:details.payment_intent})
+
+            const user = await User.findOne({customerId:details.customer})
+            const {credits} = calculateOrderAmount(+details.metadata.variant,details.amount)
+    
+
+            user.credits+=credits
+            user.save()
+            res.status(200).json({success:true,credits:user.credits})
+        }
+
     } catch (error) {
         console.log(error)
     }
@@ -541,7 +564,7 @@ export const getPurchaseHistory = async (req,res) => {
         const charges = await stripe.charges.list({customer:customerId})
         const payments = charges.data.map(e=>{
 
-            return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant),date:e.created}
+            return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant,e.amount),date:e.created}
         })
         res.status(200).json({success:true,payments})
     }catch(error){
