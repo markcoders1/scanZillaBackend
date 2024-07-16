@@ -24,6 +24,9 @@ const HistorySchema = new mongoose.Schema({
     keywords:{
         type: String,
         required:false
+    },
+    error:{
+        type:Object
     }
 },
 { timestamps: true }

@@ -325,16 +325,19 @@ export const verifyText = async (req, res) => {
 
             });
             
+            History.create({
+                userID:req.user.id,
+                title,
+                description,
+                bullets:bulletpoints,
+                error:errObj
+    
+            })
+
             return res.status(200).json({ error: errObj, success: false });
         }
 
-        History.create({
-            userID:req.user.id,
-            title,
-            description,
-            bullets:bulletpoints
-
-        })
+        
 
         // const {thread_id,id} = await openai.beta.threads.createAndRun({
         //     assistant_id:assId,
@@ -375,6 +378,19 @@ export const verifyText = async (req, res) => {
         //     ?.trim();
 
         // console.log("msg", latest_message);
+
+
+
+        // History.create({
+        //     userID:req.user.id,
+        //     title,
+        //     description,
+        //     bullets:bulletpoints,
+        //     error:JSON.parse(latest_message)
+
+        // })
+
+
 
         // // Parse the cleaned string
         // return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
@@ -574,7 +590,7 @@ export const getPurchaseHistory = async (req,res) => {
 
 export const numberOfAnalysed = async (req,res) => {
     try{
-        const count = await History.countDocuments({email:req.user.email})
+        const count = await History.countDocuments({userID:req.user.id})
         res.status(200).json({success:true,count})
     }catch(error){
         console.log(error)
@@ -593,4 +609,16 @@ export const getCardInfo = async (req,res) => {
     }
 }
 
-
+export const toggleAutoCredit = async (req,res) =>{
+    try{
+        const {toggle} = req.query
+        if(!toggle){
+            return res.status(400)
+        }
+        const user = User.findOne({email:req.user.email})
+        user.autocharge=toggle
+        return res.status(200).json({success:true})
+    }catch(err){
+        console.log(err)
+    }
+}
