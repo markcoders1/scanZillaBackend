@@ -540,39 +540,39 @@ export const buyCredits = async (req, res) => {
     }
 };
 
-export const BuyCreditWebhook = async (req,res)=>{
+export const BuyCreditWebhook = async (req, res) => {
     try {
-        
-        const details = req.body.data.object
+        const details = req.body.data.object;
 
-        
-        if(!details||!details.payment_intent){
-            return res.status(400)
-        }
-        
-        console.log(details.payment_intent)
-
-        let webhookCall = await ProcessedEvent.findOne({id:details.payment_intent})
-
-        if(webhookCall){
-            return res.status(200).json({message:"webhook already called"})
-        }else{
-
-            webhookCall = await ProcessedEvent.create({id:details.payment_intent})
-
-            const user = await User.findOne({customerId:details.customer})
-            const {credits} = calculateOrderAmount(+details.metadata.variant,details.amount)
-    
-
-            user.credits+=credits
-            user.save()
-            res.status(200).json({success:true,credits:user.credits})
+        if (!details || !details.payment_intent) {
+            return res.status(400).json({ message: "Invalid webhook data" });
         }
 
+        console.log(details.payment_intent);
+
+        let webhookCall = await ProcessedEvent.findOne({ id: details.payment_intent });
+
+        if (webhookCall) {
+            return res.status(200).json({ message: "webhook already called" });
+        }
+
+        webhookCall = await ProcessedEvent.create({ id: details.payment_intent });
+
+        const user = await User.findOne({ customerId: details.customer });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const { credits } = calculateOrderAmount(+details.metadata.variant, details.amount);
+        user.credits += credits;
+        await user.save();
+
+        return res.status(200).json({ success: true, credits: user.credits });
     } catch (error) {
-        console.log(error)
+        console.error(error);
+        return res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 export const getPurchaseHistory = async (req,res) => {
     try{
