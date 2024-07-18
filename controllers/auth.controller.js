@@ -40,7 +40,7 @@ export const createUser = async (req,res)=>{
             user._id
         );
 
-        return res.status(200).json({"message":"signed up successfully",...user._doc,accessToken, refreshToken, success:true})
+        return res.status(200).json({"message":"signed up successfully",userName:user.userName,accessToken, refreshToken, success:true})
     }catch(err){
         return res.status(400).json({message:"goodbye world!"})
         console.log(err)

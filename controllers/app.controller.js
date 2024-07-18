@@ -528,13 +528,11 @@ export const getCardInfo = async (req,res) => {
 
 export const toggleAutoCredit = async (req,res) =>{
     try{
-        const {toggle} = req.query
-        if(!toggle){
-            return res.status(400)
-        }
         const user = User.findOne({email:req.user.email})
-        user.autocharge=toggle
-        return res.status(200).json({success:true})
+        const uac = user.autocharge
+        user.autocharge=!user.autocharge
+        user.save()
+        return res.status(200).json({success:true, message:`auto credits: ${uac?"off":"on"}`})
     }catch(err){
         console.log(err)
     }
