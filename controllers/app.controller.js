@@ -151,11 +151,10 @@ export const verifyText = async (req, res) => {
 
 
         let collectiveString=title+description+bulletpoints.join('')+keywords
-        const creditPrice = Math.floor(collectiveString.length/4)
-
-
+        const creditPrice = Math.floor(collectiveString.length/4)+1
 
         if(req.user.credits<creditPrice){
+
             if (req.user.autocharge==true){
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
@@ -173,7 +172,7 @@ export const verifyText = async (req, res) => {
                 });
 
             }else{
-                return res.status(200).json({ message: "Not enough credits, please recharge", success: false });
+                return res.status(200).json({ message: "Not enough credits, please recharge", success: false, error:{} });
             }
         }
 
@@ -403,6 +402,20 @@ export const buyCredits = async (req, res) => {
         return res.status(400).json({message:"data incomplete"})
     }
 
+    const user = await User.findOne({email:req.user.email})
+
+    if(!user.customerId){
+        const customer = await stripe.customers.create({
+            email: req.user.email,
+            name: req.user.userName,
+        });
+
+        user.customerId=customer.id
+        req.user.customerId=customer.id
+        user.save()
+    }
+
+
     const paymentIntent = await stripe.paymentIntents.create({
         amount: calculateOrderAmount(variant).val,
         currency: "usd",
@@ -420,6 +433,7 @@ export const buyCredits = async (req, res) => {
 
     res.status(200).json({
         clientSecret: paymentIntent.client_secret,
+        success:true
     });
 
     }catch(error){
@@ -430,12 +444,11 @@ export const buyCredits = async (req, res) => {
 export const BuyCreditWebhook = async (req, res) => {
     try {
         const details = req.body.data.object;
-        console.log(details)
         if (!details || details.object=="charge") {
             return res.status(400).json({ message: "Invalid webhook data" });
         }
 
-        console.log(details.payment_intent);
+        // console.log(details.payment_intent);
 
         let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
@@ -463,13 +476,17 @@ export const BuyCreditWebhook = async (req, res) => {
 
 export const getPurchaseHistory = async (req,res) => {
     try{
-        const {customerId} = req.user.customerId
+        const {customerId} = req.user
+        if(!customerId){
+            return res.status(400).json({message:"no customer Id given"})
+        }
         const charges = await stripe.charges.list({customer:customerId})
         const payments = charges.data.map(e=>{
 
             return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant,e.amount),date:e.created}
         })
-        res.status(200).json({success:true,payments})
+
+        return res.status(200).json({success:true,payments})
     }catch(error){
         console.log(error)
     }
@@ -486,7 +503,12 @@ export const numberOfAnalysed = async (req,res) => {
 
 export const getCardInfo = async (req,res) => {
     try{
+        if (!req.user.customerId){
+            return res.status(200).json({message:"no customer detected"})
+        }
         const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
+
+        // console.log(req.user,paymentMethods)
         const cards=paymentMethods.data.map(e=>{
             return {expMonth:e.card.exp_month,expYear:e.card.exp_year,last4:e.card.last4}
         })

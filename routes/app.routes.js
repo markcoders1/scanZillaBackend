@@ -23,6 +23,8 @@ router.route('/getcardinfo').get(verifyJWT,getCardInfo)
 
 router.route('/toggleautocredit').get(verifyJWT,toggleAutoCredit)
 
+router.route('/getHistoryGraph').get(verifyJWT)
+
 
 // router.route('/getHistory').get(getHistory)
 

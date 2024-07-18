@@ -27,6 +27,9 @@ const HistorySchema = new mongoose.Schema({
     },
     error:{
         type:Object
+    },
+    credits:{
+        type:Number
     }
 },
 { timestamps: true }

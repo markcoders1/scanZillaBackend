@@ -31,7 +31,6 @@ export const createUser = async (req,res)=>{
     try{
         const {email,password,userName}=req.body
         const userSearch = await User.findOne({$or: [ { email: email }, { userName: userName }]})
-        console.log(userSearch)
 
         if(userSearch) return res.status(400).json({message:"user already exists"})
 
@@ -78,7 +77,6 @@ export const loginUser = async (req,res)=>{
     try{
         const {email,password} = req.body
         
-        console.log(req.body)
 
         const user = await User.findOne({email:email});
         if (!user) {
@@ -116,8 +114,6 @@ export const Oauth = async (req,res)=>{
         const {idToken} = req.body
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
-
-        console.log(decodedToken)
 
         let user = await User.findOne({email:decodedToken.email})
 

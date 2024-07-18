@@ -100,6 +100,7 @@ export const addWords = async (req,res) => {
     try {
         const words = await getWordsFromFile();
         words.push(newWord);
+        words.sort()
         await writeWordsToFile(words);
         res.status(201).json({ message: 'Word added successfully' });
     } catch (error) {

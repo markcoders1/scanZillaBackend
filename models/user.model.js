@@ -74,20 +74,18 @@ userSchema.pre('save', async function(next) {
     next();
 });
 
-userSchema.pre('save', async function (next) {
-    if (this.isNew) {
-        try {
-            const customer = await stripe.customers.create({
-                email: this.email,
-                name: this.userName,
-            });
-            this.customerId = customer.id;
-        } catch (error) {
-            next(error);
-        }
-    }
-    next();
-});
+// userSchema.pre('save', async function (next) {
+//         try {
+//             const customer = await stripe.customers.create({
+//                 email: this.email,
+//                 name: this.userName,
+//             });
+//             this.customerId = customer.id;
+//         } catch (error) {
+//             next(error);
+//         }
+//     next();
+// });
 
 
 //custom method banaya hai

@@ -32,12 +32,12 @@ anki
 ann williams group
 ansr
 anti allergenic effects
-antibacterial
 anti-bacterial
-antifungal
 anti-fungal
-antimicrobial
 anti-microbial
+antibacterial
+antifungal
+antimicrobial
 antimicrobial pesticides
 antiseptic
 anxiety
@@ -97,8 +97,8 @@ bh costmetics
 bic
 big mouth
 billy jealousy
-biodegradable
 bio-degradable
+biodegradable
 biolite
 birkenstock
 black & decker
@@ -189,13 +189,13 @@ comtrex
 converse
 cool gel 
 covid
+cra-z-art
+cra-z-gell
+cra-z-slimy
 crabtree & evelyn
 craft-tastic
 crayola
 crayola 
-cra-z-art
-cra-z-gell
-cra-z-slimy
 critter
 crocs
 crosley
@@ -247,9 +247,9 @@ dunkin donuts
 duplo
 easypix
 eb5
-eco – friendly
 eco defense
 eco friendly
+eco – friendly
 eero
 eliminates odor
 elizabeth arden
@@ -386,9 +386,9 @@ ion audio
 iphone
 irobot roomba
 it works
-it’s a 10
 italkonline
 ito professional
+it’s a 10
 jabra
 jabra/gn netcom
 jack black
@@ -440,8 +440,6 @@ kratom
 kwick sew
 kylie cosmetics
 l.o.l. dolls
-l’occitane
-l’oreal
 la bella donna
 la roche posay
 lacosta
@@ -477,6 +475,9 @@ louis vuitton
 luga
 lumineux
 lush 
+l’occitane
+l’oreal
+m-digita
 mac cosmetics
 macoon
 madax
@@ -499,7 +500,6 @@ mary kay
 matrix biolage
 mattel
 maybelline
-m-digita
 meaningful beauty 
 medela
 mega
@@ -752,8 +752,8 @@ spark cafe cups
 special
 speck
 speedo
-sperry 
 sperm
+sperry 
 spigen
 spinner
 squeezoos
@@ -783,6 +783,7 @@ supergoop
 switchmate
 sylvanian families
 syrian rue
+t-mobile prepaid phones
 table mate
 taotronics
 tapestry
@@ -804,7 +805,6 @@ thisworks
 timberland
 time2
 tinosorb
-t-mobile prepaid phones
 tobacco
 tommie copper
 tommy bahama
@@ -836,10 +836,10 @@ under armour
 urban fresh foods
 urpower
 usaopoly
+v-cube
 validated
 vanra
 vcube
-v-cube
 veggie bullet
 vera bradley
 verified
