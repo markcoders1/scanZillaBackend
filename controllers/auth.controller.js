@@ -40,7 +40,9 @@ export const createUser = async (req,res)=>{
             user._id
         );
 
-        return res.status(200).json({"message":"signed up successfully",userName:user.userName,accessToken, refreshToken, success:true})
+        const usr = await User.findOne({email:email}).select('-password')
+
+        return res.status(200).json({"message":"signed up successfully",...usr._doc,accessToken, refreshToken, success:true})
     }catch(err){
         return res.status(400).json({message:"goodbye world!"})
         console.log(err)
@@ -97,17 +99,20 @@ export const loginUser = async (req,res)=>{
             user._id
         );
 
+        const usr = await User.findOne({email:email}).select('-password')
+    
         return res
             .status(200)
             .json({
                "message":"logged in successfully",
                accessToken,
                refreshToken,
-               ...user._doc,
+               ...usr._doc,
                success:true
             })
 
     }catch(err){
+        console.log(err)
         return res.status(400).json({message:"error",err,success:false,errorType:"unexpected"})
     }
 }
