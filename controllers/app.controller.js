@@ -14,7 +14,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const openai = new OpenAI(process.env.OPENAI_API_KEY)
 
 
-// const assId = "asst_3nOxuR6z7N3xY1ZC1WKYAIhe"
 const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
 const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
@@ -78,126 +77,11 @@ const containsBlacklistedWord = (paragraph) => {
 // }
 
 
-
-// const verifyTextJoi = Joi.object({
-//     title: Joi.string().custom((value,helper)=>{
-//         const {containsWords,usedWords}=containsBlacklistedWord(value)
-//         if (containsWords){
-//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
-//         }
-//         return value
-//     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-//         "string.pattern.base":"must be standard ASCII characters or generic symbols"
-//     }),
-  
-//     description: Joi.string().custom((value,helper)=>{
-//         const {containsWords,usedWords}=containsBlacklistedWord(value)
-//         if (containsWords){
-//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
-//         }
-//         return value
-//     }).regex(/^[ -~]*$/).min(0).max(1000).messages({
-//         "string.pattern.base":"must be standard ASCII characters only"
-//     }),
-
-//     bulletpoints: Joi.array().items(
-//         Joi.string().custom((value, helper) => {
-//             const { containsWords, usedWords } = containsBlacklistedWord(value);
-//             if (containsWords) {
-//                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-//             }
-//             return value;
-//         }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
-//             "string.pattern.base": "must be standard ASCII characters only or generic symbols"
-//         })
-//     ).min(0).messages({
-//         "array.base": "bulletpoints must be an array of strings",
-//         "array.includes": "each bulletpoint must be a valid string according to the specified rules"
-//     }),
-
-//     keywords: Joi.array().items(
-//         Joi.string().custom((value, helper) => {
-//             const { containsWords, usedWords } = containsBlacklistedWord(value);
-//             if (containsWords) {
-//                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-//             }
-//             return value;
-//         }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
-//             "string.pattern.base": "must be standard ASCII characters only or generic symbols"
-//         })
-//     ).min(0).messages({
-//         "array.base": "keywords must be an array of strings",
-//         "array.includes": "each keyword must be a valid string according to the specified rules"
-//     }),
-
-//     category: Joi.string().custom((value,helper)=>{
-//         const {containsWords,usedWords}=containsBlacklistedWord(value)
-//         if (containsWords){
-//             return helper.message(`this text contains the words: (${usedWords.map(word=>" "+word)} ) which are blacklisted`)
-//         }
-//         return value
-//     }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-//         "string.pattern.base":"must be standard ASCII characters or generic symbols"
-//     }),
-
-// });
-
-
-
-
-
-// export const verifyText = async (req, res) => {
-//     try {
-//         let { title, description, bulletpoints } = req.body;
-//         console.log(req.body)
-//         req.body.title = title.replace(/[\x00-\x1F]/g, "");
-//         req.body.description = description.replace(/[\x00-\x1F]/g, "");
-//         req.body.bulletpoints = bulletpoints.map(e=>e.value.replace(/[\x00-\x1F]/g, ""));
-
-//         const { error } = verifyTextJoi.validate(req.body, { abortEarly: false });
-
-
-//         if (error) {
-
-//             console.log(error)
-
-//             let err = error.details.map((field) => {
-
-//                 console.log("eeeeeeeeeeeeeeeeeeeeeeeeeee",field)
-
-//                 if (field.type=="string.pattern.base"){
-//                     const potato = findInvalidCharacters(field?.context?.value, field?.context?.regex)
-//                     if (field.context.label == "title") {
-//                         return { error: `${field.message}: ${potato}`, field: "TE" };
-//                     } else if (field.context.label == "description") {
-//                         return { error: `${field.message}: ${potato}`, field: "DE" };
-//                     } else if (field.context.label == "bulletpoints") {
-//                         return { error: `${field.message}: ${potato}`, field: "BE" };
-//                     }
-//                 }else{
-//                     if (field.context.label == "title") {
-//                         return { error: field.message, field: "TE" };
-//                     } else if (field.context.label == "description") {
-//                         return { error: field.message, field: "DE" };
-//                     } else if (field.context.label == "bulletpoints") {
-//                         return { error: field.message, field: "BE" };
-//                     }
-//                 }
-//             });
-            
-//             console.log("err",error)
-
-//             const errObj = err.reduce((acc, current) => {
-//                 acc[current.field] = current.error;
-//                 return acc;
-//             }, {});
-
-//             console.log("err", errObj);
-//             return res.status(200).json({ message: errObj, success: false });
-//         }
+var obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
 
 
 const verifyTextJoi = Joi.object({
+
     title: Joi.string().custom((value, helper) => {
         const { containsWords, usedWords } = containsBlacklistedWord(value);
         if (containsWords) {

@@ -31,7 +31,7 @@ angelsounds
 anki
 ann williams group
 ansr
-anti allergenic effects 
+anti allergenic effects
 antibacterial
 anti-bacterial
 antifungal
@@ -42,7 +42,7 @@ antimicrobial pesticides
 antiseptic
 anxiety
 apple
-approved 
+approved
 aquafina
 aquapix
 argyreia nervosa seeds
@@ -646,7 +646,7 @@ poppy tea
 power rangers
 presonus
 prevent
-prevents bugs 
+prevents bugs
 price pfister
 prince lionheart
 princeton tec
@@ -836,7 +836,7 @@ under armour
 urban fresh foods
 urpower
 usaopoly
-validated  
+validated
 vanra
 vcube
 v-cube

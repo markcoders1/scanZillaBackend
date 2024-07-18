@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import authRouter from "./routes/auth.routes.js"
 import appRouter from "./routes/app.routes.js"
+import adminRouter from "./routes/admin.routes.js"
 import { BuyCreditWebhook } from "./controllers/app.controller.js";
 import bodyParser from 'body-parser'
 import { defaultLimiter } from "./middleware/limit.middleware.js";
@@ -55,6 +56,7 @@ const rawBodyMiddleware = (req, res, next) => {
 
 app.use("/", authRouter);
 app.use("/", appRouter)
+app.use("/", adminRouter)
 // app.post('/buycreditwebhook',rawBodyMiddleware,BuyCreditWebhook)
 app.use("*",(req,res)=>res.status(404).json({error:"route not found",code:404}))
 

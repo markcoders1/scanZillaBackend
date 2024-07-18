@@ -30,6 +30,14 @@ export const verifyJWT = async (req, res, next) => {
     }
 };
 
+export const verifyAdmin = (req, res, next) => {
+	if (req.user.role !== "admin") {
+		return res.status(401).json({ message: "unauthorized" });
+	} else {
+		next();
+	}
+};
+
 export const testMiddleware=(req,res,next)=>{
     try{
         req.world="hello world!"

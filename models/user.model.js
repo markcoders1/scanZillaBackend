@@ -47,6 +47,14 @@ const userSchema = new mongoose.Schema({
     autocharge:{
         type: Boolean,
         default:false
+    },
+    role:{
+        type: String,
+        defult:"user"
+    },
+    active:{
+        type:Boolean,
+        default:true
     }
 
 },

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getUser, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit} from "../controllers/app.controller.js";
 import { verifyJWT } from "../middleware/app.middleware.js";
+import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getUser, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit} from "../controllers/app.controller.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
 const router = Router();
