@@ -405,6 +405,7 @@ export const buyCredits = async (req, res) => {
     const user = await User.findOne({email:req.user.email})
 
     if(!user.customerId){
+        console.log("hi")
         const customer = await stripe.customers.create({
             email: req.user.email,
             name: req.user.userName,
@@ -413,6 +414,7 @@ export const buyCredits = async (req, res) => {
         user.customerId=customer.id
         req.user.customerId=customer.id
         user.save()
+        console.log(user)
     }
 
 
@@ -503,10 +505,16 @@ export const numberOfAnalysed = async (req,res) => {
 
 export const getCardInfo = async (req,res) => {
     try{
+        const user = await User.findOne({email:req.user.email})
+
+        console.log(user)
+
         if (!req.user.customerId){
             return res.status(200).json({message:"no customer detected"})
         }
         const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
+
+        console.log(paymentMethods)
 
         // console.log(req.user,paymentMethods)
         const cards=paymentMethods.data.map(e=>{
