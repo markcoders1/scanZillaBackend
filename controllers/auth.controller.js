@@ -35,7 +35,12 @@ export const createUser = async (req,res)=>{
         if(userSearch) return res.status(400).json({message:"user already exists"})
 
         const user=await User.create({email,password,userName})
-        return res.status(200).json({user})
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+            user._id
+        );
+
+        return res.status(200).json({"message":"signed up successfully",...user._doc,accessToken, refreshToken, success:true})
     }catch(err){
         return res.status(400).json({message:"goodbye world!"})
         console.log(err)
@@ -98,9 +103,7 @@ export const loginUser = async (req,res)=>{
                "message":"logged in successfully",
                accessToken,
                refreshToken,
-               username:user.userName,
-               email:user.email,
-               credits:user.credits,
+               ...user._doc,
                success:true
             })
 
