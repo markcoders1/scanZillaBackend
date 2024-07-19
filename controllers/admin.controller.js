@@ -43,7 +43,7 @@ export const getUser = async (req, res) => {
             return res.status(401).json({ message: "user does not exist" });
         }
         console.log(user);
-        return res.status(200).json({ user: user });
+        return res.status(200).json(user);
     } catch (error) {
         console.log(error);
         res.status(400).json({ error });
