@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/app.middleware.js";
-import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getUser, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit} from "../controllers/app.controller.js";
+import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit} from "../controllers/app.controller.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
 const router = Router();
@@ -12,8 +12,6 @@ router.route("/getUserHistory").get(verifyJWT,getUserHistory)
 router.route('/buycredits').post(verifyJWT,buyCredits)
 
 router.route('/buycreditwebhook').post(BuyCreditWebhook)
-
-router.route('/getuser').get(getUser)
 
 router.route('/getpurchasehistory').get(verifyJWT,getPurchaseHistory)
 

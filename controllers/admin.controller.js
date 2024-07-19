@@ -1,10 +1,8 @@
 import fs from 'fs'
+import {User} from '../models/user.model.js'
 
 export const getAllUsers = async (req, res) => {
     try {
-        if (req.user.role !== "admin") {
-            res.status(401).json({ message: "Unauthorized" });
-        }
 
         const result = await User.find().select("-password -refreshToken -__v");
         console.log(result);
@@ -34,9 +32,6 @@ export const toggleUserAccount = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        if (req.user.role !== "admin") {
-            res.status(401).json({ message: "Unauthorized" });
-        }
         const userId = req.query.id;
         if (typeof userId !== "string") {
             console.log("ID must be string");

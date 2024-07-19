@@ -4,11 +4,11 @@ import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords
 
 const router = Router()
 
-router.route("/getAllUsers").get(verifyJWT,verifyAdmin, getAllUsers)
+router.route("/getAllUsers").get(getAllUsers)
 
-router.route("/toggleUserAccount").get(verifyJWT,verifyAdmin,toggleUserAccount)
+router.route("/toggleUserAccount").get(toggleUserAccount)
 
-router.route("/getUser").get(verifyJWT,verifyAdmin, getUser)
+router.route("/getUser").get(getUser)
 
 router.route('/words').get(getWords)
 
