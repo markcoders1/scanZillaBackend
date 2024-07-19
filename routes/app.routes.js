@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/app.middleware.js";
-import { generateThread, verifyText, getUserHistory, buyCredits, BuyCreditWebhook, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit} from "../controllers/app.controller.js";
+import { generateThread, verifyText, getUserHistory, getUser, buyCredits, BuyCreditWebhook, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit,getGraphData} from "../controllers/app.controller.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
 const router = Router();
@@ -22,6 +22,10 @@ router.route('/getcardinfo').get(verifyJWT,getCardInfo)
 router.route('/toggleautocredit').get(verifyJWT,toggleAutoCredit)
 
 router.route('/getHistoryGraph').get(verifyJWT)
+
+router.route('/getUser').get(verifyJWT,getUser)
+
+router.route('/getgraphdata').get(verifyJWT,getGraphData)
 
 
 // router.route('/getHistory').get(getHistory)

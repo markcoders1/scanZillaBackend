@@ -8,7 +8,7 @@ router.route("/getAllUsers").get(getAllUsers)
 
 router.route("/toggleUserAccount").get(toggleUserAccount)
 
-router.route("/getUser").get(getUser)
+router.route("/getspecificUser").get(getUser)
 
 router.route('/words').get(getWords)
 

@@ -103,7 +103,7 @@ const verifyTextJoi = Joi.object({
     }),
 
     bulletpoints: Joi.array().items(
-        Joi.string().custom((value, helper) => {
+        Joi.string().allow('').custom((value, helper) => {
             const { containsWords, usedWords } = containsBlacklistedWord(value);
             if (containsWords) {
                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
@@ -141,7 +141,10 @@ const verifyTextJoi = Joi.object({
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
-        bulletpoints=bulletpoints.map(e=>e.value)
+        bulletpoints=bulletpoints.map(e=>{
+            return e.value
+        })
+        bulletpoints=bulletpoints.filter(e=>e)
 
         title = title.replace(/[\x00-\x1F]/g, "");
         description = description.replace(/[\x00-\x1F]/g, "");
@@ -159,7 +162,7 @@ export const verifyText = async (req, res) => {
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
                 if (!paymentId){
-                    return res.status(200).json({ message: "Not enough credits, please recharge", success: false });
+                    return res.status(400).json({ message: "Not enough credits, please recharge", success: false });
                 }
                 const paymentIntent = await stripe.paymentIntents.create({
                     amount: (creditPrice-req.user.credits)*100,
@@ -172,7 +175,7 @@ export const verifyText = async (req, res) => {
                 });
 
             }else{
-                return res.status(200).json({ message: "Not enough credits, please recharge", success: false, error:{} });
+                return res.status(400).json({ message: "Not enough credits, please recharge", success: false, error:{} });
             }
         }
 
@@ -181,7 +184,7 @@ export const verifyText = async (req, res) => {
         user.credits-=creditPrice
         user.save()
 
-        const { error } = verifyTextJoi.validate(req.body, { abortEarly: false });
+        const { error } = verifyTextJoi.validate({ title, description, bulletpoints, keywords, category }, { abortEarly: false });
 
         if (error) {
             let errObj = {
@@ -210,20 +213,32 @@ export const verifyText = async (req, res) => {
                 }
 
             });
+
             
-            History.create({
+            const history = await History.create({
                 userID:req.user.id,
                 title,
                 description,
                 bullets:bulletpoints,
-                error:errObj
+                error:errObj,
+                credits:creditPrice
     
             })
+
+
 
             return res.status(200).json({ error: errObj, success: false });
         }
 
-        
+        const history = await History.create({
+            userID:req.user.id,
+            title,
+            description,
+            bullets:bulletpoints,
+            error:{},
+            credits:creditPrice
+
+        })
 
         // const {thread_id,id} = await openai.beta.threads.createAndRun({
         //     assistant_id:assId,
@@ -365,6 +380,16 @@ export const getUserHistory = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
+
+export const getUser = async (req,res) =>{
+    try {
+        const user = await User.findOne({email:req.query.email})
+        res.status(200).json({user})
+    } catch (error) {
+        console.log(error)
     }
 }
 
@@ -519,11 +544,43 @@ export const getCardInfo = async (req,res) => {
 
 export const toggleAutoCredit = async (req,res) =>{
     try{
-        const user = User.findOne({email:req.user.email})
+        const user = await User.findOne({email:req.user.email})
         const uac = user.autocharge
         user.autocharge=!user.autocharge
         user.save()
         return res.status(200).json({success:true, message:`auto credits: ${uac?"off":"on"}`})
+    }catch(err){
+        console.log(err)
+    }
+}
+
+export const getGraphData = async (req,res) =>{
+    try{
+        const userId=req.user.id
+        const histories = await History.find({ userID: userId, createdAt: { $gte: new Date(Date.now() - 15768000000) } });
+    
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthlyCredits = {};
+        
+        histories.forEach(history => {
+          const month = monthNames[history.createdAt.getMonth()];
+          if (!monthlyCredits[month]) {
+            monthlyCredits[month] = 0;
+          }
+          monthlyCredits[month] += history.credits;
+        });
+        
+        const result = Object.keys(monthlyCredits).map(month => ({
+          name: month,
+          credits: monthlyCredits[month]
+        }));
+
+
+        res.status(200).json(result)
+
+        
+
+
     }catch(err){
         console.log(err)
     }
