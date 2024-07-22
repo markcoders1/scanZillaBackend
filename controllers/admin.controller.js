@@ -130,10 +130,10 @@ export const changeRules = async (req,res) => {
     
         const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
     
-        obj.titleCharacters = titleCharacters
-        obj.bulletNum = bulletNum
-        obj.bulletCharacters = bulletCharacters
-        obj.descriptionCharacters = descriptionCharacters
+        obj.titleCharacters = titleCharacters || obj.titleCharacters
+        obj.bulletNum = bulletNum || obj.bulletNum
+        obj.bulletCharacters = bulletCharacters || obj.bulletCharacters
+        obj.descriptionCharacters = descriptionCharacters || obj.descriptionCharacters
     
         fs.writeFileSync('rules.json', JSON.stringify(obj, null, 2), 'utf8');
 

@@ -16,6 +16,12 @@ router.route('/words').post(addWords)
 
 router.route('/words').delete(removeWords)
 
-router.route('/rules').post(verifyJWT,verifyAdmin,changeRules)
+router.route('/rules').post(changeRules)
+
+router.route('/getuserhistory')
+
+router.route('/getuserpurchases')
+
+router.route('/getrules')
 
 export default router
