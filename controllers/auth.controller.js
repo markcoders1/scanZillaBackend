@@ -36,6 +36,8 @@ export const createUser = async (req,res)=>{
 
         const user=await User.create({email,password,userName})
 
+        console.log(user)
+
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
             user._id
         );

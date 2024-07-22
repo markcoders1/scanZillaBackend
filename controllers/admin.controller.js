@@ -1,5 +1,6 @@
 import fs from 'fs'
 import {User} from '../models/user.model.js'
+import Joi from 'joi';
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -121,19 +122,32 @@ export const removeWords = async (req,res) =>{
 export const changeRules = async (req,res) => {
     try{
 
+        const rulesjoi = Joi.object({
+            titleCharacters:Joi.number().min(0).message("incorrect value"),
+            bulletNum:Joi.number().min(0).message("incorrect value"),
+            bulletCharacters:Joi.number().min(0).message("incorrect value"),
+            descriptionCharacters:Joi.number().min(0).message("incorrect value"),
+        })
+
         const {
             titleCharacters,
             bulletNum,
             bulletCharacters,
             descriptionCharacters
         } = req.body
+
+        const {error} = rulesjoi.validate(req.body, { abortEarly: false });
+
+        if (error){
+            return res.status(400).json({message:"incorrect values"})
+        }
     
         const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
     
-        obj.titleCharacters = titleCharacters || obj.titleCharacters
-        obj.bulletNum = bulletNum || obj.bulletNum
-        obj.bulletCharacters = bulletCharacters || obj.bulletCharacters
-        obj.descriptionCharacters = descriptionCharacters || obj.descriptionCharacters
+        obj.titleCharacters = Number(titleCharacters || obj.titleCharacters)
+        obj.bulletNum = Number(bulletNum || obj.bulletNum)
+        obj.bulletCharacters = Number(bulletCharacters || obj.bulletCharacters)
+        obj.descriptionCharacters = Number(descriptionCharacters || obj.descriptionCharacters)
     
         fs.writeFileSync('rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
@@ -148,68 +162,21 @@ export const changeRules = async (req,res) => {
 
 }
 
-/*
-const fs = require('fs').promises;
-
-async function readJsonFile(filepath) {
-    try {
-        // Read the file content asynchronously
-        const data = await fs.readFile(filepath, 'utf8');
-        
-        // Parse the JSON content
-        const jsonData = JSON.parse(data);
-        
-        return jsonData;
-    } catch (err) {
-        console.error("Error reading or parsing the file:", err);
-        return null;
+export const getRules = async (req,res)=>{
+    try{
+        const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+        res.status(200).json(obj)
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again or contact support"})
     }
 }
 
-async function writeJsonFile(filepath, jsonData) {
-    try {
-        // Convert the JSON object to a string
-        const data = JSON.stringify(jsonData, null, 2);
-        
-        // Write the string to the file asynchronously
-        await fs.writeFile(filepath, data, 'utf8');
-    } catch (err) {
-        console.error("Error writing to the file:", err);
+export const getTotalUsers = async (req,res)=>{
+    try{
+        const users = User.find({role:"user",active:true})
+        res.status(200).json({users})
+    }catch(err){
+        return res.status(500).json({message:"something went wrong, please try again or contact support"})
     }
 }
-
-async function alterJsonFile(filepath, newValues) {
-    try {
-        // Read the existing JSON file
-        const jsonData = await readJsonFile(filepath);
-        
-        if (jsonData) {
-            // Alter the values in the JSON object
-            Object.keys(newValues).forEach(key => {
-                if (jsonData.hasOwnProperty(key)) {
-                    jsonData[key] = newValues[key];
-                }
-            });
-            
-            // Write the updated JSON object back to the file
-            await writeJsonFile(filepath, jsonData);
-        }
-    } catch (err) {
-        console.error("Error altering the JSON file:", err);
-    }
-}
-
-// Example usage
-const filepath = '/abc';
-const newValues = {
-    titleCharacters: 150,
-    bulletNum: 10,
-    bulletCharacters: 120,
-    descriptionCharacters: 600
-};
-
-alterJsonFile(filepath, newValues)
-    .then(() => {
-        console.log("JSON file has been updated.");
-    });
-*/

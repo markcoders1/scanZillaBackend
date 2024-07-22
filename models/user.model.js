@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type: String,
-        defult:"user"
+        default:"user"
     },
     active:{
         type:Boolean,

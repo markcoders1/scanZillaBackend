@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
-import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules} from "../controllers/admin.controller.js"
+import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers} from "../controllers/admin.controller.js"
 
 const router = Router()
 
@@ -22,6 +22,14 @@ router.route('/getuserhistory')
 
 router.route('/getuserpurchases')
 
-router.route('/getrules')
+router.route('/rules').get(getRules)
+
+router.route('/getTotalUsers').get(getTotalUsers)
+
+router.route('/getTotalIncome')
+
+router.route('/creditPricing')
+
+router.route('/creditPricing')
 
 export default router

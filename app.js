@@ -34,20 +34,6 @@ app.use(
 );
 app.use(express.static("public"));
 
-const rawBodyMiddleware = (req, res, next) => {
-  if (req.headers['stripe-signature']) {
-    req.rawBody = '';
-    req.setEncoding('utf8');
-    req.on('data', (chunk) => {
-      req.rawBody += chunk;
-    });
-    req.on('end', () => {
-      next();
-    });
-  } else {
-    next();
-  }
-};
 
 //rate limits
 

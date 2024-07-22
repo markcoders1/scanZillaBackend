@@ -77,7 +77,9 @@ const containsBlacklistedWord = (paragraph) => {
 // }
 
 
-var obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+
+console.log(obj)
 
 
 const verifyTextJoi = Joi.object({
@@ -88,7 +90,7 @@ const verifyTextJoi = Joi.object({
             return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
         }
         return value;
-    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj.titleCharacters).messages({
         "string.pattern.base": "must be standard ASCII characters or generic symbols"
     }),
   
@@ -98,7 +100,7 @@ const verifyTextJoi = Joi.object({
             return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
         }
         return value;
-    }).regex(/^[ -~]*$/).min(0).max(1000).messages({
+    }).regex(/^[ -~]*$/).min(0).max(obj.descriptionCharacters).messages({
         "string.pattern.base": "must be standard ASCII characters only"
     }),
 
@@ -109,10 +111,10 @@ const verifyTextJoi = Joi.object({
                 return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
             }
             return value;
-        }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).messages({
+        }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
             "string.pattern.base": "must be standard ASCII characters only or generic symbols"
         })
-    ).min(0).label('bulletpoints').messages({
+    ).min(0).max(obj.bulletNum).label('bulletpoints').messages({
         "array.base": "bulletpoints must be an array of strings",
         "array.includes": "each bulletpoint must be a valid string according to the specified rules"
     }),
