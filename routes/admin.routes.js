@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
-import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers, getUserHistory, getUserPurchases, getTotalIncome} from "../controllers/admin.controller.js"
+import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers, getUserHistory, getUserPurchases, getTotalIncome,changeCreditPricing} from "../controllers/admin.controller.js"
 
 const router = Router()
 
@@ -28,7 +28,7 @@ router.route('/getTotalUsers').get(getTotalUsers)
 
 router.route('/getTotalIncome').get(getTotalIncome)
 
-router.route('/creditPricing')
+router.route('/creditPricing').post(changeCreditPricing)
 
 router.route('/creditPricing')
 

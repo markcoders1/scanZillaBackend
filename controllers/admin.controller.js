@@ -2,6 +2,7 @@ import fs from 'fs'
 import {User} from '../models/user.model.js'
 import Joi from 'joi';
 import { History } from '../models/history.model.js';
+import { Offer } from '../models/offers.model.js';
 import Stripe from 'stripe';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
@@ -186,37 +187,16 @@ export const getTotalUsers = async (req,res)=>{
 }
 
 export const getUserPurchases = async (req,res)=>{
-
-    const calculateOrderAmount = (variant,amount) => {
-        switch (Number(variant)) {
-            case 1:
-                return {val:1000,credits:10}
-                break;
-            case 2:
-                return {val:3000,credits:30}
-                break;
-            case 3:
-                return {val:6000,credits:60}
-                break;
-            case 4:
-                return {credits:amount/100}
-                break;
-        }
-    };
-
     try{
         const {userId} = req.query
         const user = await User.findById(userId)
 
         const charges = await stripe.charges.list({customer:user.customerId})
 
-        const payments = charges.data.map(e=>{
-            return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant,e.amount),date:e.created}
+        const payments = charges.data.map(async e=>{
+            return {id:e.id,currency:e.currency,amount:e.amount,credits:e.metadata.credits,date:e.created}
         })
         return res.status(200).json({success:true,payments})
-
-
-
 
     }catch(err){
         console.log(err)
@@ -249,5 +229,20 @@ export const getTotalIncome = async (req,res)=>{
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const changeCreditPricing = async (req,res)=>{
+    try{
+
+        //add joi
+        const {variant, price, name, description} = req.body
+        const offer = await Offer.findOne({variant})
+        Object.assign(offer,{price,name,description})
+        
+        offer.save()
+
+    }catch(err){
+
     }
 }

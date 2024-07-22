@@ -6,6 +6,8 @@ import { History } from "../models/history.model.js";
 import Stripe from "stripe";
 import { User } from "../models/user.model.js";
 import {ProcessedEvent} from "../models/webhook.model.js";
+import { Offer } from "../models/offers.model.js";
+
 
 dotenv.config();
 
@@ -154,7 +156,7 @@ export const verifyText = async (req, res) => {
 
 
         let collectiveString=title+description+bulletpoints.join('')+keywords
-        const creditPrice = Math.floor(collectiveString.length/4)+1
+        const creditPrice = Math.ceil(collectiveString.length/4)
 
         if(req.user.credits<creditPrice){
 
@@ -164,14 +166,20 @@ export const verifyText = async (req, res) => {
                 if (!paymentId){
                     return res.status(400).json({ message: "Not enough credits, please recharge", success: false });
                 }
+
+                const offer = Offer.findOne({variant:-1})
+
                 const paymentIntent = await stripe.paymentIntents.create({
-                    amount: (creditPrice-req.user.credits)*100,
+                    amount:(creditPrice-req.user.credits)*offer.amount,
                     currency: 'usd',
                     customer: req.user.customerId,
                     payment_method: paymentId,
                     off_session: true,
                     confirm: true,
-                    metadata:{variant:4}
+                    metadata:{
+                        variant:-1,
+                        credits:creditPrice-req.user.credits
+                    }
                 });
 
             }else{
@@ -392,23 +400,6 @@ export const getUser = async (req,res) =>{
         console.log(error)
     }
 }
-
-const calculateOrderAmount = (variant,amount) => {
-    switch (Number(variant)) {
-        case 1:
-            return {val:1000,credits:10}
-            break;
-        case 2:
-            return {val:3000,credits:30}
-            break;
-        case 3:
-            return {val:6000,credits:60}
-            break;
-        case 4:
-            return {credits:amount/100}
-            break;
-    }
-};
   
 export const buyCredits = async (req, res) => {
     try{
@@ -421,7 +412,6 @@ export const buyCredits = async (req, res) => {
     const user = await User.findOne({email:req.user.email})
 
     if(!user.customerId){
-        console.log("hi")
         const customer = await stripe.customers.create({
             email: req.user.email,
             name: req.user.userName,
@@ -433,15 +423,19 @@ export const buyCredits = async (req, res) => {
         console.log(user)
     }
 
+    const offer = await Offer.findOne({variant})
 
     const paymentIntent = await stripe.paymentIntents.create({
-        amount: calculateOrderAmount(variant).val,
+        amount: offer.amount,
         currency: "usd",
         automatic_payment_methods: {
         enabled: true,
         },
         customer:req.user.customerId,
-        metadata:{variant},
+        metadata:{
+            variant,
+            credits:offer.credits
+        },
         payment_method_options:{
             card:{
                 setup_future_usage:'off_session'
@@ -466,7 +460,6 @@ export const BuyCreditWebhook = async (req, res) => {
             return res.status(400).json({ message: "Invalid webhook data" });
         }
 
-        // console.log(details.payment_intent);
 
         let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
@@ -481,8 +474,9 @@ export const BuyCreditWebhook = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const { credits } = calculateOrderAmount(+details.metadata.variant, details.amount);
-        user.credits += credits;
+        const variant = Number(details.metadata.variant)
+
+        user.credits += details.metadata.credits;
         await user.save();
 
         return res.status(200).json({ success: true, credits: user.credits });
@@ -499,10 +493,13 @@ export const getPurchaseHistory = async (req,res) => {
             return res.status(400).json({message:"no customer Id given"})
         }
         const charges = await stripe.charges.list({customer:customerId})
-        const payments = charges.data.map(e=>{
 
-            return {id:e.id,currency:e.currency,...calculateOrderAmount(e.metadata.variant,e.amount),date:e.created}
+        
+        const payments = charges.data.map(e=>{
+            return {id:e.id,currency:e.currency,amount:e.amount,currency:e.currency,credits:e.metadata.credits,date:e.created}
         })
+
+        console.log("bruh",payments)
 
         return res.status(200).json({success:true,payments})
     }catch(error){
