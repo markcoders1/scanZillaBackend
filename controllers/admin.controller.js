@@ -174,7 +174,7 @@ export const getRules = async (req,res)=>{
 
 export const getTotalUsers = async (req,res)=>{
     try{
-        const users = User.find({role:"user",active:true})
+        const users = await User.countDocuments({role:"user",active:true})
         res.status(200).json({users})
     }catch(err){
         return res.status(500).json({message:"something went wrong, please try again or contact support"})
