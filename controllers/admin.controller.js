@@ -234,3 +234,20 @@ export const getUserHistory = async (req,res)=>{
         res.status(500).json({message:"something went wrong, please try again later or contact support"})
     }
 }
+
+export const getTotalIncome = async (req,res)=>{
+    try{
+        let charges = await stripe.charges.list({
+            created:{
+                gte:Date.now()-2629746000000,
+            }
+        })
+        charges = charges?.data.map(e=>e.amount)
+
+        const value = charges.reduce((a,b)=>a+b)
+        res.status(200).json({value:`$${value/100}`})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
