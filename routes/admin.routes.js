@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
-import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers} from "../controllers/admin.controller.js"
+import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers, getUserHistory} from "../controllers/admin.controller.js"
 
 const router = Router()
 
@@ -18,7 +18,7 @@ router.route('/words').delete(removeWords)
 
 router.route('/rules').post(changeRules)
 
-router.route('/getuserhistory')
+router.route('/gethistory').get(getUserHistory)
 
 router.route('/getuserpurchases')
 

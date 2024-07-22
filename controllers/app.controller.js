@@ -44,7 +44,6 @@ const containsBlacklistedWord = (paragraph) => {
     let usedWords = [];
     let containsWords = false;
 
-    // Check each blacklisted word or phrase
     for (const phrase of blacklistedWords) {
         if (lowerCaseParagraph.includes(phrase.toLowerCase())) {
             usedWords.push(phrase);
@@ -52,7 +51,6 @@ const containsBlacklistedWord = (paragraph) => {
         }
     }
 
-    // Remove duplicates
     usedWords = [...new Set(usedWords)];
     
     return { containsWords, usedWords };
@@ -77,7 +75,7 @@ const containsBlacklistedWord = (paragraph) => {
 // }
 
 
-const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
 
 console.log(obj)
 

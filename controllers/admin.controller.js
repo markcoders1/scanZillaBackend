@@ -1,6 +1,7 @@
 import fs from 'fs'
 import {User} from '../models/user.model.js'
 import Joi from 'joi';
+import { History } from '../models/history.model.js';
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -142,14 +143,14 @@ export const changeRules = async (req,res) => {
             return res.status(400).json({message:"incorrect values"})
         }
     
-        const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
     
         obj.titleCharacters = Number(titleCharacters || obj.titleCharacters)
         obj.bulletNum = Number(bulletNum || obj.bulletNum)
         obj.bulletCharacters = Number(bulletCharacters || obj.bulletCharacters)
         obj.descriptionCharacters = Number(descriptionCharacters || obj.descriptionCharacters)
     
-        fs.writeFileSync('rules.json', JSON.stringify(obj, null, 2), 'utf8');
+        fs.writeFileSync('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
         res.status(200).send({ message: 'Rules updated successfully' });
 
@@ -164,7 +165,7 @@ export const changeRules = async (req,res) => {
 
 export const getRules = async (req,res)=>{
     try{
-        const obj = JSON.parse(fs.readFileSync('rules.json', 'utf8'));
+        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
         res.status(200).json(obj)
     }catch(err){
         console.log(err)
@@ -178,5 +179,25 @@ export const getTotalUsers = async (req,res)=>{
         res.status(200).json({users})
     }catch(err){
         return res.status(500).json({message:"something went wrong, please try again or contact support"})
+    }
+}
+
+export const getUserPurchases = async (req,res)=>{
+    try{
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const getUserHistory = async (req,res)=>{
+    try{
+        const {userId} = req.query
+        const Histories = await History.find({userID:userId})
+        res.status(200).json(Histories)
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:"something went wrong, please try again later or contact support"})
     }
 }
