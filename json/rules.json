@@ -2,5 +2,7 @@
   "titleCharacters": 100,
   "bulletNum": 5,
   "bulletCharacters": 100,
-  "descriptionCharacters": 500
+  "descriptionCharacters": 500,
+  "creditCost":1,
+  "characterCost":4
 }

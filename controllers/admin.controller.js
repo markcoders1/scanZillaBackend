@@ -132,13 +132,17 @@ export const changeRules = async (req,res) => {
             bulletNum:Joi.number().min(0).message("incorrect value"),
             bulletCharacters:Joi.number().min(0).message("incorrect value"),
             descriptionCharacters:Joi.number().min(0).message("incorrect value"),
+            creditCost:Joi.number().min(0).message("incorrect value"),
+            characterCost:Joi.number().min(0).message("incorrect value")
         })
 
         const {
             titleCharacters,
             bulletNum,
             bulletCharacters,
-            descriptionCharacters
+            descriptionCharacters,
+            creditCost,
+            characterCost
         } = req.body
 
         const {error} = rulesjoi.validate(req.body, { abortEarly: false });
@@ -153,6 +157,8 @@ export const changeRules = async (req,res) => {
         obj.bulletNum = Number(bulletNum || obj.bulletNum)
         obj.bulletCharacters = Number(bulletCharacters || obj.bulletCharacters)
         obj.descriptionCharacters = Number(descriptionCharacters || obj.descriptionCharacters)
+        obj.creditCost = Number(creditCost || obj.creditCost)
+        obj.characterCost = Number(characterCost || obj.characterCost)
     
         fs.writeFileSync('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
