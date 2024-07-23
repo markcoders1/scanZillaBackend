@@ -246,3 +246,14 @@ export const changeCreditPricing = async (req,res)=>{
 
     }
 }
+
+export const getMostRecentHistory = async (req,res) =>{
+    try{
+        const history = await History.findOne({}, {}, { sort: { 'created_at' : -1 } })
+        const user = await User.findById(history.userID)
+        res.status(200).json({history,userName:user.userName})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
