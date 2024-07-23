@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default:false
     },
+    preferredCredits:{
+        type:Number,
+        default:0
+    },
     role:{
         type: String,
         default:"user"

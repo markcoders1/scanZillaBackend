@@ -158,9 +158,12 @@ export const verifyText = async (req, res) => {
         let collectiveString=title+description+bulletpoints.join('')+keywords
         const creditPrice = Math.ceil(collectiveString.length/4)
 
+        const user=await User.findOne({email:req.user.email})
+
         if(req.user.credits<creditPrice){
 
             if (req.user.autocharge==true){
+
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
                 if (!paymentId){
@@ -168,6 +171,14 @@ export const verifyText = async (req, res) => {
                 }
 
                 const offer = Offer.findOne({variant:-1})
+
+                let credits
+
+                if(user.preferredCredits=0){
+                    credits=creditPrice-req.user.credits
+                }else{
+                    credits=user.preferredCredits
+                }
 
                 const paymentIntent = await stripe.paymentIntents.create({
                     amount:(creditPrice-req.user.credits)*offer.amount,
@@ -178,16 +189,18 @@ export const verifyText = async (req, res) => {
                     confirm: true,
                     metadata:{
                         variant:-1,
-                        credits:creditPrice-req.user.credits
+                        credits
                     }
                 });
+
+                if(req.user.credits+user.preferredCredits > creditPrice){
+                    return res.status(400).json({ message: "Not enough credits, please recharge", success: false, error:{} });
+                }
 
             }else{
                 return res.status(400).json({ message: "Not enough credits, please recharge", success: false, error:{} });
             }
         }
-
-        const user=await User.findOne({email:req.user.email})
 
         user.credits-=creditPrice
         user.save()
@@ -323,8 +336,12 @@ export const verifyText = async (req, res) => {
         */
         
     } catch (error) {
-        console.log(error);
-        return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
+        if(error.code=='authentication_required'){
+            return res.status(200).json({ message: "not enough credits, autopay failed, authentication required", success: false });
+        }else{
+            console.log(error);
+            return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
+        }
     }
 };
 
@@ -541,9 +558,14 @@ export const getCardInfo = async (req,res) => {
 
 export const toggleAutoCredit = async (req,res) =>{
     try{
+        const {preferredCredits} = req.query
+        if(preferredCredits < 0){
+            return res.status(400).json({success:false, message:"preferred Credits can not be less than 0"})
+        }
         const user = await User.findOne({email:req.user.email})
         const uac = user.autocharge
         user.autocharge=!user.autocharge
+        user.preferredCredits=preferredCredits
         user.save()
         return res.status(200).json({success:true, message:`auto credits: ${uac?"off":"on"}`})
     }catch(err){

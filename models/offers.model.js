@@ -12,6 +12,9 @@ const OfferSchema = new mongoose.Schema({
     },
     amount:{
         type:Number
+    },
+    description:{
+        type:String
     }
 },
 { timestamps: false }

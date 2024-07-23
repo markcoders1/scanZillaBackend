@@ -232,18 +232,34 @@ export const getTotalIncome = async (req,res)=>{
     }
 }
 
-export const changeCreditPricing = async (req,res)=>{
+export const changeOfferPricing = async (req,res)=>{
     try{
 
         //add joi
-        const {variant, price, name, description} = req.body
+        let {variant, amount, name, description} = req.body
+        amount = amount*100
         const offer = await Offer.findOne({variant})
-        Object.assign(offer,{price,name,description})
+        offer.amount = amount||offer.amount
+        offer.name = name||offer.name
+        offer.description = description||offer.description
         
         offer.save()
+        
+        res.status(200).json({success:true})
 
     }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
 
+export const getOffers = async (req,res) => {
+    try{
+        const offers = await Offer.find()
+        res.status(200).json({success:true,offers})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
     }
 }
 
