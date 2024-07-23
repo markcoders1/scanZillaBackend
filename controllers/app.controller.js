@@ -495,7 +495,7 @@ export const BuyCreditWebhook = async (req, res) => {
 
         const variant = Number(details.metadata.variant)
 
-        user.credits += details.metadata.credits;
+        user.credits = Number(user.credits) + Number(details.metadata.credits);
         await user.save();
 
         return res.status(200).json({ success: true, credits: user.credits });
