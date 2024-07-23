@@ -125,7 +125,7 @@ export const Oauth = async (req,res)=>{
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
 
-        let user = await User.findOne({email:decodedToken.email})
+        let user = await User.findOne({email:decodedToken.email}).select('-password')
 
         if (!user){
             user = await User.create({
@@ -133,7 +133,6 @@ export const Oauth = async (req,res)=>{
                 email:decodedToken.email,
                 password: `!${Date.now()}! !${Math.floor(Math.random() * 100)}!`
             })
-
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -146,10 +145,11 @@ export const Oauth = async (req,res)=>{
                "message":"logged in successfully",
                accessToken,
                refreshToken,
+               success:true,
                username:user.userName,
                email:user.email,
                credits:user.credits,
-               success:true
+               ...user._doc
             })
 
     } catch (error) {

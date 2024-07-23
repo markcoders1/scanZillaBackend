@@ -1,6 +1,23 @@
 import { Router } from "express";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
-import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords, changeRules, getRules, getTotalUsers, getUserHistory, getUserPurchases, getTotalIncome,changeOfferPricing,getMostRecentHistory, getOffers} from "../controllers/admin.controller.js"
+import {
+    getAllUsers, 
+    toggleUserAccount, 
+    getUser, 
+    getWords, 
+    addWords, 
+    removeWords, 
+    changeRules, 
+    getRules, 
+    getTotalUsers, 
+    getUserHistory, 
+    getUserPurchases, 
+    getTotalIncome,
+    changeOfferPricing,
+    getMostRecentHistory, 
+    getOffers, 
+    giveUserCredits
+} from "../controllers/admin.controller.js"
 
 const router = Router()
 
@@ -33,5 +50,7 @@ router.route('/offers').post(verifyJWT, verifyAdmin, changeOfferPricing)
 router.route('/offers').get(verifyJWT, verifyAdmin, getOffers)
 
 router.route('/getRecentHistory').get(verifyJWT, verifyAdmin, getMostRecentHistory)
+
+router.route('/givecredits').post(verifyJWT, verifyAdmin, giveUserCredits)
 
 export default router

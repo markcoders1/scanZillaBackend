@@ -11,7 +11,6 @@ export const getAllUsers = async (req, res) => {
     try {
 
         const result = await User.find().select("-password -refreshToken -__v");
-        console.log(result);
         return res.status(200).json(result);
     } catch (error) {
         console.log(error);
@@ -40,12 +39,10 @@ export const getUser = async (req, res) => {
     try {
         const userId = req.query.id;
         if (typeof userId !== "string") {
-            console.log("ID must be string");
             return res.status(401).json({ message: "ID must be string" });
         }
         const user = await User.findById(userId);
         if (!user) {
-            console.log("user does not exist");
             return res.status(401).json({ message: "user does not exist" });
         }
         console.log(user);
@@ -93,9 +90,16 @@ export const getWords= async (req,res)=>{
 }
 
 export const addWords = async (req,res) => {
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
     const newWord = req.body.word;
-    if (!newWord) {
-        return res.status(400).json({ error: 'No word provided' });
+    const {error} = wordjoi.validate(newWord)
+
+    if (error){
+        return res.status(400).json({success:false,message: error.details[0].message})
     }
 
     try {
@@ -112,6 +116,18 @@ export const addWords = async (req,res) => {
 
 export const removeWords = async (req,res) =>{
     const wordToRemove = req.query.word;
+
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
+
+    const {error} = wordjoi.validate(wordToRemove)
+
+    if(error){
+        return res.status(400).json({success:false,message:"word invalid"})
+    }
 
     try {
         let words = await getWordsFromFile();
@@ -241,8 +257,20 @@ export const getTotalIncome = async (req,res)=>{
 export const changeOfferPricing = async (req,res)=>{
     try{
 
-        //add joi
+        const offerJoi = Joi.object({
+            variant:Joi.number().min(-1),
+            amount:Joi.number().min(100),
+            name:Joi.string().min(2).max(20),
+            description:Joi.string.min(10)
+        })
+
+        const {error} = offerJoi.validate(req.body)
+        if (error){
+            return res.status(400).json({success:false, message:"data invalid"})
+        }
+
         let {variant, amount, name, description} = req.body
+
         amount = amount*100
         const offer = await Offer.findOne({variant})
         offer.amount = amount||offer.amount
@@ -274,6 +302,20 @@ export const getMostRecentHistory = async (req,res) =>{
         const history = await History.findOne({}, {}, { sort: { 'created_at' : -1 } })
         const user = await User.findById(history.userID)
         res.status(200).json({history,userName:user.userName})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const giveUserCredits = async (req,res) => {
+    try{
+        const {userId,credits} = req.body
+        const user = await User.findById(userId)
+
+        user.credits+=credits
+        user.save()
+
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})

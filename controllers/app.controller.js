@@ -79,8 +79,6 @@ const containsBlacklistedWord = (paragraph) => {
 
 const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
 
-console.log(obj)
-
 
 const verifyTextJoi = Joi.object({
 
@@ -547,8 +545,6 @@ export const getCardInfo = async (req,res) => {
             return res.status(200).json({message:"no customer detected"})
         }
         const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
-
-        console.log(paymentMethods)
 
         // console.log(req.user,paymentMethods)
         const cards=paymentMethods.data.map(e=>{
