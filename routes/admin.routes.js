@@ -4,34 +4,34 @@ import {getAllUsers, toggleUserAccount, getUser, getWords, addWords, removeWords
 
 const router = Router()
 
-router.route("/getAllUsers").get(getAllUsers)
+router.route("/getAllUsers").get(verifyJWT, verifyAdmin, getAllUsers)
 
-router.route("/toggleUserAccount").get(toggleUserAccount)
+router.route("/toggleUserAccount").get(verifyJWT, verifyAdmin, toggleUserAccount)
 
-router.route("/getspecificUser").get(getUser)
+router.route("/getspecificUser").get(verifyJWT, verifyAdmin, getUser)
 
-router.route('/words').get(getWords)
+router.route('/words').get(verifyJWT, verifyAdmin, getWords)
 
-router.route('/words').post(addWords)
+router.route('/words').post(verifyJWT, verifyAdmin, addWords)
 
-router.route('/words').delete(removeWords)
+router.route('/words').delete(verifyJWT, verifyAdmin, removeWords)
 
-router.route('/rules').post(changeRules)
+router.route('/rules').post(verifyJWT, verifyAdmin, changeRules)
 
-router.route('/gethistory').get(getUserHistory)
+router.route('/gethistory').get(verifyJWT, verifyAdmin, getUserHistory)
 
-router.route('/getuserpurchases').get(getUserPurchases)
+router.route('/getuserpurchases').get(verifyJWT, verifyAdmin, getUserPurchases)
 
-router.route('/rules').get(getRules)
+router.route('/rules').get(verifyJWT, verifyAdmin, getRules)
 
-router.route('/getTotalUsers').get(getTotalUsers)
+router.route('/getTotalUsers').get(verifyJWT, verifyAdmin, getTotalUsers)
 
-router.route('/getTotalIncome').get(getTotalIncome)
+router.route('/getTotalIncome').get(verifyJWT, verifyAdmin, getTotalIncome)
 
-router.route('/offers').post(changeOfferPricing)
+router.route('/offers').post(verifyJWT, verifyAdmin, changeOfferPricing)
 
-router.route('/offers').get(getOffers)
+router.route('/offers').get(verifyJWT, verifyAdmin, getOffers)
 
-router.route('/getRecentHistory').get(getMostRecentHistory)
+router.route('/getRecentHistory').get(verifyJWT, verifyAdmin, getMostRecentHistory)
 
 export default router
