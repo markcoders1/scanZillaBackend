@@ -156,7 +156,11 @@ export const verifyText = async (req, res) => {
 
 
         let collectiveString=title+description+bulletpoints.join('')+keywords
-        const creditPrice = Math.ceil(collectiveString.length/4)
+        // const creditPrice = (Math.ceil(collectiveString.length/obj.characterCost)) * obj.creditCost
+
+        const fullChunks = Math.floor(collectiveString.length / obj.characterCost);
+        const partialChunk = collectiveString.length % obj.characterCost > 0 ? 1 : 0;
+        const creditPrice = (fullChunks * obj.creditCost) + (partialChunk * Math.ceil(obj.creditCost / 2));
 
         const user=await User.findOne({email:req.user.email})
 
