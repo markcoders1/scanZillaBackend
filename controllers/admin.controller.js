@@ -316,6 +316,8 @@ export const giveUserCredits = async (req,res) => {
         user.credits+=Number(credits)
         user.save()
 
+        return res.status(200).json({success:true})
+
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
