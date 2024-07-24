@@ -146,10 +146,15 @@ export const Oauth = async (req,res)=>{
                accessToken,
                refreshToken,
                success:true,
-               username:user.userName,
+               userName:user.userName,
                email:user.email,
                credits:user.credits,
-               ...user._doc
+               role:user.role,
+               customerId:user.customerId,
+               credits:user.credits,
+               autocharge:user.autocharge,
+               active:user.active,
+               preferredCredits:user.preferredCredits
             })
 
     } catch (error) {
@@ -168,7 +173,7 @@ export const refreshAccessToken = (req,res)=>{
             const user = await User.findOne({email:decoded.email})
             if(user.refreshToken!==refreshToken) return res.sendStatus(403);
 
-            const accessToken =jwt.sign({email:decoded.email},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15s"})
+            const accessToken =jwt.sign({email:decoded.email},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15m"})
             res.status(200).json({message:"access Token refreshed",accessToken})
 
         })

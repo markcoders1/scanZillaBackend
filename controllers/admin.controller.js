@@ -313,7 +313,7 @@ export const giveUserCredits = async (req,res) => {
         const {userId,credits} = req.body
         const user = await User.findById(userId)
 
-        user.credits+=credits
+        user.credits+=Number(credits)
         user.save()
 
     }catch(err){
