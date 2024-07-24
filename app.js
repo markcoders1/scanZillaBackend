@@ -37,7 +37,7 @@ app.use(express.static("public"));
 
 //rate limits
 
-// app.use('/',defaultLimiter)
+app.use('/',defaultLimiter)
 
 // routes declaration
 
