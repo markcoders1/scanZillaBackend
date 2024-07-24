@@ -51,6 +51,6 @@ router.route('/offers').get(verifyJWT, verifyAdmin, getOffers)
 
 router.route('/getRecentHistory').get(verifyJWT, verifyAdmin, getMostRecentHistory)
 
-router.route('/givecredits').post(verifyJWT, verifyAdmin, giveUserCredits)
+router.route('/givecredits').post(giveUserCredits)
 
 export default router

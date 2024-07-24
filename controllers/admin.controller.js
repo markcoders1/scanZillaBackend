@@ -215,7 +215,7 @@ export const getUserPurchases = async (req,res)=>{
 
         const charges = await stripe.charges.list({customer:user.customerId})
 
-        const payments = charges.data.map(async e=>{
+        const payments = charges.data.map(e=>{
             return {id:e.id,currency:e.currency,amount:e.amount,credits:e.metadata.credits,date:e.created}
         })
         return res.status(200).json({success:true,payments})
@@ -310,10 +310,17 @@ export const getMostRecentHistory = async (req,res) =>{
 
 export const giveUserCredits = async (req,res) => {
     try{
-        const {userId,credits} = req.body
+        let {userId,credits} = req.body
+
+        if (!userId||!credits){
+            return res.status(400).json({message:"values not found"})
+        }
+
         const user = await User.findById(userId)
 
-        user.credits+=Number(credits)
+        credits = Number(credits)
+
+        user.credits+=credits
         user.save()
 
         return res.status(200).json({success:true, userCredits:user.credits, message:`you have successfully sent ${credits} credits to user: ${user.userName}`})
