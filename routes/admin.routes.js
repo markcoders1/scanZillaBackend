@@ -45,7 +45,7 @@ router.route('/getTotalUsers').get(verifyJWT, verifyAdmin, getTotalUsers)
 
 router.route('/getTotalIncome').get(verifyJWT, verifyAdmin, getTotalIncome)
 
-router.route('/offers').post(verifyJWT, verifyAdmin, changeOfferPricing)
+router.route('/offers').post(changeOfferPricing)
 
 router.route('/offers').get(verifyJWT, verifyAdmin, getOffers)
 

@@ -261,7 +261,7 @@ export const changeOfferPricing = async (req,res)=>{
             variant:Joi.number().min(-1),
             amount:Joi.number().min(100),
             name:Joi.string().min(2).max(20),
-            description:Joi.string.min(10)
+            description:Joi.string().min(10)
         })
 
         const {error} = offerJoi.validate(req.body)
