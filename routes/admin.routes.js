@@ -15,7 +15,6 @@ import {
     getTotalIncome,
     changeOfferPricing,
     getMostRecentHistory, 
-    getOffers, 
     giveUserCredits
 } from "../controllers/admin.controller.js"
 
@@ -46,8 +45,6 @@ router.route('/getTotalUsers').get(verifyJWT, verifyAdmin, getTotalUsers)
 router.route('/getTotalIncome').get(verifyJWT, verifyAdmin, getTotalIncome)
 
 router.route('/offers').post(changeOfferPricing)
-
-router.route('/offers').get(verifyJWT, verifyAdmin, getOffers)
 
 router.route('/getRecentHistory').get(verifyJWT, verifyAdmin, getMostRecentHistory)
 

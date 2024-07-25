@@ -287,16 +287,6 @@ export const changeOfferPricing = async (req,res)=>{
     }
 }
 
-export const getOffers = async (req,res) => {
-    try{
-        const offers = await Offer.find()
-        res.status(200).json({success:true,offers})
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
-    }
-}
-
 export const getMostRecentHistory = async (req,res) =>{
     try{
         const history = await History.findOne({}, {}, { sort: { 'created_at' : -1 } })

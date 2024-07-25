@@ -605,3 +605,13 @@ export const getGraphData = async (req,res) =>{
         console.log(err)
     }
 }
+
+export const getOffers = async (req,res) => {
+    try{
+        const offers = await Offer.find()
+        res.status(200).json({success:true,offers})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
