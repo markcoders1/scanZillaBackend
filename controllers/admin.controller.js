@@ -237,17 +237,73 @@ export const getUserHistory = async (req,res)=>{
     }
 }
 
-export const getTotalIncome = async (req,res)=>{
+
+export const getIncome = async (req,res)=>{
     try{
-        let charges = await stripe.charges.list({
-            created:{
-                gte:Date.now()-2629746000000,
+        let charges = [];
+        let hasMore = true;
+        let lastId = null;
+        let now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000;
+
+        console.log('1')
+        const start = Date.now()
+        
+        while (hasMore) {
+            let response
+
+            if(lastId){
+                response = await stripe.charges.list({
+                    created: {
+                        gte: startOfMonth
+                    },
+                    limit: 100,
+                    starting_after: lastId
+                });
+
+            }else{
+                response = await stripe.charges.list({
+                    created: {
+                        gte: startOfMonth
+                    },
+                    limit: 100,
+                });
             }
+        
+            charges = charges.concat(response.data);
+            hasMore = response.has_more;
+            if (hasMore) {
+                lastId = response.data[response.data.length - 1].id;
+            }
+        }
+
+        console.log()
+
+
+        let graphdata = charges.map(e=>{
+            let datecreated = new Date(e.created*1000)
+            return {amount:e.amount,createdAt:datecreated.getDate()}
         })
-        charges = charges?.data.map(e=>e.amount)
+
+        let aggregatedData = graphdata.reduce((acc, curr) => {
+            if (!acc[curr.createdAt]) {
+                acc[curr.createdAt] = 0;
+            }
+            acc[curr.createdAt] += curr.amount;
+            return acc;
+        }, {});
+        
+        let latestDate = Math.max(...graphdata.map(item => item.createdAt));
+        let result = [];
+        
+        for (let i = 1; i <= latestDate; i++) {
+            result.push({ amount: aggregatedData[i] || 0, createdAt: i });
+        }
+
+        charges = graphdata.map(e=>e.amount)
 
         const value = charges.reduce((a,b)=>a+b)
-        res.status(200).json({value:`$${value/100}`})
+        res.status(200).json({value:`$${value/100}`,result})
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
@@ -261,7 +317,8 @@ export const changeOfferPricing = async (req,res)=>{
             variant:Joi.number().min(-1),
             amount:Joi.number().min(100),
             name:Joi.string().min(2).max(20),
-            description:Joi.string().min(10)
+            description:Joi.string().min(10),
+            credits:Joi.number().min(10)
         })
 
         const {error} = offerJoi.validate(req.body)
@@ -276,22 +333,12 @@ export const changeOfferPricing = async (req,res)=>{
         offer.amount = amount||offer.amount
         offer.name = name||offer.name
         offer.description = description||offer.description
+        offer.credits = credits||offer.credits
         
         offer.save()
         
         res.status(200).json({success:true})
 
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
-    }
-}
-
-export const getMostRecentHistory = async (req,res) =>{
-    try{
-        const history = await History.findOne({}, {}, { sort: { 'created_at' : -1 } })
-        const user = await User.findById(history.userID)
-        res.status(200).json({history,userName:user.userName})
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
@@ -318,5 +365,14 @@ export const giveUserCredits = async (req,res) => {
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const getIncomeGraph = async (req,res)=>{
+    try{
+        
+    }catch(error){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})   
     }
 }
