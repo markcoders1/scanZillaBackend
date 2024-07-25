@@ -415,3 +415,29 @@ export const getAssInstructions = async (req,res) => {
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
     }
 }
+
+export const updateAssInstructions = async (req,res) =>{
+    try{
+        const {titleDo,titleDont,descriptionDo,descriptionDont,bulletsDo,bulletsDont} = req.body
+        const instructions = JSON.parse(fs.readFileSync('json/AI.rules.json', 'utf8'))
+
+        instructions.title.Dos = titleDo
+        instructions.title.Donts = titleDont
+        instructions.description.Dos = descriptionDo
+        instructions.description.Donts = descriptionDont
+        instructions.bullets.Dos = bulletsDo
+        instructions.bullets.Donts = bulletsDont
+
+        fs.writeFileSync('json/AI.rules.json', JSON.stringify(instructions, null, 2), 'utf8');
+
+        await openai.beta.assistants.update(
+            assId,
+            {
+              instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos}      DONTs: ${instructions.title.Donts}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos}      DONTs: ${instructions.description.Donts}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos}      DONTs: ${instructions.bullets.Donts}`,
+            }
+          );
+    }catch(error){
+        console.log(error)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}

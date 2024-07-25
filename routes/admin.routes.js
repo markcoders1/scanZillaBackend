@@ -17,6 +17,7 @@ import {
     toggleUserAccount, 
     changeOfferPricing,
     getAssInstructions,
+    updateAssInstructions
 } from "../controllers/admin.controller.js"
 
 const router = Router()
@@ -43,14 +44,16 @@ router.route('/rules').get(verifyJWT, verifyAdmin, getRules)
 
 router.route('/getTotalUsers').get(verifyJWT, verifyAdmin, getTotalUsers)
 
-router.route('/getIncome').get(getIncome)
+router.route('/getIncome').get(verifyJWT, verifyAdmin, getIncome)
 
-router.route('/offers').post(changeOfferPricing)
+router.route('/offers').post(verifyJWT, verifyAdmin, changeOfferPricing)
 
-router.route('/givecredits').post(giveUserCredits)
+router.route('/givecredits').post(verifyJWT, verifyAdmin, giveUserCredits)
 
-router.route('/analysisgraph').get(analysisgraph)
+router.route('/analysisgraph').get(verifyJWT, verifyAdmin, analysisgraph)
 
-router.route('/assistant').get(getAssInstructions)
+router.route('/assistant').get(verifyJWT, verifyAdmin, getAssInstructions)
+
+router.route('/assistant').post(verifyJWT, verifyAdmin, updateAssInstructions)
 
 export default router
