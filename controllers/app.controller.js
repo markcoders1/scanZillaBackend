@@ -559,6 +559,7 @@ export const getCardInfo = async (req,res) => {
 export const toggleAutoCredit = async (req,res) =>{
     try{
         const {preferredCredits} = req.query
+        console.log(preferredCredits)
         if(preferredCredits < 0){
             return res.status(400).json({success:false, message:"preferred Credits can not be less than 0"})
         }
