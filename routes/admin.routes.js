@@ -1,20 +1,22 @@
 import { Router } from "express";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
 import {
-    getAllUsers, 
-    toggleUserAccount, 
     getUser, 
     getWords, 
-    addWords, 
-    removeWords, 
-    changeRules, 
-    getRules, 
-    getTotalUsers, 
-    getUserHistory, 
-    getUserPurchases, 
+    addWords,
+    getRules,
     getIncome,
+    removeWords, 
+    changeRules,  
+    getAllUsers, 
+    getTotalUsers, 
+    analysisgraph, 
+    getUserHistory, 
+    giveUserCredits,
+    getUserPurchases, 
+    toggleUserAccount, 
     changeOfferPricing,
-    giveUserCredits
+    getAssInstructions,
 } from "../controllers/admin.controller.js"
 
 const router = Router()
@@ -46,5 +48,9 @@ router.route('/getIncome').get(getIncome)
 router.route('/offers').post(changeOfferPricing)
 
 router.route('/givecredits').post(giveUserCredits)
+
+router.route('/analysisgraph').get(analysisgraph)
+
+router.route('/assistant').get(getAssInstructions)
 
 export default router

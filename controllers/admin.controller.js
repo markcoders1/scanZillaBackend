@@ -4,8 +4,16 @@ import Joi from 'joi';
 import { History } from '../models/history.model.js';
 import { Offer } from '../models/offers.model.js';
 import Stripe from 'stripe';
+import dotenv from 'dotenv'
+import OpenAI from 'openai';
+
+dotenv.config()
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+const openai = new OpenAI(process.env.OPENAI_API_KEY)
+
+const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
+
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -368,11 +376,42 @@ export const giveUserCredits = async (req,res) => {
     }
 }
 
-export const getIncomeGraph = async (req,res)=>{
+export const analysisgraph = async (req,res)=>{
     try{
+        const now = new Date()
+        const disMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000
+        let histories = await History.find({createdAt: {$gte:disMonth}})
+        console.log(histories)
+        histories = histories.map(e=>{
+            const date = new Date(e.createdAt)
+            return date.getDate()
+        })
+
+        const maxNumber = Math.max(...histories);
+        const counts = Array(maxNumber).fill(0);
         
+        histories.forEach(num => {
+            counts[num - 1]++;
+        });
+        
+        const result = counts.map((count, index) => ({
+            date: index + 1,
+            analysis: count
+        }));
+
+        res.status(200).json(result)
     }catch(error){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})   
+        console.log(error)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const getAssInstructions = async (req,res) => {
+    try{
+        const instructions = JSON.parse(fs.readFileSync('json/AI.rules.json', 'utf8'))
+        res.status(200).json({title:instructions.title,description:instructions.description,bullets:instructions.bullets})
+    }catch(error){
+        console.log(error)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
     }
 }
