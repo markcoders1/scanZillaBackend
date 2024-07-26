@@ -421,12 +421,12 @@ export const updateAssInstructions = async (req,res) =>{
         const {titleDo,titleDont,descriptionDo,descriptionDont,bulletsDo,bulletsDont} = req.body
         const instructions = JSON.parse(fs.readFileSync('json/AI.rules.json', 'utf8'))
 
-        instructions.title.Dos = titleDo
-        instructions.title.Donts = titleDont
-        instructions.description.Dos = descriptionDo
-        instructions.description.Donts = descriptionDont
-        instructions.bullets.Dos = bulletsDo
-        instructions.bullets.Donts = bulletsDont
+        instructions.title.Dos = titleDo || instructions.title.Dos
+        instructions.title.Donts = titleDont || instructions.title.Donts
+        instructions.description.Dos = descriptionDo || instructions.description.Dos
+        instructions.description.Donts = descriptionDont || instructions.description.Donts
+        instructions.bullets.Dos = bulletsDo || instructions.bullets.Dos
+        instructions.bullets.Donts = bulletsDont || instructions.bullets.Donts
 
         fs.writeFileSync('json/AI.rules.json', JSON.stringify(instructions, null, 2), 'utf8');
 
