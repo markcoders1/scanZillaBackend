@@ -92,6 +92,10 @@ export const loginUser = async (req,res)=>{
          return res.status(400).send({message:"user not found",success:false,errorType:"email"})
         }
 
+        if (!user.active) {
+            return res.status(400).send({message:"user has been blocked",success:false})
+        }
+
         const isPasswordValid = await user.isPasswordCorrect(password);
         if (!isPasswordValid) {
             return res.status(400).json({message:"email or password incorrect",success:false,errorType:"password"})
@@ -133,6 +137,10 @@ export const Oauth = async (req,res)=>{
                 email:decodedToken.email,
                 password: `!${Date.now()}! !${Math.floor(Math.random() * 100)}!`
             })
+        }
+
+        if (!user.active) {
+            return res.status(400).send({message:"user has been blocked",success:false})
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
