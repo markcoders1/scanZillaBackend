@@ -472,6 +472,23 @@ export const buyCredits = async (req, res) => {
     }
 };
 
+export const addPaymentMethod = async (req,res) =>{
+    try{
+        const user = await User.findOne({email:req.user.email})
+
+
+        const setupIntent = await stripe.setupIntents.create({
+          customer: user.customerId,
+          automatic_payment_methods: {enabled: true,},
+        });
+        console.log(setupIntent)
+        res.status(200).json({success:true, clientSecret:setupIntent.client_secret})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 export const BuyCreditWebhook = async (req, res) => {
     try {
         const details = req.body.data.object;
