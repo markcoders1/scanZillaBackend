@@ -491,7 +491,6 @@ export const addPaymentMethod = async (req,res) =>{
         const setupIntent = await stripe.setupIntents.create({
           customer: req.user.customerId,
           automatic_payment_methods: {enabled: true,},
-          attach_to_self:true
         });
         console.log(setupIntent)
         res.status(200).json({success:true, clientSecret:setupIntent.client_secret})
