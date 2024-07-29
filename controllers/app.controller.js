@@ -198,7 +198,7 @@ export const verifyText = async (req, res) => {
 
                 user=await User.findOne({email:req.user.email})
 
-                if(user.credits+user.preferredCredits < creditPrice){
+                if(user.credits+credits < creditPrice){
                     return res.status(400).json({ message: "your Auto Credits are not enough to cover for this analyzation, please recharge", success: false, error:{} });
                 }
 
