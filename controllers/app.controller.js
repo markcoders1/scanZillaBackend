@@ -543,7 +543,7 @@ export const getPurchaseHistory = async (req,res) => {
     try{
         const {customerId} = req.user
         if(!customerId){
-            return res.status(400).json({message:"no customer Id given"})
+            return res.status(200).json({message:"no customer Id given",payments:[]})
         }
         const charges = await stripe.charges.list({customer:customerId})
 
