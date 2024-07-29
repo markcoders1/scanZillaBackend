@@ -160,7 +160,7 @@ export const verifyText = async (req, res) => {
         const partialChunk = collectiveString.length % obj.characterCost;
         const creditPrice = Math.ceil((fullChunks * obj.creditCost) + (partialChunk > 0 ? (partialChunk / obj.characterCost) * obj.creditCost : 0));
 
-        const user=await User.findOne({email:req.user.email})
+        let user=await User.findOne({email:req.user.email})
 
         if(req.user.credits<creditPrice){
 
@@ -168,16 +168,17 @@ export const verifyText = async (req, res) => {
 
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
+                
                 if (!paymentId){
                     return res.status(400).json({ message: "Not enough credits, please recharge", success: false });
                 }
 
-                const offer = Offer.findOne({variant:-1})
+                const offer = await Offer.findOne({variant:-1})
 
                 let credits
 
-                if(user.preferredCredits=0){
-                    credits=creditPrice-req.user.credits
+                if(user.preferredCredits<=0){
+                    credits=creditPrice-user.credits
                 }else{
                     credits=user.preferredCredits
                 }
@@ -195,8 +196,10 @@ export const verifyText = async (req, res) => {
                     }
                 });
 
-                if(req.user.credits+user.preferredCredits > creditPrice){
-                    return res.status(400).json({ message: "Not enough credits, please recharge", success: false, error:{} });
+                user=await User.findOne({email:req.user.email})
+
+                if(user.credits+user.preferredCredits < creditPrice){
+                    return res.status(400).json({ message: "your Auto Credits are not enough to cover for this analyzation, please recharge", success: false, error:{} });
                 }
 
             }else{
@@ -210,6 +213,9 @@ export const verifyText = async (req, res) => {
         const { error } = verifyTextJoi.validate({ title, description, bulletpoints, keywords, category }, { abortEarly: false });
 
         if (error) {
+
+            console.log(error.details)
+
             let errObj = {
                 TE: "",
                 DE: "",
