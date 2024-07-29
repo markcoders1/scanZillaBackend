@@ -435,7 +435,9 @@ export const updateAssInstructions = async (req,res) =>{
             {
               instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos}      DONTs: ${instructions.title.Donts}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos}      DONTs: ${instructions.description.Donts}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos}      DONTs: ${instructions.bullets.Donts}`,
             }
-          );
+        );
+
+        res.status(200).json({success:true, message:"AI rules changed successfully", instructions})
     }catch(error){
         console.log(error)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
