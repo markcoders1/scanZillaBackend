@@ -476,9 +476,20 @@ export const addPaymentMethod = async (req,res) =>{
     try{
         const user = await User.findOne({email:req.user.email})
 
+        if(!user.customerId){
+            const customer = await stripe.customers.create({
+                email: req.user.email,
+                name: req.user.userName,
+            });
+    
+            user.customerId=customer.id
+            req.user.customerId=customer.id
+            user.save()
+            console.log(user)
+        }
 
         const setupIntent = await stripe.setupIntents.create({
-          customer: user.customerId,
+          customer: req.user.customerId,
           automatic_payment_methods: {enabled: true,},
           attach_to_self:true
         });
