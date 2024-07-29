@@ -323,24 +323,25 @@ export const changeOfferPricing = async (req,res)=>{
 
         const offerJoi = Joi.object({
             variant:Joi.number().min(-1),
-            amount:Joi.number().min(100),
-            name:Joi.string().min(2).max(20),
-            description:Joi.string().min(10),
-            credits:Joi.number().min(10)
+            amount:Joi.number().min(0),
+            name:Joi.string().min(0).max(20),
+            buttonText:Joi.string().min(0),
+            credits:Joi.number().min(0)
         })
 
         const {error} = offerJoi.validate(req.body)
         if (error){
+            console.log(error)
             return res.status(400).json({success:false, message:"data invalid"})
         }
 
-        let {variant, amount, name, description} = req.body
+        let {variant, amount, name, buttonText, credits} = req.body
 
         amount = amount*100
         const offer = await Offer.findOne({variant})
         offer.amount = amount||offer.amount
         offer.name = name||offer.name
-        offer.description = description||offer.description
+        offer.buttonText = buttonText||offer.buttonText
         offer.credits = credits||offer.credits
         
         offer.save()

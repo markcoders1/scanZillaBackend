@@ -13,7 +13,7 @@ const OfferSchema = new mongoose.Schema({
     amount:{
         type:Number
     },
-    description:{
+    buttonText:{
         type:String
     }
 },
