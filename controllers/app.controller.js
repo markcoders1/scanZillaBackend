@@ -548,11 +548,12 @@ export const getPurchaseHistory = async (req,res) => {
         const charges = await stripe.charges.list({customer:customerId})
 
         
-        const payments = charges.data.map(e=>{
-            return {id:e.id,currency:e.currency,amount:e.amount,currency:e.currency,credits:e.metadata.credits,date:e.created}
+        
+        let payments = charges.data.map(e=>{
+            return {id:e.id,currency:e.currency,amount:e.amount,currency:e.currency,credits:e.metadata.credits,date:e.created,status:e.status}
         })
 
-        console.log("bruh",payments)
+        payments = payments.filter(e=>e.status==='succeeded')
 
         return res.status(200).json({success:true,payments})
     }catch(error){
