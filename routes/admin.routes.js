@@ -1,5 +1,5 @@
 import { Router } from "express";
-import express from 'express'
+import multer from "multer"
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
 import {
     getUser, 
@@ -14,14 +14,16 @@ import {
     analysisgraph, 
     getUserHistory, 
     giveUserCredits,
-    getUserPurchases, 
+    getUserPurchases,
     toggleUserAccount, 
     changeOfferPricing,
     getAssInstructions,
     updateAssInstructions,
-    uploadCsv
+    uploadCsv,
+    downloadCsv
 } from "../controllers/admin.controller.js"
 
+const upload = multer({ dest: './' });
 const router = Router()
 
 router.route("/getAllUsers").get(verifyJWT, verifyAdmin, getAllUsers)
@@ -58,7 +60,9 @@ router.route('/assistant').post(verifyJWT, verifyAdmin, updateAssInstructions)
 
 router.route('/makeAdmin').get(verifyJWT,verifyAdmin,makeAdmin)
 
-router.route('/uploadcsv').post(uploadCsv)
+router.route('/csv').post(upload.single('file'),uploadCsv)
+
+router.route('/csv').get(downloadCsv)
 
 
 export default router

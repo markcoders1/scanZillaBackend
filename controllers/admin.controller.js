@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import OpenAI from 'openai';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
+import multer from 'multer';
 
 
 dotenv.config()
@@ -65,9 +66,10 @@ export const getUser = async (req, res) => {
 };
 
 
-const getWordsFromFile = async () => {
+const getWordsFromFile = async (filepath) => {
     try {
-        const fileContent = await fs.readFile("blacklistedWords.csv");
+        let path = filepath || "blacklistedWords.csv"
+        const fileContent = await fs.readFile(path);
         const words = parse(fileContent).map(row => row[0]);
         return words;
     } catch (error) {
@@ -155,8 +157,21 @@ export const removeWords = async (req,res) =>{
 
 export const uploadCsv = async (req,res) => {
     try{
-        console.log(req)
-        res.status(200).json({message:"uploaded csv successfully"})
+        if(req.file.mimetype!="text/csv"){
+            return res.status(400).json({message:"incorrect filetype",success:false})
+        }
+        const words = await getWordsFromFile(req.file.path)
+        await fs.rm(`./${req.file.path}`)
+        await writeWordsToFile(words)
+        res.status(200).json({message:"uploaded csv successfully",words})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const downloadCsv = async (req,res)=>{
+    try{
+        res.download("./blacklistedWords.csv")
     }catch(error){
         console.log(error)
     }
