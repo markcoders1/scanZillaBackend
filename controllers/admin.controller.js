@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'fs/promises'
 import {User} from '../models/user.model.js'
 import Joi from 'joi';
 import { History } from '../models/history.model.js';
@@ -6,6 +6,9 @@ import { Offer } from '../models/offers.model.js';
 import Stripe from 'stripe';
 import dotenv from 'dotenv'
 import OpenAI from 'openai';
+import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
+
 
 dotenv.config()
 
@@ -62,33 +65,32 @@ export const getUser = async (req, res) => {
 };
 
 
-const getWordsFromFile = () => {
-    return new Promise((resolve, reject) => {
-        fs.readFile("blacklistedWords.txt", 'utf8', (err, data) => {
-            if (err) {
-                return reject(err);
-            }
-            const words = data.split(/[^\S ]+/);
-            resolve(words);
-        });
-    });
+const getWordsFromFile = async () => {
+    try {
+        const fileContent = await fs.readFile("blacklistedWords.csv");
+        const words = parse(fileContent).map(row => row[0]);
+        return words;
+    } catch (error) {
+        console.log(error);
+        throw new Error('Failed to read words from file');
+    }
 };
 
 const writeWordsToFile = async (words) => {
     try {
-        const data = words.join('\n');
-        await fs.writeFile("blacklistedWords.txt", data,(err)=>{
-            if(err) console.log(err)
+        const data = stringify(words.map(word => [word]));
+        await fs.writeFile("blacklistedWords.csv", data, (err) => {
+            if (err) console.log(err);
         });
     } catch (error) {
-        console.log(error)
+        console.log(error);
         throw new Error('Failed to write words to file');
     }
 };
 
 export const getWords= async (req,res)=>{
     try {
-        const words = await getWordsFromFile();
+        const words = await getWordsFromFile("blacklistedWords.csv");
         res.status(200).json(words);
     } catch (error) {
         console.log(error)
@@ -197,16 +199,6 @@ export const changeRules = async (req,res) => {
 
 }
 
-export const getRules = async (req,res)=>{
-    try{
-        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
-        res.status(200).json(obj)
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again or contact support"})
-    }
-}
-
 export const getTotalUsers = async (req,res)=>{
     try{
         const users = await User.countDocuments({role:"user",active:true})
@@ -253,29 +245,15 @@ export const getIncome = async (req,res)=>{
         let lastId = null;
         let now = new Date()
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000;
-
-        console.log('1')
         const start = Date.now()
         
         while (hasMore) {
             let response
 
             if(lastId){
-                response = await stripe.charges.list({
-                    created: {
-                        gte: startOfMonth
-                    },
-                    limit: 100,
-                    starting_after: lastId
-                });
-
+                response = await stripe.charges.list({ created: { gte: startOfMonth }, limit: 100, starting_after: lastId });
             }else{
-                response = await stripe.charges.list({
-                    created: {
-                        gte: startOfMonth
-                    },
-                    limit: 100,
-                });
+                response = await stripe.charges.list({ created: { gte: startOfMonth }, limit: 100, });
             }
         
             charges = charges.concat(response.data);
@@ -310,8 +288,11 @@ export const getIncome = async (req,res)=>{
 
         charges = graphdata.map(e=>e.amount)
 
-        const value = charges.reduce((a,b)=>a+b)
-        res.status(200).json({value:`$${value/100}`,result})
+        let value = charges.reduce((a,b)=>a+b)
+        value = value/100
+        value = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+        res.status(200).json({value,result})
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
@@ -439,6 +420,19 @@ export const updateAssInstructions = async (req,res) =>{
         );
 
         res.status(200).json({success:true, message:"AI rules changed successfully", instructions})
+    }catch(error){
+        console.log(error)
+        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const makeAdmin = async (req,res) =>{
+    try{
+        const { userId } = req.query
+        const user = await User.findById(userId)
+        user.role=="user"?user.role="admin":user.role="user"
+        user.save()
+        res.status(200).json({success:true,message:"user toggled admin successfully"})
     }catch(error){
         console.log(error)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})

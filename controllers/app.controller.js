@@ -170,7 +170,7 @@ export const verifyText = async (req, res) => {
                 const paymentId = paymentMethods.data[0].id
                 
                 if (!paymentId){
-                    return res.status(400).json({ message: "Not enough credits, please recharge", success: false });
+                    return res.status(400).json({ message: "No Payment Method Detected, add credits, or add payment method", success: false });
                 }
 
                 const offer = await Offer.findOne({variant:-1})
@@ -648,5 +648,15 @@ export const getOffers = async (req,res) => {
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+export const getRules = async (req,res)=>{
+    try{
+        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
+        res.status(200).json(obj)
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again or contact support"})
     }
 }

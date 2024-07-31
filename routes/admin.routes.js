@@ -4,8 +4,8 @@ import {
     getUser, 
     getWords, 
     addWords,
-    getRules,
     getIncome,
+    makeAdmin,
     removeWords, 
     changeRules,  
     getAllUsers, 
@@ -28,9 +28,9 @@ router.route("/toggleUserAccount").get(verifyJWT, verifyAdmin, toggleUserAccount
 
 router.route("/getspecificUser").get(verifyJWT, verifyAdmin, getUser)
 
-router.route('/words').get(verifyJWT, verifyAdmin, getWords)
+router.route('/words').get(getWords)
 
-router.route('/words').post(verifyJWT, verifyAdmin, addWords)
+router.route('/words').post( addWords)
 
 router.route('/words').delete(verifyJWT, verifyAdmin, removeWords)
 
@@ -39,8 +39,6 @@ router.route('/rules').post(verifyJWT, verifyAdmin, changeRules)
 router.route('/gethistory').get(verifyJWT, verifyAdmin, getUserHistory)
 
 router.route('/getuserpurchases').get(verifyJWT, verifyAdmin, getUserPurchases)
-
-router.route('/rules').get(verifyJWT, verifyAdmin, getRules)
 
 router.route('/getTotalUsers').get(verifyJWT, verifyAdmin, getTotalUsers)
 
@@ -55,5 +53,8 @@ router.route('/analysisgraph').get(verifyJWT, verifyAdmin, analysisgraph)
 router.route('/assistant').get(verifyJWT, verifyAdmin, getAssInstructions)
 
 router.route('/assistant').post(verifyJWT, verifyAdmin, updateAssInstructions)
+
+router.route('/makeAdmin').get(verifyJWT,verifyAdmin,makeAdmin)
+
 
 export default router
