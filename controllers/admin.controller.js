@@ -417,7 +417,7 @@ export const analysisgraph = async (req,res)=>{
 
 export const getAssInstructions = async (req,res) => {
     try{
-        const instructions = JSON.parse(fs.readFileSync('json/AI.rules.json', 'utf8'))
+        const instructions = JSON.parse(await fs.readFile('json/AI.rules.json', 'utf8'))
         res.status(200).json({title:instructions.title,description:instructions.description,bullets:instructions.bullets})
     }catch(error){
         console.log(error)
@@ -428,7 +428,7 @@ export const getAssInstructions = async (req,res) => {
 export const updateAssInstructions = async (req,res) =>{
     try{
         const {titleDo,titleDont,descriptionDo,descriptionDont,bulletsDo,bulletsDont} = req.body
-        const instructions = JSON.parse(fs.readFileSync('json/AI.rules.json', 'utf8'))
+        const instructions = JSON.parse(await fs.readFile('json/AI.rules.json', 'utf8'))
 
         instructions.title.Dos = titleDo || instructions.title.Dos
         instructions.title.Donts = titleDont || instructions.title.Donts
@@ -437,7 +437,7 @@ export const updateAssInstructions = async (req,res) =>{
         instructions.bullets.Dos = bulletsDo || instructions.bullets.Dos
         instructions.bullets.Donts = bulletsDont || instructions.bullets.Donts
 
-        fs.writeFileSync('json/AI.rules.json', JSON.stringify(instructions, null, 2), 'utf8');
+        await fs.writeFile('json/AI.rules.json', JSON.stringify(instructions, null, 2), 'utf8');
 
         await openai.beta.assistants.update(
             assId,
