@@ -87,7 +87,7 @@ const paymentEmailJoi = Joi.object({
     email:Joi.string().required().email(),
     name:Joi.string().required().alphanum().min(2),
     credits:Joi.number().required().min(1),
-    paymentDetails:Joi.string().required().min(5),
+    paymentDetails:Joi.string().required(),
 })
 
 
