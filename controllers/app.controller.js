@@ -7,6 +7,9 @@ import Stripe from "stripe";
 import { User } from "../models/user.model.js";
 import {ProcessedEvent} from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
+import { transporterConstructor } from "../utils/email.js";
+
+const transporter = transporterConstructor()
 
 
 dotenv.config();
@@ -79,6 +82,13 @@ const containsBlacklistedWord = (paragraph) => {
 
 
 const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
+
+const paymentEmailJoi = Joi.object({
+    email:Joi.string().required().email(),
+    name:Joi.string().required().alphanum().min(2),
+    credits:Joi.number().required().min(1),
+    paymentDetails:Joi.string().required().min(5),
+})
 
 
 const verifyTextJoi = Joi.object({
@@ -160,9 +170,14 @@ export const verifyText = async (req, res) => {
         let collectiveString=title+description+bulletpoints.join('')+keywords
         // const creditPrice = (Math.ceil(collectiveString.length/obj.characterCost)) * obj.creditCost
 
-        const fullChunks = Math.floor(collectiveString.length / obj.characterCost);
-        const partialChunk = collectiveString.length % obj.characterCost;
-        const creditPrice = Math.ceil((fullChunks * obj.creditCost) + (partialChunk > 0 ? (partialChunk / obj.characterCost) * obj.creditCost : 0));
+        const calcStringCost = (stringToCalc)=>{
+            const fullChunks = Math.floor(stringToCalc.length / obj.characterCost);
+            const partialChunk = stringToCalc.length % obj.characterCost;
+            const valtosend = Math.ceil((fullChunks * obj.creditCost) + (partialChunk > 0 ? (partialChunk / obj.characterCost) * obj.creditCost : 0)) 
+            return valtosend;
+        }
+
+        const creditPrice = calcStringCost(title)+calcStringCost(description)+calcStringCost(bulletpoints.join(''))+calcStringCost(keywords)
 
         let user=await User.findOne({email:req.user.email})
 
@@ -662,5 +677,36 @@ export const getRules = async (req,res)=>{
     }catch(err){
         console.log(err)
         return res.status(500).json({message:"something went wrong, please try again or contact support"})
+    }
+}
+
+export const paymentEmail = (req,res) =>{
+    try{
+
+        const {error} = paymentEmailJoi.validate(req.body)
+
+        if(error){
+            return res.status(400).json({success:false,message:"invalid data provided"})
+        }
+
+        const {email,name,credits,paymentDetails} = req.body
+
+        transporter.sendMail({
+            to:"haris.markcoders@gmail.com",
+            subject:"payment request",
+            text:`
+            
+            sender: ${email}
+            name: ${name}
+            number of credits Requested: ${credits}
+
+            ${paymentDetails}
+            
+            `
+        })
+        res.status(200).json({success:true,message:"email sent successfully"})
+    }catch(error){
+        console.log(err)
+        return res.status(500).json({message:"something went wrong, please try again or contact support ... directly."})
     }
 }
