@@ -114,13 +114,16 @@ export const addWords = async (req,res) => {
 
     try {
         const words = await getWordsFromFile();
+        if (words.includes(newWord)){
+            return res.status(400).json({success:false,message:"word already exists"})
+        }
         words.push(newWord);
         words.sort()
         await writeWordsToFile(words);
-        res.status(201).json({ message: 'Word added successfully' });
+        return res.status(201).json({ success:true,message: 'Word added successfully' });
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: 'Failed to add word to file' });
+        return res.status(500).json({ error: 'Failed to add word to file' });
     }
 }
 
@@ -147,6 +150,15 @@ export const removeWords = async (req,res) =>{
     } catch (error) {
         console.log(error)
         res.status(500).json({ error: 'Failed to remove word from file' });
+    }
+}
+
+export const uploadCsv = async (req,res) => {
+    try{
+        console.log(req)
+        res.status(200).json({message:"uploaded csv successfully"})
+    }catch(error){
+        console.log(error)
     }
 }
 
@@ -432,7 +444,7 @@ export const makeAdmin = async (req,res) =>{
         const user = await User.findById(userId)
         user.role=="user"?user.role="admin":user.role="user"
         user.save()
-        res.status(200).json({success:true,message:"user toggled admin successfully"})
+        res.status(200).json({success:true,message:`user toggled ${user.role} successfully`,role:user.role})
     }catch(error){
         console.log(error)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})

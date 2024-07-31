@@ -47,7 +47,8 @@ const containsBlacklistedWord = (paragraph) => {
     let containsWords = false;
 
     for (const phrase of blacklistedWords) {
-        if (lowerCaseParagraph.includes(phrase.toLowerCase())) {
+        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, 'g');
+        if (regex.test(lowerCaseParagraph)) {
             usedWords.push(phrase);
             containsWords = true;
         }
@@ -141,6 +142,9 @@ const verifyTextJoi = Joi.object({
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
+
+        if(!category) return res.status(400).json({success:false, message:"category is required"})
+
         bulletpoints=bulletpoints.map(e=>{
             return e.value
         })

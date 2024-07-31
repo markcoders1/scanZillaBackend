@@ -1,4 +1,5 @@
 import { Router } from "express";
+import express from 'express'
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
 import {
     getUser, 
@@ -17,7 +18,8 @@ import {
     toggleUserAccount, 
     changeOfferPricing,
     getAssInstructions,
-    updateAssInstructions
+    updateAssInstructions,
+    uploadCsv
 } from "../controllers/admin.controller.js"
 
 const router = Router()
@@ -55,6 +57,8 @@ router.route('/assistant').get(verifyJWT, verifyAdmin, getAssInstructions)
 router.route('/assistant').post(verifyJWT, verifyAdmin, updateAssInstructions)
 
 router.route('/makeAdmin').get(verifyJWT,verifyAdmin,makeAdmin)
+
+router.route('/uploadcsv').post(uploadCsv)
 
 
 export default router
