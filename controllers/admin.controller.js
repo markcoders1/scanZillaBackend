@@ -122,7 +122,7 @@ export const addWords = async (req,res) => {
         words.push(newWord);
         words.sort()
         await writeWordsToFile(words);
-        return res.status(201).json({ success:true,message: 'Word added successfully' });
+        return res.status(201).json({ success:true,message: 'Word added successfully',words });
     } catch (error) {
         console.log(error)
         return res.status(500).json({ error: 'Failed to add word to file' });
