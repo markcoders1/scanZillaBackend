@@ -85,7 +85,7 @@ const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
 
 const paymentEmailJoi = Joi.object({
     email:Joi.string().required().email(),
-    name:Joi.string().required().alphanum().min(2),
+    name:Joi.string().required().min(2),
     credits:Joi.number().required().min(1),
     paymentDetails:Joi.string().required(),
 })
@@ -686,6 +686,7 @@ export const paymentEmail = (req,res) =>{
         const {error} = paymentEmailJoi.validate(req.body)
 
         if(error){
+            console.log(error)
             return res.status(400).json({success:false,message:"invalid data provided"})
         }
 
