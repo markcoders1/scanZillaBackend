@@ -282,84 +282,76 @@ export const verifyText = async (req, res) => {
 
         //head this is where the ai starts
 
-        //         const {thread_id,id} = await openai.beta.threads.createAndRun({
-        //             assistant_id:assId,
-        //         })
-        //         console.log("threadId",thread_id)
-        //         let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+                const {thread_id,id} = await openai.beta.threads.createAndRun({
+                    assistant_id:assId,
+                })
+                console.log("threadId",thread_id)
+                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
         
-        //         while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-        //             console.log("waiting for completion");
-        //             await new Promise((resolve) => setTimeout(resolve, 1000));
-        //             threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-        //             console.log(`threadrun status: ${threadrun.status}`);
-        //         }
+                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+                    console.log("waiting for completion");
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+                    console.log(`threadrun status: ${threadrun.status}`);
+                }
         
-        //         const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
         
-        //         let run = await createRun(thread_id, assId);
-        //         console.log(`run created: ${run.id} at ${thread_id}`);
+                let run = await createRun(thread_id, assId);
+                console.log(`run created: ${run.id} at ${thread_id}`);
         
-        //         while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-        //             console.log("waiting for completion");
-        //             await new Promise((resolve) => setTimeout(resolve, 1000));
-        //             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-        //             console.log(`run status: ${run.status}`);
-        //         }
-        //         console.log(`run completed: ${run.id}`);
+                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+                    console.log("waiting for completion");
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+                    console.log(`run status: ${run.status}`);
+                }
+                console.log(`run completed: ${run.id}`);
         
-        //         const message_response = await openai.beta.threads.messages.list(thread_id);
-        //         const messages = message_response.data;
+                const message_response = await openai.beta.threads.messages.list(thread_id);
+                const messages = message_response.data;
         
-        //         latest_message = messages[0]?.content[0]?.text?.value;
+                latest_message = messages[0]?.content[0]?.text?.value;
         
-        //         // Clean the JSON string properly
-        //         latest_message = latest_message
-        //             ?.replace(/```json/g, "")
-        //             ?.replace(/```/g, "")
-        //             ?.replace(/\\n/g, "")
-        //             ?.trim();
+                // Clean the JSON string properly
+                latest_message = latest_message
+                    ?.replace(/```json/g, "")
+                    ?.replace(/```/g, "")
+                    ?.replace(/\\n/g, "")
+                    ?.trim();
         
-        //         console.log("msg", latest_message);
+                console.log("msg", latest_message);
 
 
 
 
-        //         latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
+                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
         
-        //         const parsedMessage = JSON.parse(latest_message)
+                const parsedMessage = JSON.parse(latest_message)
 
-        //         let keys = Object.keys(parsedMessage)
+                let keys = Object.keys(parsedMessage)
 
-        //         keys.forEach(e=>{
-        //             if(Array.isArray(parsedMessage[e])){
-        //                 parsedMessage[e] = parsedMessage[e].join('<br/>')
-        //             }
-        //         })
+                keys.forEach(e=>{
+                    if(Array.isArray(parsedMessage[e])){
+                        parsedMessage[e] = parsedMessage[e].join('|-|')
+                    }
+                })
 
-        //     console.log(parsedMessage)
-
-
-        // await History.create({
-        //     userID:req.user.id,
-        //     title,
-        //     description,
-        //     bullets:bulletpoints,
-        //     error:JSON.parse(latest_message)
-
-        // })
-
-        const parsedMessage = {
-            TE: 'The title is not following the correct format. It is missing a brand name and the main keyword phrase. Additionally, the phrase "almost any kind of tree" is not specific enough.',
-            TF: '[Brand Name] Tree Climbing Hooks, Durable and Reliable, Available in Multiple Colors and Sizes',
-            DE: '',
-            DF: '',
-            BE: 'The bullet points use double dashes ("--") and inconsistent capitalization.<br/>The bullet points contain unnecessary promotional phrases such as "Great fun for friends and Family".<br/>One bullet point uses non-capitalized letters for colors but then capitalizes colors unnecessarily.<br/>Sizes should be formatted uniformly.<br/>The list of tree types should be consistent in grammar.',
-            BF: '- Can be used to climb oak, pine, and birch trees<br/>- Available in red, green, and blue<br/>- Fun activity for friends and family<br/>- Available in sizes M, L, and XL'
-        }
+            console.log(parsedMessage)
 
 
-        return res.status(200).json({ message: "text verified", message: parsedMessage, success: true });
+        const newHistory = await History.create({
+            userID:req.user.id,
+            title,
+            description,
+            bullets:bulletpoints,
+            error:JSON.parse(latest_message)
+
+        })
+
+        console.log(newHistory)
+
+        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
         
     } catch (error) {
         if(error.code=='authentication_required'){
@@ -415,7 +407,7 @@ export const getUserHistory = async (req, res) => {
         const limit = parseInt(req.query.limit) || 5;
         const skip = (page - 1) * limit;
 
-        const Histories = await History.find({ userID: req.user.id }).skip(skip).limit(limit);
+        const Histories = await History.find({ userID: req.user.id }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
         const totalHistories = await History.countDocuments({ userID: req.user.id });
 
