@@ -278,89 +278,58 @@ export const verifyText = async (req, res) => {
             return res.status(200).json({ error: errObj, success: false });
         }
 
-        const history = await History.create({
+        const {thread_id,id} = await openai.beta.threads.createAndRun({
+            assistant_id:assId,
+        })
+        console.log("threadId",thread_id)
+        let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+
+        while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+            console.log("waiting for completion");
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+            console.log(`threadrun status: ${threadrun.status}`);
+        }
+
+        const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+
+        let run = await createRun(thread_id, assId);
+        console.log(`run created: ${run.id}`);
+
+        while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+            console.log("waiting for completion");
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+            console.log(`run status: ${run.status}`);
+        }
+        console.log(`run completed: ${run.id}`);
+
+        const message_response = await openai.beta.threads.messages.list(thread_id);
+        const messages = message_response.data;
+
+        let latest_message = messages[0]?.content[0]?.text?.value;
+
+        // Clean the JSON string properly
+        latest_message = latest_message
+            ?.replace(/```json/g, "")
+            ?.replace(/```/g, "")
+            ?.replace(/\\n/g, "")
+            ?.trim();
+
+        console.log("msg", latest_message);
+
+
+
+        History.create({
             userID:req.user.id,
             title,
             description,
             bullets:bulletpoints,
-            error:{},
-            credits:creditPrice
+            error:JSON.parse(latest_message)
 
         })
 
-        // const {thread_id,id} = await openai.beta.threads.createAndRun({
-        //     assistant_id:assId,
-        // })
-        // console.log("threadId",thread_id)
-        // let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
-
-        // while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-        //     console.log("waiting for completion");
-        //     await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-        //     console.log(`threadrun status: ${threadrun.status}`);
-        // }
-
-        // const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints}`);
-
-        // let run = await createRun(thread_id, assId);
-        // console.log(`run created: ${run.id}`);
-
-        // while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-        //     console.log("waiting for completion");
-        //     await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-        //     console.log(`run status: ${run.status}`);
-        // }
-        // console.log(`run completed: ${run.id}`);
-
-        // const message_response = await openai.beta.threads.messages.list(thread_id);
-        // const messages = message_response.data;
-
-        // let latest_message = messages[0]?.content[0]?.text?.value;
-
-        // // Clean the JSON string properly
-        // latest_message = latest_message
-        //     ?.replace(/```json/g, "")
-        //     ?.replace(/```/g, "")
-        //     ?.replace(/\\n/g, "")
-        //     ?.trim();
-
-        // console.log("msg", latest_message);
-
-
-
-        // History.create({
-        //     userID:req.user.id,
-        //     title,
-        //     description,
-        //     bullets:bulletpoints,
-        //     error:JSON.parse(latest_message)
-
-        // })
-
-
-
-        // // Parse the cleaned string
-        // return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
-        return res.status(200).json({ message: "text verified", success: true });
-
-        /*
-        const stripe = Stripe('your_publishable_key');
-
-        async function handlePaymentIntent(paymentIntentClientSecret) {
-          const { error, paymentIntent } = await stripe.confirmCardPayment(paymentIntentClientSecret);
-
-          if (error) {
-            console.error('Payment failed:', error);
-          } else if (paymentIntent.status === 'succeeded') {
-            console.log('Payment succeeded:', paymentIntent);
-          }
-        }
-
-        // Call this function if the payment requires action
-        handlePaymentIntent('client_secret_from_server');
-        */
+        return res.status(200).json({ message: "text verified", message: JSON.parse(latest_message), success: true });
         
     } catch (error) {
         if(error.code=='authentication_required'){
