@@ -5,7 +5,7 @@
   "descriptionCharacters": 500,
   "creditCost": 1,
   "characterCost": 4,
-  "totalBulletsLength": 300,  
+  "totalBulletsLength": 300,
   "Appliances":200,
   "Arts, Crafts & Sewing":200,
   "Automotive":200,
@@ -29,5 +29,5 @@
   "Pet Supplies":200,
   "Sports & Outdoors":200,
   "Tools & Home Improvement":200,
-  "Toys & Games ":200,
+  "Toys & Games":200
 }
