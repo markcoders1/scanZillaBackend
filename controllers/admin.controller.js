@@ -187,7 +187,7 @@ export const changeRules = async (req,res) => {
             descriptionCharacters:Joi.number().min(0).message("incorrect value"),
             creditCost:Joi.number().min(0).message("incorrect value"),
             characterCost:Joi.number().min(0).message("incorrect value"),
-            category:Joi.string(),
+            category:Joi.string().min(0),
             totalBulletsLength:Joi.number().min(100).message("incorrect value")
         })
 
@@ -204,11 +204,16 @@ export const changeRules = async (req,res) => {
 
         const {error} = rulesjoi.validate(req.body, { abortEarly: false });
 
+        if(titleCharacters && !category){
+            return res.status(400).json({message:"Enter the category you want to set a title limit on."})
+        }
+
         if (error){
+            console.log(error)
             return res.status(400).json({message:"incorrect values"})
         }
     
-        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
+        const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
     
         // obj.titleCharacters = Number(titleCharacters || obj.titleCharacters)
         obj.bulletNum = Number(bulletNum || obj.bulletNum)
@@ -219,7 +224,7 @@ export const changeRules = async (req,res) => {
         obj[category] = Number(titleCharacters || obj[category])
         obj.totalBulletsLength = Number(totalBulletsLength || obj.totalBulletsLength)
     
-        fs.writeFileSync('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
+        await fs.writeFile('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
         res.status(200).send({ message: 'Rules updated successfully' });
 
