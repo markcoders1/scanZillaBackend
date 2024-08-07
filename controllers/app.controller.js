@@ -108,7 +108,7 @@ export const verifyText = async (req, res) => {
                         return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
                     }
                     return value;
-                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj[category]).messages({
+                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj[category]+1).messages({
                     "string.pattern.base": "must be standard ASCII characters or generic symbols",
                     "string.max":`title for category: "${category}" must be less than ${obj[category]} characters long`
                 }),
