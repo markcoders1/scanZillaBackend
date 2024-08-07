@@ -186,7 +186,9 @@ export const changeRules = async (req,res) => {
             bulletCharacters:Joi.number().min(0).message("incorrect value"),
             descriptionCharacters:Joi.number().min(0).message("incorrect value"),
             creditCost:Joi.number().min(0).message("incorrect value"),
-            characterCost:Joi.number().min(0).message("incorrect value")
+            characterCost:Joi.number().min(0).message("incorrect value"),
+            category:Joi.string(),
+            totalBulletsLength:Joi.number().min(100).message("incorrect value")
         })
 
         const {
@@ -195,7 +197,9 @@ export const changeRules = async (req,res) => {
             bulletCharacters,
             descriptionCharacters,
             creditCost,
-            characterCost
+            characterCost,
+            category,
+            totalBulletsLength
         } = req.body
 
         const {error} = rulesjoi.validate(req.body, { abortEarly: false });
@@ -206,12 +210,14 @@ export const changeRules = async (req,res) => {
     
         const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
     
-        obj.titleCharacters = Number(titleCharacters || obj.titleCharacters)
+        // obj.titleCharacters = Number(titleCharacters || obj.titleCharacters)
         obj.bulletNum = Number(bulletNum || obj.bulletNum)
         obj.bulletCharacters = Number(bulletCharacters || obj.bulletCharacters)
         obj.descriptionCharacters = Number(descriptionCharacters || obj.descriptionCharacters)
         obj.creditCost = Number(creditCost || obj.creditCost)
         obj.characterCost = Number(characterCost || obj.characterCost)
+        obj[category] = Number(titleCharacters || obj[category])
+        obj.totalBulletsLength = Number(totalBulletsLength || obj.totalBulletsLength)
     
         fs.writeFileSync('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
@@ -315,7 +321,7 @@ export const getIncome = async (req,res)=>{
 
         charges = graphdata.map(e=>e.amount)
 
-        let value = charges.reduce((a,b)=>a+b)
+        let value = charges.reduce((a,b)=>a+b,0)
         value = value/100
         value = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 

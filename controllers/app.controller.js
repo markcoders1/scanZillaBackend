@@ -91,69 +91,82 @@ const paymentEmailJoi = Joi.object({
 })
 
 
-const verifyTextJoi = Joi.object({
 
-    title: Joi.string().custom((value, helper) => {
-        const { containsWords, usedWords } = containsBlacklistedWord(value);
-        if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-        }
-        return value;
-    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj.titleCharacters).messages({
-        "string.pattern.base": "must be standard ASCII characters or generic symbols"
-    }),
-  
-    description: Joi.string().custom((value, helper) => {
-        const { containsWords, usedWords } = containsBlacklistedWord(value);
-        if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-        }
-        return value;
-    }).regex(/^[ -~]*$/).min(0).max(obj.descriptionCharacters).messages({
-        "string.pattern.base": "must be standard ASCII characters only"
-    }),
-
-    bulletpoints: Joi.array().items(
-        Joi.string().allow('').custom((value, helper) => {
-            const { containsWords, usedWords } = containsBlacklistedWord(value);
-            if (containsWords) {
-                return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-            }
-            return value;
-        }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
-            "string.pattern.base": "must be standard ASCII characters only or generic symbols"
-        })
-    ).min(0).max(obj.bulletNum).label('bulletpoints').messages({
-        "array.base": "bulletpoints must be an array of strings",
-        "array.includes": "each bulletpoint must be a valid string according to the specified rules"
-    }),
-
-    keywords: Joi.string().custom((value, helper) => {
-        const { containsWords, usedWords } = containsBlacklistedWord(value);
-        if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-        }
-        return value;
-    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-        "string.pattern.base": "must be standard ASCII characters or generic symbols"
-    }),
-
-    category: Joi.string().custom((value, helper) => {
-        const { containsWords, usedWords } = containsBlacklistedWord(value);
-        if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-        }
-        return value;
-    }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
-        "string.pattern.base": "must be standard ASCII characters or generic symbols"
-    }),
-});
 
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
         if(!category) return res.status(400).json({success:false, message:"category is required"})
+
+
+            const verifyTextJoi = Joi.object({
+
+                title: Joi.string().custom((value, helper) => {
+                    const { containsWords, usedWords } = containsBlacklistedWord(value);
+                    if (containsWords) {
+                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                    }
+                    return value;
+                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj[category]).messages({
+                    "string.pattern.base": "must be standard ASCII characters or generic symbols",
+                    "string.max":`title for category: "${category}" must be less than ${obj[category]} characters long`
+                }),
+              
+                description: Joi.string().custom((value, helper) => {
+                    const { containsWords, usedWords } = containsBlacklistedWord(value);
+                    if (containsWords) {
+                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                    }
+                    return value;
+                }).regex(/^[ -~]*$/).min(0).max(obj.descriptionCharacters).messages({
+                    "string.pattern.base": "must be standard ASCII characters only"
+                }),
+            
+                bulletpoints: Joi.array().items(
+                    Joi.string().allow('').custom((value, helper) => {
+                        const { containsWords, usedWords } = containsBlacklistedWord(value);
+                        if (containsWords) {
+                            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                        }
+                        return value;
+                    }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
+                        "string.pattern.base": "must be standard ASCII characters only or generic symbols"
+                    })
+                ).min(0).max(obj.bulletNum).label('bulletpoints').messages({
+                    "array.base": "bulletpoints must be an array of strings",
+                    "array.includes": "each bulletpoint must be a valid string according to the specified rules"
+                }).custom((value, helper) => {
+                    const combinedLength = value.reduce((acc, str) => acc + str.length, 0);
+                    if (combinedLength > obj.totalBulletsLength) {
+                        return helper.message(`The combined length of all bulletpoints must be less than or equal to ${obj.totalBulletsLength} characters`);
+                    }
+                    return value;
+                }),
+            
+                keywords: Joi.string().custom((value, helper) => {
+                    const { containsWords, usedWords } = containsBlacklistedWord(value);
+                    if (containsWords) {
+                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                    }
+                    return value;
+                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+                    "string.pattern.base": "must be standard ASCII characters or generic symbols"
+                }),
+            
+                category: Joi.string().regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+                    "string.pattern.base": "must be standard ASCII characters or generic symbols"
+                }),
+            });
+
+
+
+
+
+
+
+
+
 
         bulletpoints=bulletpoints.map(e=>{
             return e.value
@@ -282,76 +295,77 @@ export const verifyText = async (req, res) => {
 
         //head this is where the ai starts
 
-                const {thread_id,id} = await openai.beta.threads.createAndRun({
-                    assistant_id:assId,
-                })
-                console.log("threadId",thread_id)
-                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+        //         const {thread_id,id} = await openai.beta.threads.createAndRun({
+        //             assistant_id:assId,
+        //         })
+        //         console.log("threadId",thread_id)
+        //         let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
         
-                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-                    console.log(`threadrun status: ${threadrun.status}`);
-                }
+        //         while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+        //             console.log(`threadrun status: ${threadrun.status}`);
+        //         }
         
-                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+        //         const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
         
-                let run = await createRun(thread_id, assId);
-                console.log(`run created: ${run.id} at ${thread_id}`);
+        //         let run = await createRun(thread_id, assId);
+        //         console.log(`run created: ${run.id} at ${thread_id}`);
         
-                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-                    console.log(`run status: ${run.status}`);
-                }
-                console.log(`run completed: ${run.id}`);
+        //         while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        //             console.log(`run status: ${run.status}`);
+        //         }
+        //         console.log(`run completed: ${run.id}`);
         
-                const message_response = await openai.beta.threads.messages.list(thread_id);
-                const messages = message_response.data;
+        //         const message_response = await openai.beta.threads.messages.list(thread_id);
+        //         const messages = message_response.data;
         
-                latest_message = messages[0]?.content[0]?.text?.value;
+        //         latest_message = messages[0]?.content[0]?.text?.value;
         
-                // Clean the JSON string properly
-                latest_message = latest_message
-                    ?.replace(/```json/g, "")
-                    ?.replace(/```/g, "")
-                    ?.replace(/\\n/g, "")
-                    ?.trim();
+        //         // Clean the JSON string properly
+        //         latest_message = latest_message
+        //             ?.replace(/```json/g, "")
+        //             ?.replace(/```/g, "")
+        //             ?.replace(/\\n/g, "")
+        //             ?.trim();
         
-                console.log("msg", latest_message);
+        //         console.log("msg", latest_message);
 
 
 
 
-                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
+        //         latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
         
-                const parsedMessage = JSON.parse(latest_message)
+        //         const parsedMessage = JSON.parse(latest_message)
 
-                let keys = Object.keys(parsedMessage)
+        //         let keys = Object.keys(parsedMessage)
 
-                keys.forEach(e=>{
-                    if(Array.isArray(parsedMessage[e])){
-                        parsedMessage[e] = parsedMessage[e].join('|-|')
-                    }
-                })
+        //         keys.forEach(e=>{
+        //             if(Array.isArray(parsedMessage[e])){
+        //                 parsedMessage[e] = parsedMessage[e].join('|-|')
+        //             }
+        //         })
 
-            console.log(parsedMessage)
+        //     console.log(parsedMessage)
 
 
-        const newHistory = await History.create({
-            userID:req.user.id,
-            title,
-            description,
-            bullets:bulletpoints,
-            error:JSON.parse(latest_message)
+        // const newHistory = await History.create({
+        //     userID:req.user.id,
+        //     title,
+        //     description,
+        //     bullets:bulletpoints,
+        //     error:JSON.parse(latest_message)
 
-        })
+        // })
 
-        console.log(newHistory)
+        // console.log(newHistory)
 
-        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        // return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        res.json({success:true})
         
     } catch (error) {
         if(error.code=='authentication_required'){
