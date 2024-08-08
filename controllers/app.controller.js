@@ -295,77 +295,77 @@ export const verifyText = async (req, res) => {
 
         //head this is where the ai starts
 
-        //         const {thread_id,id} = await openai.beta.threads.createAndRun({
-        //             assistant_id:assId,
-        //         })
-        //         console.log("threadId",thread_id)
-        //         let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+                const {thread_id,id} = await openai.beta.threads.createAndRun({
+                    assistant_id:assId,
+                })
+                console.log("threadId",thread_id)
+                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
         
-        //         while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-        //             console.log("waiting for completion");
-        //             await new Promise((resolve) => setTimeout(resolve, 1000));
-        //             threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-        //             console.log(`threadrun status: ${threadrun.status}`);
-        //         }
+                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+                    console.log("waiting for completion");
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+                    console.log(`threadrun status: ${threadrun.status}`);
+                }
         
-        //         const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
         
-        //         let run = await createRun(thread_id, assId);
-        //         console.log(`run created: ${run.id} at ${thread_id}`);
+                let run = await createRun(thread_id, assId);
+                console.log(`run created: ${run.id} at ${thread_id}`);
         
-        //         while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-        //             console.log("waiting for completion");
-        //             await new Promise((resolve) => setTimeout(resolve, 1000));
-        //             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-        //             console.log(`run status: ${run.status}`);
-        //         }
-        //         console.log(`run completed: ${run.id}`);
+                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+                    console.log("waiting for completion");
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+                    console.log(`run status: ${run.status}`);
+                }
+                console.log(`run completed: ${run.id}`);
         
-        //         const message_response = await openai.beta.threads.messages.list(thread_id);
-        //         const messages = message_response.data;
+                const message_response = await openai.beta.threads.messages.list(thread_id);
+                const messages = message_response.data;
         
-        //         latest_message = messages[0]?.content[0]?.text?.value;
+                latest_message = messages[0]?.content[0]?.text?.value;
         
-        //         // Clean the JSON string properly
-        //         latest_message = latest_message
-        //             ?.replace(/```json/g, "")
-        //             ?.replace(/```/g, "")
-        //             ?.replace(/\\n/g, "")
-        //             ?.trim();
+                // Clean the JSON string properly
+                latest_message = latest_message
+                    ?.replace(/```json/g, "")
+                    ?.replace(/```/g, "")
+                    ?.replace(/\\n/g, "")
+                    ?.trim();
         
-        //         console.log("msg", latest_message);
+                console.log("msg", latest_message);
 
 
 
 
-        //         latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
+                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
         
-        //         const parsedMessage = JSON.parse(latest_message)
+                const parsedMessage = JSON.parse(latest_message)
 
-        //         let keys = Object.keys(parsedMessage)
+                let keys = Object.keys(parsedMessage)
 
-        //         keys.forEach(e=>{
-        //             if(Array.isArray(parsedMessage[e])){
-        //                 parsedMessage[e] = parsedMessage[e].join('|-|')
-        //             }
-        //         })
+                keys.forEach(e=>{
+                    if(Array.isArray(parsedMessage[e])){
+                        parsedMessage[e] = parsedMessage[e].join('|-|')
+                    }
+                })
 
-        //     console.log(parsedMessage)
+            console.log(parsedMessage)
 
 
-        // const newHistory = await History.create({
-        //     userID:req.user.id,
-        //     title,
-        //     description,
-        //     bullets:bulletpoints,
-        //     error:JSON.parse(latest_message)
+        const newHistory = await History.create({
+            userID:req.user.id,
+            title,
+            description,
+            bullets:bulletpoints,
+            error:JSON.parse(latest_message)
 
-        // })
+        })
 
-        // console.log(newHistory)
+        console.log(newHistory)
 
-        // return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
-        res.json({success:true})
+        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        // res.json({success:true})
         
     } catch (error) {
         if(error.code=='authentication_required'){

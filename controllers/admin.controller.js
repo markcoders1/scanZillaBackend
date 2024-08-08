@@ -188,7 +188,7 @@ export const changeRules = async (req,res) => {
             creditCost:Joi.number().min(0).message("incorrect value"),
             characterCost:Joi.number().min(0).message("incorrect value"),
             category:Joi.string().min(0),
-            totalBulletsLength:Joi.number().min(100).message("incorrect value")
+            totalBulletsLength:Joi.number().min(0).message("incorrect value")
         })
 
         const {
@@ -209,7 +209,7 @@ export const changeRules = async (req,res) => {
         }
 
         if (error){
-            console.log(error)
+            console.log(error.details)
             return res.status(400).json({message:"incorrect values"})
         }
     
