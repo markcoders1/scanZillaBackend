@@ -399,9 +399,8 @@ export const giveUserCredits = async (req,res) => {
 export const analysisgraph = async (req,res)=>{
     try{
         const now = new Date()
-        const disMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000
+        const disMonth = new Date(now.getFullYear(), now.getMonth(), 1)
         let histories = await History.find({createdAt: {$gte:disMonth}})
-        console.log(histories)
         histories = histories.map(e=>{
             const date = new Date(e.createdAt)
             return date.getDate()

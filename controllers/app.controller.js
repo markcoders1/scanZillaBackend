@@ -1,7 +1,7 @@
 import Joi from "joi"
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import fs from 'fs'
+import fs from 'fs/promises'
 import { History } from "../models/history.model.js";
 import Stripe from "stripe";
 import { User } from "../models/user.model.js";
@@ -22,14 +22,14 @@ const openai = new OpenAI(process.env.OPENAI_API_KEY)
 const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
 const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
 
-const loadBlacklistedWords = () => {
-    const data = fs.readFileSync("blacklistedWords.txt", 'utf-8');
+const loadBlacklistedWords = async () => {
+    const data = await fs.readFile("blacklistedWords.csv", 'utf-8');
     const words = new Set(data.split(/\r?\n/).map(word => word.toLowerCase()));
     return words;
 };
 
 
-const blacklistedWords= loadBlacklistedWords();
+const blacklistedWords= await loadBlacklistedWords();
 
 
 function findInvalidCharacters(input,regex) {
@@ -62,6 +62,58 @@ const containsBlacklistedWord = (paragraph) => {
     return { containsWords, usedWords };
 };
 
+const correctCapitalisations = (paragraph) => {
+    const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without"]
+    const words = paragraph.split(' ');
+
+    let check = true
+    let checkArray = []
+
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const lowerWord = word.toLowerCase();
+        if (exceptions.includes(lowerWord)) {
+            if (word !== lowerWord) {
+                checkArray.push(word)
+                check = false;
+            }
+        } else {
+            if(word){
+                if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
+                    checkArray.push(word)
+                    check = false;
+                }
+            }
+        }
+    }
+    return ({check,checkArray});
+}
+
+
+function containsAllCapsWords(str) {
+
+    const words = str.split(' ');
+    let cappedWords = []
+    let containsCaps = false
+
+    for (let word of words) {
+        if (word && word.length > 1 && word === word.toUpperCase() && word !== word.toLowerCase()) {
+            cappedWords.push(word)
+            containsCaps = true; 
+        }
+    }
+
+    return ({containsCaps,cappedWords}); 
+}
+
+function containsHTMLTags(str) {
+    const regex = /<\/?[\w\s="/.':;#-\/]+>/gi;
+    return regex.test(str);
+}
+
+
+
+
 // function detectNumberWords(text) {
 //     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 //     const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
@@ -81,7 +133,7 @@ const containsBlacklistedWord = (paragraph) => {
 // }
 
 
-const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
+const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
 
 const paymentEmailJoi = Joi.object({
     email:Joi.string().required().email(),
@@ -97,74 +149,142 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
+        console.log(category)
+
         if(!category) return res.status(400).json({success:false, message:"category is required"})
 
 
             const verifyTextJoi = Joi.object({
 
-                title: Joi.string().custom((value, helper) => {
+                title: Joi
+                .string()
+                .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value);
                     if (containsWords) {
                         return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
                     }
                     return value;
-                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(obj[category]+1).messages({
+                })
+                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .min(0)
+                .max(obj[category]+1)
+                .custom((value,helper)=>{
+                    const {check,checkArray} = correctCapitalisations(value)
+                    if(!check){
+                        return helper.message(`Incorrect capitalizations found: (${checkArray.join(', ')})`)
+                    }
+                    return value
+                })
+                .messages({
                     "string.pattern.base": "must be standard ASCII characters or generic symbols",
                     "string.max":`title for category: "${category}" must be less than ${obj[category]} characters long`
                 }),
+
+
+
+
+
               
-                description: Joi.string().custom((value, helper) => {
+                description: Joi
+                .string()
+                .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value);
                     if (containsWords) {
                         return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
                     }
                     return value;
-                }).regex(/^[ -~]*$/).min(0).max(obj.descriptionCharacters).messages({
+                })
+                .regex(/^[ -#%-~]*$/)
+                .min(0)
+                .max(obj.descriptionCharacters)
+                .messages({
                     "string.pattern.base": "must be standard ASCII characters only"
+                })
+                .custom((value,helper) => {
+                    const {containsCaps,cappedWords} = containsAllCapsWords(value)
+                    if(containsCaps){
+                        return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
+                    }
+                    return value
+                })
+                .custom((value, helper) => {
+                    if (category !== "Books" && /<[^>]*>/g.test(value)) {
+                      return helper.message(
+                        "HTML tags are not allowed in the description unless the category is 'Books'",
+                      );
+                    }
+                    return value;
                 }),
             
-                bulletpoints: Joi.array().items(
-                    Joi.string().allow('').custom((value, helper) => {
+                bulletpoints: Joi
+                .array()
+                .items(
+                    Joi
+                    .string()
+                    .allow('')
+                    .custom((value, helper) => {
                         const { containsWords, usedWords } = containsBlacklistedWord(value);
                         if (containsWords) {
                             return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
                         }
                         return value;
-                    }).regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
+                    })
+                    .regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
                         "string.pattern.base": "must be standard ASCII characters only or generic symbols"
                     })
-                ).min(0).max(obj.bulletNum).label('bulletpoints').messages({
+                    .custom((value,helper) => {
+                        const {containsCaps,cappedWords} = containsAllCapsWords(value)
+                        if(containsCaps){
+                            return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
+                        }
+                        return value
+                    })
+                )
+                .min(0)
+                .max(obj.bulletNum)
+                .label('bulletpoints')
+                .messages({
                     "array.base": "bulletpoints must be an array of strings",
                     "array.includes": "each bulletpoint must be a valid string according to the specified rules"
-                }).custom((value, helper) => {
+                })
+                .custom((value, helper) => {
                     const combinedLength = value.reduce((acc, str) => acc + str.length, 0);
                     if (combinedLength > obj.totalBulletsLength) {
                         return helper.message(`The combined length of all bulletpoints must be less than or equal to ${obj.totalBulletsLength} characters`);
                     }
                     return value;
                 }),
+
             
-                keywords: Joi.string().custom((value, helper) => {
+                keywords: Joi
+                .string()
+                .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value);
                     if (containsWords) {
                         return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
                     }
                     return value;
-                }).regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+                })
+                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .min(0)
+                .max(200)
+                .messages({
                     "string.pattern.base": "must be standard ASCII characters or generic symbols"
                 }),
+
+
+
+
             
-                category: Joi.string().regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/).min(0).max(200).messages({
+                category: Joi
+                .string()
+                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .min(0)
+                .max(200)
+                .messages({
                     "string.pattern.base": "must be standard ASCII characters or generic symbols"
                 }),
             });
-
-
-
-
-
-
-
 
 
 
@@ -677,7 +797,7 @@ export const getOffers = async (req,res) => {
 
 export const getRules = async (req,res)=>{
     try{
-        const obj = JSON.parse(fs.readFileSync('json/rules.json', 'utf8'));
+        const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
         res.status(200).json(obj)
     }catch(err){
         console.log(err)
