@@ -63,29 +63,33 @@ const containsBlacklistedWord = (paragraph) => {
 };
 
 const correctCapitalisations = (paragraph) => {
+    console.log(paragraph)
     const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without"]
     const words = paragraph.split(' ');
 
     let check = true
     let checkArray = []
 
+    console.log(words)
+
     for (let i = 0; i < words.length; i++) {
         const word = words[i];
         const lowerWord = word.toLowerCase();
-        if (exceptions.includes(lowerWord)) {
-            if (word !== lowerWord) {
-                checkArray.push(word)
-                check = false;
-            }
-        } else {
-            if(word){
-                if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
+        if(word){
+            if (exceptions.includes(lowerWord)) {
+                if (word !== lowerWord) {
                     checkArray.push(word)
                     check = false;
                 }
+            } else {
+                    if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
+                        checkArray.push(word)
+                        check = false;
+                    }
             }
         }
     }
+    console.log(check)
     return ({check,checkArray});
 }
 
@@ -314,9 +318,9 @@ export const verifyText = async (req, res) => {
 
         let user=await User.findOne({email:req.user.email})
 
-        if(req.user.credits<creditPrice){
+        if(user.credits<creditPrice){
 
-            if (req.user.autocharge==true){
+            if (user.autocharge==true){
 
                 const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
                 const paymentId = paymentMethods.data[0].id
@@ -327,16 +331,9 @@ export const verifyText = async (req, res) => {
 
                 const offer = await Offer.findOne({variant:-1})
 
-                let credits
-
-                if(user.preferredCredits<=0){
-                    credits=creditPrice-user.credits
-                }else{
-                    credits=user.preferredCredits
-                }
 
                 const paymentIntent = await stripe.paymentIntents.create({
-                    amount:(creditPrice-req.user.credits)*offer.amount,
+                    amount:user.preferredCredits*offer.amount,
                     currency: 'usd',
                     customer: req.user.customerId,
                     payment_method: paymentId,
@@ -344,13 +341,13 @@ export const verifyText = async (req, res) => {
                     confirm: true,
                     metadata:{
                         variant:-1,
-                        credits
+                        credits:user.preferredCredits
                     }
                 });
 
                 user=await User.findOne({email:req.user.email})
 
-                if(user.credits+credits < creditPrice){
+                if(user.credits+user.preferredCredits < creditPrice){
                     return res.status(400).json({ message: "your Auto Credits are not enough to cover for this analyzation, please recharge", success: false, error:{} });
                 }
 
@@ -369,11 +366,11 @@ export const verifyText = async (req, res) => {
             console.log(error.details)
 
             let errObj = {
-                TE: "",
-                DE: "",
-                BE: "",
-                KE: "",
-                CE: ""
+                TE: [],
+                DE: [],
+                BE: [],
+                KE: [],
+                CE: []
             };
 
             error.details.forEach(field => {
@@ -388,9 +385,9 @@ export const verifyText = async (req, res) => {
 
                 if (field.type === "string.pattern.base") {
                     const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
-                    errObj[fieldKey] = `${field.message}: ${invalidChars}`;
+                    errObj[fieldKey].push(`${field.message}: ${invalidChars}`)
                 } else {
-                    errObj[fieldKey] = field.message;
+                    errObj[fieldKey].push(field.message)
                 }
 
             });
@@ -409,83 +406,84 @@ export const verifyText = async (req, res) => {
 
 
             return res.status(200).json({ error: errObj, success: false });
+
         }
 
         let latest_message
 
         //head this is where the ai starts
 
-                const {thread_id,id} = await openai.beta.threads.createAndRun({
-                    assistant_id:assId,
-                })
-                console.log("threadId",thread_id)
-                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+        //         const {thread_id,id} = await openai.beta.threads.createAndRun({
+        //             assistant_id:assId,
+        //         })
+        //         console.log("threadId",thread_id)
+        //         let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
         
-                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-                    console.log(`threadrun status: ${threadrun.status}`);
-                }
+        //         while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+        //             console.log(`threadrun status: ${threadrun.status}`);
+        //         }
         
-                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+        //         const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
         
-                let run = await createRun(thread_id, assId);
-                console.log(`run created: ${run.id} at ${thread_id}`);
+        //         let run = await createRun(thread_id, assId);
+        //         console.log(`run created: ${run.id} at ${thread_id}`);
         
-                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-                    console.log(`run status: ${run.status}`);
-                }
-                console.log(`run completed: ${run.id}`);
+        //         while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        //             console.log(`run status: ${run.status}`);
+        //         }
+        //         console.log(`run completed: ${run.id}`);
         
-                const message_response = await openai.beta.threads.messages.list(thread_id);
-                const messages = message_response.data;
+        //         const message_response = await openai.beta.threads.messages.list(thread_id);
+        //         const messages = message_response.data;
         
-                latest_message = messages[0]?.content[0]?.text?.value;
+        //         latest_message = messages[0]?.content[0]?.text?.value;
         
-                // Clean the JSON string properly
-                latest_message = latest_message
-                    ?.replace(/```json/g, "")
-                    ?.replace(/```/g, "")
-                    ?.replace(/\\n/g, "")
-                    ?.trim();
+        //         // Clean the JSON string properly
+        //         latest_message = latest_message
+        //             ?.replace(/```json/g, "")
+        //             ?.replace(/```/g, "")
+        //             ?.replace(/\\n/g, "")
+        //             ?.trim();
         
-                console.log("msg", latest_message);
+        //         console.log("msg", latest_message);
 
 
 
 
-                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
+        //         latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
         
-                const parsedMessage = JSON.parse(latest_message)
+        //         const parsedMessage = JSON.parse(latest_message)
 
-                let keys = Object.keys(parsedMessage)
+        //         let keys = Object.keys(parsedMessage)
 
-                keys.forEach(e=>{
-                    if(Array.isArray(parsedMessage[e])){
-                        parsedMessage[e] = parsedMessage[e].join('|-|')
-                    }
-                })
+        //         keys.forEach(e=>{
+        //             if(!Array.isArray(parsedMessage[e])){
+        //                 parsedMessage[e] = [parsedMessage[e]]
+        //             }
+        //         })
 
-            console.log(parsedMessage)
+        //     console.log(parsedMessage)
 
 
-        const newHistory = await History.create({
-            userID:req.user.id,
-            title,
-            description,
-            bullets:bulletpoints,
-            error:JSON.parse(latest_message)
+        // const newHistory = await History.create({
+        //     userID:req.user.id,
+        //     title,
+        //     description,
+        //     bullets:bulletpoints,
+        //     error:JSON.parse(latest_message)
 
-        })
+        // })
 
-        console.log(newHistory)
+        // console.log(newHistory)
 
-        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
-        // res.json({success:true})
+        // return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
         
     } catch (error) {
         if(error.code=='authentication_required'){
