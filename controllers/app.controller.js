@@ -75,19 +75,30 @@ const correctCapitalisations = (paragraph) => {
     for (let i = 0; i < words.length; i++) {
         const word = words[i];
         const lowerWord = word.toLowerCase();
+        
         if(word){
-            if (exceptions.includes(lowerWord)) {
+            if (word.includes('-')) {
+                const parts = word.split('-');
+                for (let part of parts) {
+                    if (part.length === 0 || part[0] !== part[0].toUpperCase() || part.slice(1) !== part.slice(1).toLowerCase()) {
+                        checkArray.push(word);
+                        check = false;
+                        break;
+                    }
+                }
+            } else if (exceptions.includes(lowerWord)) {
                 if (word !== lowerWord) {
-                    checkArray.push(word)
+                    checkArray.push(word);
                     check = false;
                 }
             } else {
-                    if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
-                        checkArray.push(word)
-                        check = false;
-                    }
+                if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
+                    checkArray.push(word);
+                    check = false;
+                }
             }
         }
+
     }
     console.log(check)
     return ({check,checkArray});
@@ -169,7 +180,7 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .regex(/^[ -~]*$/)
                 .min(0)
                 .max(obj[category]+1)
                 .custom((value,helper)=>{
@@ -180,14 +191,9 @@ export const verifyText = async (req, res) => {
                     return value
                 })
                 .messages({
-                    "string.pattern.base": "must be standard ASCII characters or generic symbols",
+                    "string.pattern.base": "These Characters Are Not Allowed",
                     "string.max":`title for category: "${category}" must be less than ${obj[category]} characters long`
                 }),
-
-
-
-
-
               
                 description: Joi
                 .string()
@@ -198,11 +204,11 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -#%-~]*$/)
+                .regex(/^[ -~]*$/)
                 .min(0)
                 .max(obj.descriptionCharacters)
                 .messages({
-                    "string.pattern.base": "must be standard ASCII characters only"
+                    "string.pattern.base": "These Characters Are Not Allowed"
                 })
                 .custom((value,helper) => {
                     const {containsCaps,cappedWords} = containsAllCapsWords(value)
@@ -233,8 +239,8 @@ export const verifyText = async (req, res) => {
                         }
                         return value;
                     })
-                    .regex(/^[A-Za-z0-9 ,.'\-]*$/).min(0).max(obj.bulletCharacters).messages({
-                        "string.pattern.base": "must be standard ASCII characters only or generic symbols"
+                    .regex(/^[ -~]*$/).min(0).max(obj.bulletCharacters).messages({
+                        "string.pattern.base": "These Characters Are Not Allowed"
                     })
                     .custom((value,helper) => {
                         const {containsCaps,cappedWords} = containsAllCapsWords(value)
@@ -244,19 +250,23 @@ export const verifyText = async (req, res) => {
                         return value
                     })
                 )
+                .custom((value,helper) => {
+                    // const {containsCaps,cappedWords} = containsAllCapsWords(value)
+                    // if(containsCaps){
+                    //     return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
+                    // }
+                    // return value
+                    if(value.join('').length>obj.totalBulletsLength){
+                        return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength}`)
+                    }
+                    return value
+                })
                 .min(0)
                 .max(obj.bulletNum)
                 .label('bulletpoints')
                 .messages({
                     "array.base": "bulletpoints must be an array of strings",
                     "array.includes": "each bulletpoint must be a valid string according to the specified rules"
-                })
-                .custom((value, helper) => {
-                    const combinedLength = value.reduce((acc, str) => acc + str.length, 0);
-                    if (combinedLength > obj.totalBulletsLength) {
-                        return helper.message(`The combined length of all bulletpoints must be less than or equal to ${obj.totalBulletsLength} characters`);
-                    }
-                    return value;
                 }),
 
             
@@ -269,24 +279,21 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .regex(/^[ -~]*$/)
                 .min(0)
                 .max(200)
                 .messages({
-                    "string.pattern.base": "must be standard ASCII characters or generic symbols"
+                    "string.pattern.base": "These Characters Are Not Allowed"
                 }),
-
-
-
 
             
                 category: Joi
                 .string()
-                .regex(/^[a-zA-Z0-9,– '.:\-\\/&]*$/)
+                .required()
                 .min(0)
                 .max(200)
                 .messages({
-                    "string.pattern.base": "must be standard ASCII characters or generic symbols"
+                    "string.pattern.base": "These Characters Are Not Allowed"
                 }),
             });
 
@@ -383,14 +390,44 @@ export const verifyText = async (req, res) => {
                 };
                 const fieldKey = fieldKeyMap[field.path[0]];
 
+                console.log("path",field.path[0]=="bulletpoints")
+
                 if (field.type === "string.pattern.base") {
                     const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
-                    errObj[fieldKey].push(`${field.message}: ${invalidChars}`)
-                } else {
+                    field.message = `${field.message}: ${invalidChars}`
+                }
+
+                if(field.path[0]=="bulletpoints"){
+
+                    console.log("hoi")
+                    errObj.joi=true
+
+                    let exists = false
+
+                    errObj[fieldKey].forEach((e)=>{
+                        if(e.point==(field.path[1]+1)){
+                            e.message=e.message+`|-|${field.message}`
+                            exists = true
+                        }
+                    })
+
+                    if(!exists){
+                        errObj[fieldKey].push({point:(field.path[1]+1)|| -10,message:field.message})
+                    }
+                    
+
+                    
+                }else {
                     errObj[fieldKey].push(field.message)
                 }
 
+
+
             });
+
+            // if(bulletpoints.join("").length>obj.totalBulletsLength){
+            //     errObj.BE.push({point:-1,message:`length of all bullet points collectively should be less than ${obj.totalBulletsLength}`})
+            // }
 
             
             const history = await History.create({
@@ -413,77 +450,77 @@ export const verifyText = async (req, res) => {
 
         //head this is where the ai starts
 
-                const {thread_id,id} = await openai.beta.threads.createAndRun({
-                    assistant_id:assId,
-                })
-                console.log("threadId",thread_id)
-                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
+        //         const {thread_id,id} = await openai.beta.threads.createAndRun({
+        //             assistant_id:assId,
+        //         })
+        //         console.log("threadId",thread_id)
+        //         let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
         
-                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-                    console.log(`threadrun status: ${threadrun.status}`);
-                }
+        //         while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
+        //             console.log(`threadrun status: ${threadrun.status}`);
+        //         }
         
-                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
+        //         const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
         
-                let run = await createRun(thread_id, assId);
-                console.log(`run created: ${run.id} at ${thread_id}`);
+        //         let run = await createRun(thread_id, assId);
+        //         console.log(`run created: ${run.id} at ${thread_id}`);
         
-                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-                    console.log(`run status: ${run.status}`);
-                }
-                console.log(`run completed: ${run.id}`);
+        //         while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
+        //             console.log("waiting for completion");
+        //             await new Promise((resolve) => setTimeout(resolve, 1000));
+        //             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        //             console.log(`run status: ${run.status}`);
+        //         }
+        //         console.log(`run completed: ${run.id}`);
         
-                const message_response = await openai.beta.threads.messages.list(thread_id);
-                const messages = message_response.data;
+        //         const message_response = await openai.beta.threads.messages.list(thread_id);
+        //         const messages = message_response.data;
         
-                latest_message = messages[0]?.content[0]?.text?.value;
+        //         latest_message = messages[0]?.content[0]?.text?.value;
         
-                // Clean the JSON string properly
-                latest_message = latest_message
-                    ?.replace(/```json/g, "")
-                    ?.replace(/```/g, "")
-                    ?.replace(/\\n/g, "")
-                    ?.trim();
+        //         // Clean the JSON string properly
+        //         latest_message = latest_message
+        //             ?.replace(/```json/g, "")
+        //             ?.replace(/```/g, "")
+        //             ?.replace(/\\n/g, "")
+        //             ?.trim();
         
-                console.log("msg", latest_message);
+        //         console.log("msg", latest_message);
 
 
 
 
-                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
+        //         latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
         
-                const parsedMessage = JSON.parse(latest_message)
+        //         const parsedMessage = JSON.parse(latest_message)
 
-                let keys = Object.keys(parsedMessage)
+        //         let keys = Object.keys(parsedMessage)
 
-                keys.forEach(e=>{
-                    if(!Array.isArray(parsedMessage[e])){
-                        parsedMessage[e] = [parsedMessage[e]]
-                    }
-                })
+        //         keys.forEach(e=>{
+        //             if(!Array.isArray(parsedMessage[e])){
+        //                 parsedMessage[e] = [parsedMessage[e]]
+        //             }
+        //         })
 
-            console.log(parsedMessage)
+        //     console.log(parsedMessage)
 
 
-        const newHistory = await History.create({
-            userID:req.user.id,
-            title,
-            description,
-            bullets:bulletpoints,
-            error:JSON.parse(latest_message)
+        // const newHistory = await History.create({
+        //     userID:req.user.id,
+        //     title,
+        //     description,
+        //     bullets:bulletpoints,
+        //     error:JSON.parse(latest_message)
 
-        })
+        // })
 
-        console.log(newHistory)
+        // console.log(newHistory)
 
-        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
-        // res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
+        // return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
         
     } catch (error) {
         if(error.code=='authentication_required'){
