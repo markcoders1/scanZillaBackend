@@ -6,6 +6,7 @@
   "creditCost": 1,
   "characterCost": 4294967290,
   "totalBulletsLength": 1000,
+  "searchTerms": 250,
   "Appliances": 200,
   "Arts, Crafts & Sewing": 200,
   "Automotive": 200,
@@ -30,5 +31,5 @@
   "Sports & Outdoors": 200,
   "Tools & Home Improvement": 200,
   "Toys & Games": 200,
-  "": null
+  "": 0
 }

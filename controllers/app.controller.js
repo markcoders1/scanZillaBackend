@@ -65,7 +65,8 @@ const containsBlacklistedWord = (paragraph) => {
 const correctCapitalisations = (paragraph) => {
     console.log(paragraph)
     const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without"]
-    const words = paragraph.split(' ');
+    const fixed = paragraph.split("-").join(" ")
+    const words = fixed.split(' ');
 
     let check = true
     let checkArray = []
@@ -77,19 +78,7 @@ const correctCapitalisations = (paragraph) => {
         const lowerWord = word.toLowerCase();
         
         if(word){
-            if (word.includes('-')) {
-                const parts = word.split('-');
-                let counter = 0
-                for (let part of parts) {
-                    if (part.length === 0 || part[0] !== part[0].toUpperCase() || part.slice(1) !== part.slice(1).toLowerCase()) {
-                        if(part.length === 0) counter ++
-                        checkArray.push(word);
-                        check = false;
-                    }
-                }
-                if(counter >1)check=true
-
-            } else if (exceptions.includes(lowerWord)) {
+            if (exceptions.includes(lowerWord)) {
                 if (word !== lowerWord) {
                     checkArray.push(word);
                     check = false;
@@ -160,6 +149,27 @@ const paymentEmailJoi = Joi.object({
     paymentDetails:Joi.string().required(),
 })
 
+function mergeObjects(obj1, obj2) {
+    const result = { ...obj2 };  // Start with a copy of obj2
+  
+    // Iterate over the keys of obj1
+    for (const key in obj1) {
+      const value1 = obj1[key];
+      // Check if the value from obj1 is an empty string or an empty array
+      if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
+        // If obj2 doesn't have the key, add it as empty from obj1
+        if (!obj2.hasOwnProperty(key)) {
+          result[key] = value1;
+        }
+      } else {
+        // For non-empty values from obj1, or values not checked, override or add to the result
+        result[key] = value1;
+      }
+    }
+  
+    return result;
+  }
+
 
 
 
@@ -167,7 +177,6 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
-        console.log(category)
 
         if(!category) return res.status(400).json({success:false, message:"category is required"})
 
@@ -272,11 +281,6 @@ export const verifyText = async (req, res) => {
                     })
                 )
                 .custom((value,helper) => {
-                    // const {containsCaps,cappedWords} = containsAllCapsWords(value)
-                    // if(containsCaps){
-                    //     return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
-                    // }
-                    // return value
                     if(value.join('').length>obj.totalBulletsLength){
                         return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength}`)
                     }
@@ -302,7 +306,7 @@ export const verifyText = async (req, res) => {
                 })
                 .regex(/^[ -~]*$/)
                 .min(0)
-                .max(200)
+                .max(obj.searchTerms)
                 .custom((value, helper) => {
                     if(value.length > 0 && /^\s*$/.test(value)){
                         return helper.message(`this text only consists of whitespace, please Enter a Value`);
@@ -339,7 +343,6 @@ export const verifyText = async (req, res) => {
 
 
         let collectiveString=title+description+bulletpoints.join('')+keywords
-        // const creditPrice = (Math.ceil(collectiveString.length/obj.characterCost)) * obj.creditCost
 
         const calcStringCost = (stringToCalc)=>{
             const fullChunks = Math.floor(stringToCalc.length / obj.characterCost);
@@ -394,18 +397,17 @@ export const verifyText = async (req, res) => {
         user.save()
 
         const { error } = verifyTextJoi.validate({ title, description, bulletpoints, keywords, category }, { abortEarly: false });
+        
+        let errObj = {
+            TE: [],
+            DE: [],
+            BE: [],
+            KE: [],
+            CE: []
+        };
 
         if (error) {
 
-            console.log(error.details)
-
-            let errObj = {
-                TE: [],
-                DE: [],
-                BE: [],
-                KE: [],
-                CE: []
-            };
 
             error.details.forEach(field => {
                 const fieldKeyMap = {
@@ -452,25 +454,21 @@ export const verifyText = async (req, res) => {
 
             });
 
-            // if(bulletpoints.join("").length>obj.totalBulletsLength){
-            //     errObj.BE.push({point:-1,message:`length of all bullet points collectively should be less than ${obj.totalBulletsLength}`})
-            // }
-
             
-            const history = await History.create({
-                userID:req.user.id,
-                title,
-                description,
-                keywords,
-                bullets:bulletpoints,
-                error:errObj,
-                credits:creditPrice
+            // const history = await History.create({
+            //     userID:req.user.id,
+            //     title,
+            //     description,
+            //     keywords,
+            //     bullets:bulletpoints,
+            //     error:errObj,
+            //     credits:creditPrice
     
-            })
+            // })
 
 
 
-            return res.status(200).json({ error: errObj, success: false });
+            // return res.status(200).json({ error: errObj, success: false });
 
         }
 
@@ -533,7 +531,7 @@ export const verifyText = async (req, res) => {
                     }
                 })
 
-            console.log(parsedMessage)
+            const mergedObject = mergeObjects(errObj,parsedMessage)    
 
 
         const newHistory = await History.create({
@@ -542,19 +540,20 @@ export const verifyText = async (req, res) => {
             description,
             bullets:bulletpoints,
             keywords,
-            error:JSON.parse(latest_message)
+            error:mergedObject
 
         })
 
         console.log(newHistory)
 
-        return res.status(200).json({ message: "text verified", error: parsedMessage, success: true });
+        return res.status(200).json({ message: "text verified", error: mergedObject, success: true });
         // res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
         
     } catch (error) {
         if(error.code=='authentication_required'){
             return res.status(200).json({ message: "not enough credits, autopay failed, authentication required", success: false });
         }else{
+
             console.log(error);
             return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
         }

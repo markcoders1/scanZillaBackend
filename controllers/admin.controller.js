@@ -188,7 +188,8 @@ export const changeRules = async (req,res) => {
             creditCost:Joi.number().min(0).message("incorrect value"),
             characterCost:Joi.number().min(0).message("incorrect value"),
             category:Joi.string().min(0),
-            totalBulletsLength:Joi.number().min(0).message("incorrect value")
+            totalBulletsLength:Joi.number().min(0).message("incorrect value"),
+            searchTerms:Joi.number().min(0).message("incorrect value")
         })
 
         const {
@@ -199,7 +200,8 @@ export const changeRules = async (req,res) => {
             creditCost,
             characterCost,
             category,
-            totalBulletsLength
+            totalBulletsLength,
+            searchTerms
         } = req.body
 
         const {error} = rulesjoi.validate(req.body, { abortEarly: false });
@@ -223,6 +225,7 @@ export const changeRules = async (req,res) => {
         obj.characterCost = Number(characterCost || obj.characterCost)
         obj[category] = Number(titleCharacters || obj[category])
         obj.totalBulletsLength = Number(totalBulletsLength || obj.totalBulletsLength)
+        obj.searchTerms = Number(searchTerms || obj.searchTerms)
     
         await fs.writeFile('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
