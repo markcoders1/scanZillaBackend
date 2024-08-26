@@ -455,7 +455,7 @@ export const updateAssInstructions = async (req,res) =>{
         await openai.beta.assistants.update(
             assId,
             {
-              instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos}      DONTs: ${instructions.title.Donts}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos}      DONTs: ${instructions.description.Donts}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos}      DONTs: ${instructions.bullets.Donts}`,
+              instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos.join("-")}      DONTs: ${instructions.title.Donts.join("-")}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos.join("-")}      DONTs: ${instructions.description.Donts.join("-")}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos.join("-")}      DONTs: ${instructions.bullets.Donts.join("-")}`,
             }
         );
 
