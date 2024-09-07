@@ -71,8 +71,6 @@ const correctCapitalisations = (paragraph) => {
     let check = true
     let checkArray = []
 
-    console.log(words)
-
     for (let i = 0; i < words.length; i++) {
         const word = words[i];
         const lowerWord = word.toLowerCase();
@@ -92,25 +90,29 @@ const correctCapitalisations = (paragraph) => {
         }
 
     }
-    console.log(check)
+
     return ({check,checkArray});
 }
 
 
 function containsAllCapsWords(str) {
+    const acceptedAbbreviations = [
+        'RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID'
+    ];
 
     const words = str.split(' ');
-    let cappedWords = []
-    let containsCaps = false
+    let cappedWords = [];
+    let containsCaps = false;
 
     for (let word of words) {
-        if (word && word.length > 1 && word === word.toUpperCase() && word !== word.toLowerCase()) {
-            cappedWords.push(word)
-            containsCaps = true; 
+        // Checks if the word is entirely alphabetic, in uppercase, and either a known abbreviation or longer than one character
+        if (/^[A-Z]+$/.test(word) && (word.length > 1 && !acceptedAbbreviations.includes(word))) {
+            cappedWords.push(word);
+            containsCaps = true;
         }
     }
 
-    return ({containsCaps,cappedWords}); 
+    return { containsCaps, cappedWords };
 }
 
 function containsHTMLTags(str) {
@@ -149,7 +151,7 @@ const paymentEmailJoi = Joi.object({
     paymentDetails:Joi.string().required(),
 })
 
-function mergeObjects(obj1, obj2) {
+   function mergeObjects(obj1, obj2) {
     const result = { ...obj2 };  // Start with a copy of obj2
   
     // Iterate over the keys of obj1
@@ -178,6 +180,7 @@ export const verifyText = async (req, res) => {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
 
+        console.log(`${keywords}`)
         if(!category) return res.status(400).json({success:false, message:"category is required"})
 
 
@@ -192,16 +195,16 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~]*$/)
+                .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
                 .min(0)
                 .max(obj[category]+1)
-                .custom((value,helper)=>{
-                    const {check,checkArray} = correctCapitalisations(value)
-                    if(!check){
-                        return helper.message(`Incorrect capitalizations found: (${checkArray.join(', ')})`)
-                    }
-                    return value
-                })
+                // .custom((value,helper)=>{
+                //     const {check,checkArray} = correctCapitalisations(value)
+                //     if(!check){
+                //         return helper.message(`Incorrect capitalizations found: (${checkArray.join(', ')})`)
+                //     }
+                //     return value
+                // })
                 .custom((value, helper) => {
                     if(value.length > 0 && /^\s*$/.test(value)){
                         return helper.message(`this text only consists of whitespace, please Enter a Value`);
@@ -222,7 +225,8 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~]*$/)
+                // .regex(/^[\u0020-\u007E\u2010-\u2015\u2212\u23E4\u2500\u2501\u2796\u2E0F\u3161\u1173\u4E00\u2043\u1428\uFF0D\uFE63\u2E3A-\u2E3B]*$/)
+                .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
                 .min(0)
                 .max(obj.descriptionCharacters)
                 .messages({
@@ -242,11 +246,12 @@ export const verifyText = async (req, res) => {
                     return value
                 })
                 .custom((value, helper) => {
-                    if (category !== "Books" && /<[^>]*>/g.test(value)) {
-                      return helper.message(
-                        "HTML tags are not allowed in the description unless the category is 'Books'",
-                      );
-                    }
+                    if ((category !== "Books" && /<(?!\/?br\s*\/?>)[^>]*>/g.test(value)) ||
+                    (category === "Books" && /<[^>]+>/g.test(value))) {
+                  return helper.message(
+                    "Only <br> tags are allowed outside the 'Books' category.",
+                  );
+                }
                     return value;
                 }),
             
@@ -269,8 +274,9 @@ export const verifyText = async (req, res) => {
                         }
                         return value
                     })
-                    .regex(/^[ -~]*$/).min(0).max(obj.bulletCharacters).messages({
-                        "string.pattern.base": "These Characters Are Not Allowed"
+                    .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/).min(0).max(obj.bulletCharacters).messages({
+                        "string.pattern.base": "These Characters Are Not Allowed",
+                        "string.max":"length must be less than or equal to 250 characters long to be fully indexed"
                     })
                     .custom((value,helper) => {
                         const {containsCaps,cappedWords} = containsAllCapsWords(value)
@@ -282,7 +288,7 @@ export const verifyText = async (req, res) => {
                 )
                 .custom((value,helper) => {
                     if(value.join('').length>obj.totalBulletsLength){
-                        return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength}`)
+                        return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed`)
                     }
                     return value
                 })
@@ -304,7 +310,7 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~]*$/)
+                .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
                 .min(0)
                 .max(obj.searchTerms)
                 .custom((value, helper) => {
@@ -548,6 +554,8 @@ export const verifyText = async (req, res) => {
 
         return res.status(200).json({ message: "text verified", error: mergedObject, success: true });
         // res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
+        // res.json({error:errObj,message:"success"})
+
         
     } catch (error) {
         if(error.code=='authentication_required'){

@@ -304,7 +304,6 @@ export const getIncome = async (req,res)=>{
             }
         }
 
-        console.log()
 
 
         let graphdata = charges.map(e=>{
