@@ -111,7 +111,7 @@ function containsAllCapsWords(str) {
             containsCaps = true;
         }
     }
-
+    cappedWords = [...new Set(cappedWords)]
     return { containsCaps, cappedWords };
 }
 
