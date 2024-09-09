@@ -6,9 +6,31 @@ import { Offer } from '../models/offers.model.js';
 import Stripe from 'stripe';
 import dotenv from 'dotenv'
 import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod.mjs';
+import { z } from 'zod';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
 import multer from 'multer';
+
+
+/*
+    {
+        TE:[title error],
+        TF:[title fixed],
+        DE:[description error],
+        DF:[description fixed],
+        BE:[bullet point error],
+        BF:[bullet point fixed]
+    }
+*/
+const responseSchema = z.object({
+    titleErrors:z.array(z.string()),
+    titleFixed:z.array(z.string()),
+    descriptionErrors:z.array(z.string()),
+    descriptionFixed:z.array(z.string()),
+    bulletPointErrors:z.array(z.string()),
+    bulletPointFixed:z.array(z.string()),
+})
 
 
 dotenv.config()
@@ -455,6 +477,8 @@ export const updateAssInstructions = async (req,res) =>{
             assId,
             {
               instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos.join("-")}      DONTs: ${instructions.title.Donts.join("-")}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos.join("-")}      DONTs: ${instructions.description.Donts.join("-")}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos.join("-")}      DONTs: ${instructions.bullets.Donts.join("-")}`,
+              response_format:zodResponseFormat(responseSchema,"scanzilla"),
+              model:"gpt-4o-2024-08-06"
             }
         );
 

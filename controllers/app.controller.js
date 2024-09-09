@@ -97,7 +97,7 @@ const correctCapitalisations = (paragraph) => {
 
 function containsAllCapsWords(str) {
     const acceptedAbbreviations = [
-        'RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID'
+        'RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID','LG'
     ];
 
     const words = str.split(' ');
@@ -537,7 +537,18 @@ export const verifyText = async (req, res) => {
                     }
                 })
 
-            const mergedObject = mergeObjects(errObj,parsedMessage)    
+                const changedObject = {
+                    TE:parsedMessage.titleErrors,
+                    TF:parsedMessage.titleFixed,
+                    DE:parsedMessage.descriptionErrors,
+                    DF:parsedMessage.descriptionFixed,
+                    BE:parsedMessage.bulletPointErrors,
+                    BF:parsedMessage.bulletPointFixed
+                }
+
+                
+
+            const mergedObject = mergeObjects(errObj,changedObject)    
 
 
         const newHistory = await History.create({
