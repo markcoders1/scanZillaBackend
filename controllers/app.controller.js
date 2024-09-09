@@ -97,7 +97,7 @@ const correctCapitalisations = (paragraph) => {
 
 function containsAllCapsWords(str) {
     const acceptedAbbreviations = [
-        'RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID','LG'
+        'RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID','LG',"RFID","AND","NAND","OS","OMEDIA","NOT","XOR","XNOR","OR","NOR","AMD"
     ];
 
     const words = str.split(' ');
