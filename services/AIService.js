@@ -44,7 +44,7 @@ export const analyzeValue = async (value,assistant) => {
             assId = 'asst_vZhSQFlyB4lcTEaJhk0FitZa'
         }
         const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId});
-        console.log("threadIdTitle", thread_id);
+        console.log(assistant, thread_id);
         let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
         
         while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
@@ -60,7 +60,7 @@ export const analyzeValue = async (value,assistant) => {
         const message = await createMessage(thread_id,"user",`${value}`);
         
         let run = await createRun(thread_id, assId);
-        console.log(`run created: ${run.id} at ${thread_id}`);
+        console.log(`run created: ${run.id} at ${thread_id} for ${assistant}`);
         
         while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
             // console.log("waiting for completion");
@@ -77,6 +77,8 @@ export const analyzeValue = async (value,assistant) => {
         const messages = message_response.data;
         
         latest_message = messages[0]?.content[0]?.text?.value;
+
+        console.log(assistant,"latest_message",latest_message)
     
         return JSON.parse(latest_message);
     }catch(err){
