@@ -2,8 +2,6 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config()
 
-let assId = ''
-
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
 //a way to update the ai
@@ -36,6 +34,7 @@ export const analyzeValue = async (value,assistant) => {
     try{
 
         let latest_message;
+        let assId
         if(assistant == 'title'){
             assId = 'asst_3nOxuR6z7N3xY1ZC1WKYAIhe'
         }else if(assistant == 'desc'){
@@ -48,13 +47,8 @@ export const analyzeValue = async (value,assistant) => {
         let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
         
         while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
-            // console.log("waiting for completion");
             await new Promise((resolve) => setTimeout(resolve, 1000));
-            threadrun = await openai.beta.threads.runs.retrieve(
-                thread_id,
-                threadrun.id
-            );
-            // console.log(`threadrun status: ${threadrun.status}`);
+            threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
         }
         
         const message = await createMessage(thread_id,"user",`${value}`);
@@ -63,20 +57,16 @@ export const analyzeValue = async (value,assistant) => {
         console.log(`run created: ${run.id} at ${thread_id} for ${assistant}`);
         
         while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
-            // console.log("waiting for completion");
             await new Promise((resolve) => setTimeout(resolve, 1000));
             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-            console.log(`run status: ${run.status} for ${assistant} at ${thread_id}`);
         }
-    
-        console.log(`analyzed ${assistant} at ${thread_id} using run ${run.id}`);
-        const message_response = await openai.beta.threads.messages.list(thread_id);
-        console.log(`analyzed ${assistant} at ${thread_id} using run ${run.id}`);
+
+        let message_response = await openai.beta.threads.messages.list(thread_id);
         const messages = message_response.data;
         latest_message = messages[0]?.content[0]?.text?.value;
         console.log(assistant,"latest_message",latest_message)
     
-        return new Promise((resolve) => resolve(JSON.parse(latest_message)));
+        return JSON.parse(latest_message);
     }catch(err){
         console.log(assistant,err);
         return {}
