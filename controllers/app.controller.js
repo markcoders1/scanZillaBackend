@@ -561,10 +561,12 @@ export const verifyText = async (req, res) => {
         if(errObj.DE.length == 0&&description!=''){
             errors.push(analyzeValue(description, 'desc'))
         }
-        if(errObj.BE.length == 1&&bulletpoints[0].value!=''){
+        if(errObj.BE.length == 0&&bulletpoints.length>0&&bulletpoints[0]!=''){
             errors.push(analyzeValue(bulletpoints, 'bullets'))
         }
         const parsedMessage = Object.assign({}, ...(await Promise.all(errors)));
+
+        console.log('message data',parsedMessage)
 
         const changedObject = {
             TE: parsedMessage.titleErrors || [],
