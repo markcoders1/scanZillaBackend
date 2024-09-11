@@ -66,21 +66,17 @@ export const analyzeValue = async (value,assistant) => {
             // console.log("waiting for completion");
             await new Promise((resolve) => setTimeout(resolve, 1000));
             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-            // console.log(`run status: ${run.status}`);
+            console.log(`run status: ${run.status} for ${assistant} at ${thread_id}`);
         }
-        
-        console.log(`run completed: ${run.id}`);
     
-        console.log(`analyzed ${assistant}`)
-        
+        console.log(`analyzed ${assistant} at ${thread_id} using run ${run.id}`);
         const message_response = await openai.beta.threads.messages.list(thread_id);
+        console.log(`analyzed ${assistant} at ${thread_id} using run ${run.id}`);
         const messages = message_response.data;
-        
         latest_message = messages[0]?.content[0]?.text?.value;
-
         console.log(assistant,"latest_message",latest_message)
     
-        return JSON.parse(latest_message);
+        return new Promise((resolve) => resolve(JSON.parse(latest_message)));
     }catch(err){
         console.log(assistant,err);
         return {}

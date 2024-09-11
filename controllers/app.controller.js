@@ -556,15 +556,17 @@ export const verifyText = async (req, res) => {
         const errors = []
 
         if(errObj.TE.length == 0&&title!=''){
-            errors.push(analyzeValue(title, 'title'))
+            errors.push(await analyzeValue(title, 'title'))
         }
         if(errObj.DE.length == 0&&description!=''){
-            errors.push(analyzeValue(description, 'desc'))
+            errors.push(await analyzeValue(description, 'desc'))
         }
         if(errObj.BE.length == 0&&bulletpoints.length>0&&bulletpoints[0]!=''){
-            errors.push(analyzeValue(bulletpoints, 'bullets'))
+            errors.push(await analyzeValue(bulletpoints, 'bullets'))
         }
-        const parsedMessage = Object.assign({}, ...(await Promise.all(errors)));
+        // const parsedMessage = Object.assign({}, ...(await Promise.all(errors)));
+        // const results = await Promise.all(errors);
+        const parsedMessage = Object.assign({}, ...errors);
 
         console.log('message data',parsedMessage)
 
