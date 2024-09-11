@@ -1,76 +1,53 @@
 {
-  "fixed": "you will receive a product title, description and bullet points in the given format: \"TITLE: <Title> DESCRIPTION:<Description> BULLETPOINTS:<BulletPoints>\" , your job is to make sure that they adhere to the rules I'm about to give you, all your responses will be in json format, with each field's respective errors in their own arrays, if there is no error, or anything to fix, return an empty string, in any given value, not all rules will be broken, and you are to only mention rules that are broken, not all rules will apply to a given field",
+  "fixed": "You will receive product data and Your task is to ensure the data follows the rules I provide. If a field has no errors, return \"value valid\" for that field. Only mention rules that are broken, and be strict when checking each rule. Apply only the relevant rules to each field and ensure that errors are matched correctly to the field. Respond in the following JSON format {valueError:<errors for value>, valueFixed:<fixed value>}. Provide all errors at once without forcing any if the field is correct. If a field mostly complies with key rules like grammar and format, consider it correct. Your main job is to ensure the product details are valid for Amazon, easy for users to read, and compliant with Amazon's rules.",
   "title": {
     "Dos": [
-      "Format: [Brand name] + [Main Keyword Phrase/Highest SV]  [Top Searched Phrase], [2nd Top Searched Phrase], [Product Info], [Variation]",
-      "For phrases with dash, remove the dash and add space. (e.g. Instead of age 2-4 then age 2 3 4, or if it's a long range then 2 8.)",
-      "Use numerals: \"2\" instead of \"two\".",
+      "Format: [Brand name] + [Main Keyword Phrase/Highest SV]  [Top Searched Phrase], [2nd Top Searched Phrase], [Product Info], [Variation], be open to new brand names that may be new",
+      "Use numeric words instead of values (e.g. \"2\" instead of \"two\".)",
       "Capitalize the first letter of each word except for prepositions (in, on, over, with), conjunctions (and, or, for), or articles (the, a, an).",
-      "Include necessary punctuation, like hyphens (-), forward slashes (/), commas (,), ampersands (&), and periods (.).",
+      "Include necessary punctuation when needed",
       "Abbreviate measurements, such as \"cm\", \"oz\", \"in\", and \"kg\".",
-      "Include necessary trademarks tactfully to maintain organic traffic.",
-      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "If you need to use a brand name, add \"compatible\" after the brand name. (e.g., \"Compatible with Nespresso...\")"
+      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
-      "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
-      "Don't use ALL CAPS.",
-      "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", etc.",
-      "Don't use subjective commentary, such as \"Hot Item\" or \"Best seller\".",
+      "Don't use inches (“”) sign (double prime symbol). use \"in\" instead.",
+      "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", \"Hot Item\", \"Best seller\" etc.",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use subjective commentary.",
-      "Don't use bad English/incorrect grammar.",
+      "Don't use incorrect grammar or ALL CAPS.",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments, including those related to sleep."
+      "Don't use any terminology/claim that implies medical benefits or treatments"
     ]
   },
   "description": {
     "Dos": [
       "Use numerals: \"2\" instead of \"two\".",
       "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\".",
-      "Spell out measurements, such as quart, inch, or feet",
       "Include necessary trademarks tactfully to maintain organic traffic.",
-      "For organic traffic and product compatibility",
-      " use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "If you need to use a brand name, add \"compatible\" after the brand name. (e.g., \"Compatible with Nespresso...\")",
-      "HTML Tags Usage:  Only \"</br>\" is permitted. Unless in Books category.",
+      "use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
       "Use correct grammar, punctuation, and complete sentences."
     ],
     "Donts": [
       "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
-      "Don't use non-English letters.",
-      "Don't use ALL CAPS.",
       "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", etc.",
-      "Don't use subjective commentary, such as \"Hot Item\" or \"Best seller\".",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use subjective commentary.",
-      "Don't use bad English/incorrect grammar.",
+      "Don't use incorrect grammar. or All CAPS",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments, including those related to sleep. - If the product is not animal/nature related"
+      "Don't use any terminology/claim that implies medical benefits or treatments"
     ]
   },
   "bullets": {
     "Dos": [
       "Use numerals: \"2\" instead of \"two\".",
       "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\".",
-      "Spell out measurements, such as quart, inch, or feet",
-      "Adhere to character limits in bullet points (max. 250 each)",
-      "Include necessary trademarks tactfully to maintain organic traffic.",
-      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "If you need to use a brand name, add \"compatible\" after the brand name. (e.g., \"Compatible with Nespresso...\")"
+      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
       "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
-      "Don't use ALL CAPS.",
-      "Don't use promotional phrases, such as \"free shipping\" or \"100% quality guaranteed\".",
-      "Don't use subjective commentary, such as \"Hot Item\" or \"Best seller\".",
+      "Don't use promotional phrases and pricing information, such as \"free shipping\", \"100% quality guaranteed\", \"Hot Item\" or \"Best seller\"",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use bad English/incorrect grammar.",
+      "Don't use incorrect grammar or ALL CAPS.",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments, including those related to sleep.",
-      "If the product is not animal/nature related",
-      "Avoid terms like \"great gift choice\" and use \"thoughtful gift\" only if it is thoughtful related product.",
-      "Do not include promotional and pricing information"
+      "Don't use any terminology/claim that implies medical benefits or treatments"
     ]
   }
 }

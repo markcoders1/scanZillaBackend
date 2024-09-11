@@ -32,13 +32,28 @@ const responseSchema = z.object({
     bulletPointFixed:z.array(z.string()),
 })
 
+const titleSchema = z.object({
+    titleErrors:z.array(z.string()),
+    titleFixed:z.array(z.string()),
+})
+
+const descriptionSchema = z.object({
+    descriptionErrors:z.array(z.string()),
+    descriptionFixed:z.array(z.string()),
+})
+
+const bulletsSchema = z.object({
+    bulletPointErrors:z.array(z.string()),
+    bulletPointFixed:z.array(z.string()),
+})
+
 
 dotenv.config()
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 const openai = new OpenAI(process.env.OPENAI_API_KEY)
 
-const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
+// const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
 
 
 export const getAllUsers = async (req, res) => {
@@ -473,16 +488,31 @@ export const updateAssInstructions = async (req,res) =>{
 
         await fs.writeFile('json/AI.rules.json', JSON.stringify(instructions, null, 2), 'utf8');
 
-        await openai.beta.assistants.update(
+        const updatefunc = async (assId,valUpdate,schema) => {
+            return await openai.beta.assistants.update(
             assId,
             {
-              instructions:`${instructions.fixed}       here are the dos and donts for the title:     DOs: ${instructions.title.Dos.join("-")}      DONTs: ${instructions.title.Donts.join("-")}        here are the dos and donts for the description:     DOs: ${instructions.description.Dos.join("-")}      DONTs: ${instructions.description.Donts.join("-")}      here are the dos and donts for the bullets:     DOs: ${instructions.bullets.Dos.join("-")}      DONTs: ${instructions.bullets.Donts.join("-")}`,
-              response_format:zodResponseFormat(responseSchema,"scanzilla"),
+              instructions:`${instructions.fixed}       here are the dos and donts for the ${valUpdate}:     DOs: ${instructions[valUpdate].Dos.join("-")}      DONTs: ${instructions[valUpdate].Donts.join("-")}`,
+              response_format:zodResponseFormat(schema,`${valUpdate}`),
               model:"gpt-4o-2024-08-06"
             }
-        );
+            );
+        }
 
-        res.status(200).json({success:true, message:"AI rules changed successfully", instructions})
+        const updates = []
+        if(titleDo||titleDont){
+            updates.push(updatefunc('asst_3nOxuR6z7N3xY1ZC1WKYAIhe','title',titleSchema))
+        }
+        if(descriptionDo||descriptionDont){
+            updates.push(updatefunc('asst_GokOIlMbjA1jlvKb8pLNMR51','description',descriptionSchema))
+        }
+        if(bulletsDo||bulletsDont){
+            updates.push(updatefunc('asst_vZhSQFlyB4lcTEaJhk0FitZa','bullets',bulletsSchema))
+        }
+        const update = await Promise.all(updates)
+        console.log("update")
+
+        res.status(200).json({success:true, message:"AI rules changed successfully", update})
     }catch(error){
         console.log(error)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})

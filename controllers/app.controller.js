@@ -1,48 +1,45 @@
-import Joi from "joi"
+import Joi from "joi";
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import fs from 'fs/promises'
+import fs from "fs/promises";
 import { History } from "../models/history.model.js";
 import Stripe from "stripe";
 import { User } from "../models/user.model.js";
-import {ProcessedEvent} from "../models/webhook.model.js";
+import { ProcessedEvent } from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
+import { analyzeValue } from "../services/AIService.js";
 
-const transporter = transporterConstructor()
-
+const transporter = transporterConstructor();
 
 dotenv.config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const openai = new OpenAI(process.env.OPENAI_API_KEY)
+const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-
-const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ"
-const runId = "run_NtD8Nk9cxGzelSCPf12JXy8l"
+const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ";
 
 const loadBlacklistedWords = async () => {
-    const data = await fs.readFile("blacklistedWords.csv", 'utf-8');
-    const words = new Set(data.split(/\r?\n/).map(word => word.toLowerCase()));
+    const data = await fs.readFile("blacklistedWords.csv", "utf-8");
+    const words = new Set(
+        data.split(/\r?\n/).map((word) => word.toLowerCase())
+    );
     return words;
 };
 
+const blacklistedWords = await loadBlacklistedWords();
 
-const blacklistedWords= await loadBlacklistedWords();
-
-
-function findInvalidCharacters(input,regex) {
+function findInvalidCharacters(input, regex) {
     let invalidChars = [];
-  
-    for (let char of input) {
-      if (!regex.test(char) && !invalidChars.includes(char)) {
-        invalidChars.push(char);
-      }
-    }
-    return invalidChars.join(' ');
-}
 
+    for (let char of input) {
+        if (!regex.test(char) && !invalidChars.includes(char)) {
+            invalidChars.push(char);
+        }
+    }
+    return invalidChars.join(" ");
+}
 
 const containsBlacklistedWord = (paragraph) => {
     const lowerCaseParagraph = paragraph.toLowerCase();
@@ -50,7 +47,7 @@ const containsBlacklistedWord = (paragraph) => {
     let containsWords = false;
 
     for (const phrase of blacklistedWords) {
-        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, 'g');
+        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
         if (regex.test(lowerCaseParagraph)) {
             usedWords.push(phrase);
             containsWords = true;
@@ -58,68 +55,64 @@ const containsBlacklistedWord = (paragraph) => {
     }
 
     usedWords = [...new Set(usedWords)];
-    
+
     return { containsWords, usedWords };
 };
 
-const correctCapitalisations = (paragraph) => {
-    console.log(paragraph)
-    const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without"]
-    const fixed = paragraph.split("-").join(" ")
-    const words = fixed.split(' ');
+// const correctCapitalisations = (paragraph) => {
+//     console.log(paragraph);
+//     const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without",];
+//     const fixed = paragraph.split("-").join(" ");
+//     const words = fixed.split(" ");
 
-    let check = true
-    let checkArray = []
+//     let check = true;
+//     let checkArray = [];
 
-    for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const lowerWord = word.toLowerCase();
-        
-        if(word){
-            if (exceptions.includes(lowerWord)) {
-                if (word !== lowerWord) {
-                    checkArray.push(word);
-                    check = false;
-                }
-            } else {
-                if (word[0] !== word[0].toUpperCase() || word.slice(1) !== word.slice(1).toLowerCase()) {
-                    checkArray.push(word);
-                    check = false;
-                }
-            }
-        }
+//     for (let i = 0; i < words.length; i++) {
+//         const word = words[i];
+//         const lowerWord = word.toLowerCase();
 
-    }
+//         if (word) {
+//             if (exceptions.includes(lowerWord)) {
+//                 if (word !== lowerWord) {
+//                     checkArray.push(word);
+//                     check = false;
+//                 }
+//             } else {
+//                 if (
+//                     word[0] !== word[0].toUpperCase() ||
+//                     word.slice(1) !== word.slice(1).toLowerCase()
+//                 ) {
+//                     checkArray.push(word);
+//                     check = false;
+//                 }
+//             }
+//         }
+//     }
 
-    return ({check,checkArray});
-}
-
+//     return { check, checkArray };
+// };
 
 function containsAllCapsWords(str) {
-    const acceptedAbbreviations = ['RGB', 'OLED', 'LED', 'USB', 'HDMI', 'LCD', 'SSD', 'DDR', 'GPU', 'CPU', 'AI', 'AC', 'DC', 'UV', 'IR', 'HD', 'VR', 'AR', 'FM', 'AM', 'FAQ', 'PVC', 'ABS', 'NFC', 'RFID','LG',"RFID","AND","NAND","OS","OMDIA","NOT","XOR","XNOR","OR","NOR","AMD","WiFi","RAM","ROM","SD","TF","CCTV","GPS","DPI","PPI","USB-C","VGA","DVI","SATA","PCIe","HDCP","HDR","UHD","QLED","IPS","MP","FPS","Mbps","Gbps","TB","GB","MHz","GHz","mAh","Li-ion","Li-Po","PSU","UPS","POE","VoIP","AIoT","IoT","CAT5","CAT6","FTTH","EPUB","PDF","USB","MIMO","BPSK","QPSK","FHD","WQHD","TFT","LGA","SO-DIMM","mSATA","NVMe","APU","FPU","AVR","DLP","DMX","IP","ISP","DSP","PMP","TV","PTZ","STB","OIS","XLR","MIDI","BNC","SFP","MAC","WAN","LAN","VLAN","SSL","HTTPS","DNS","DHCP","IC","PWM","LDO","BMS","OLED","CAGR","TPU","TDP","RMS","THD","I2C","SPI","UART","TTL","HDMI","DP","DTS","DAC","ADC","JTAG","SOC","BIOS","UFS","PD","QC","LED TV","8K","DND","DIY","FAT32","NTFS","EXT4","HDD","RAID","E-ATX","MID","OD","LED","AV","S/PDIF","LLC","RoHS","UL","FCC","CE","API","GUI","CLI","CD","DVD","BD","USB 4.0","MHL","XGA","WXGA","QR","NVR","NAS","ECC","SAS","GDDR","SMD","MOSFET","IGBT","VFD","HMI","AP","SSID","WPA","WPA2","WPA3","LTE","3G","4G","5G","SIM","eSIM","CMOS","CCD","LIDAR","SONAR","SISO","PON","AIO","ODI","CDN","TLS","AES","DES","IPX","ATM","PTP","XMPP","SSH","SMTP","POP3","IMAP","PSTN","POTS","BPS","RF","EMI","EMC","EIRP","SMPS","BLE","COFDM","QAM","OFDM","FDD","TDD","TDMA","FDMA","SDR","EPC","ESD","ACPI","DVI-D","DVI-I","XMP","RS-232","RS-485","USB-PD","M.2","QHD","XQD","UHS","NVM","ATA","IDE","GSM","CDMA","WCDMA","VoLTE","IPTV","TFT-LCD","OLED-QLED","DCR","ICR","HFR","ITX","ZIF","PDIP","SOIC","QFN","BGA","PCB","RFQ","RFP","OEM","ODM","COTS","MMU","DMA","VPN","VPS","SLA","QoS","RISC","CISC","IOT","ML","NLP","VPU","AI","MIC","DVR","CVR","MLC","TLC","QLC","UVLO","OTP","DLNA","HSI","CSI","PIR","GPIO","RTC","PFC","PMIC","VCXO","LVDS","SDIO","WiDi","UWB","Z-Wave","Zigbee","SATA","SFP+","QFP","HVAC","PDM","DFT","DFA","DC-DC","OP-AMP","PLL","SNR","THX","IPFS","EIGRP","OSPF","BGP","MPLS","NAT","PAT","ACL","IDS","AVC","HEVC","H.264","H.265","SDXC","SMB","CIFS","SFTP","BTS","RTOS","FAT","EXIF","LGA1151","VESA","MIPI","RTP","RTCP","HLS","DASH","SIP","SVC","MP3","WAV","AAC","FLAC","OPUS","TWS","ANC","UPnP","IMU","DMP","MSP","PABX","PBX","CATV","IFTTT","FMC","APC","SMSC"]
+    const acceptedAbbreviations = ["RGB","OLED","LED","USB","HDMI","LCD","SSD","DDR","GPU","CPU","AI","AC","DC","UV","IR","HD","VR","AR","FM","AM","FAQ","PVC","ABS","NFC","RFID","LG","RFID","AND","NAND","OS","OMDIA","NOT","XOR","XNOR","OR","NOR","AMD","WiFi","RAM","ROM","SD","TF","CCTV","GPS","DPI","PPI","USB-C","VGA","DVI","SATA","PCIe","HDCP","HDR","UHD","QLED","IPS","MP","FPS","Mbps","Gbps","TB","GB","MHz","GHz","mAh","Li-ion","Li-Po","PSU","UPS","POE","VoIP","AIoT","IoT","CAT5","CAT6","FTTH","EPUB","PDF","USB","MIMO","BPSK","QPSK","FHD","WQHD","TFT","LGA","SO-DIMM","mSATA","NVMe","APU","FPU","AVR","DLP","DMX","IP","ISP","DSP","PMP","TV","PTZ","STB","OIS","XLR","MIDI","BNC","SFP","MAC","WAN","LAN","VLAN","SSL","HTTPS","DNS","DHCP","IC","PWM","LDO","BMS","OLED","CAGR","TPU","TDP","RMS","THD","I2C","SPI","UART","TTL","HDMI","DP","DTS","DAC","ADC","JTAG","SOC","BIOS","UFS","PD","QC","LED TV","8K","DND","DIY","FAT32","NTFS","EXT4","HDD","RAID","E-ATX","MID","OD","LED","AV","S/PDIF","LLC","RoHS","UL","FCC","CE","API","GUI","CLI","CD","DVD","BD","USB 4.0","MHL","XGA","WXGA","QR","NVR","NAS","ECC","SAS","GDDR","SMD","MOSFET","IGBT","VFD","HMI","AP","SSID","WPA","WPA2","WPA3","LTE","3G","4G","5G","SIM","eSIM","CMOS","CCD","LIDAR","SONAR","SISO","PON","AIO","ODI","CDN","TLS","AES","DES","IPX","ATM","PTP","XMPP","SSH","SMTP","POP3","IMAP","PSTN","POTS","BPS","RF","EMI","EMC","EIRP","SMPS","BLE","COFDM","QAM","OFDM","FDD","TDD","TDMA","FDMA","SDR","EPC","ESD","ACPI","DVI-D","DVI-I","XMP","RS-232","RS-485","USB-PD","M.2","QHD","XQD","UHS","NVM","ATA","IDE","GSM","CDMA","WCDMA","VoLTE","IPTV","TFT-LCD","OLED-QLED","DCR","ICR","HFR","ITX","ZIF","PDIP","SOIC","QFN","BGA","PCB","RFQ","RFP","OEM","ODM","COTS","MMU","DMA","VPN","VPS","SLA","QoS","RISC","CISC","IOT","ML","NLP","VPU","AI","MIC","DVR","CVR","MLC","TLC","QLC","UVLO","OTP","DLNA","HSI","CSI","PIR","GPIO","RTC","PFC","PMIC","VCXO","LVDS","SDIO","WiDi","UWB","Z-Wave","Zigbee","SATA","SFP+","QFP","HVAC","PDM","DFT","DFA","DC-DC","OP-AMP","PLL","SNR","THX","IPFS","EIGRP","OSPF","BGP","MPLS","NAT","PAT","ACL","IDS","AVC","HEVC","H.264","H.265","SDXC","SMB","CIFS","SFTP","BTS","RTOS","FAT","EXIF","LGA1151","VESA","MIPI","RTP","RTCP","HLS","DASH","SIP","SVC","MP3","WAV","AAC","FLAC","OPUS","TWS","ANC","UPnP","IMU","DMP","MSP","PABX","PBX","CATV","IFTTT","FMC","APC","SMSC"];
 
-    const words = str.split(' ');
+    const words = str.split(" ");
     let cappedWords = [];
     let containsCaps = false;
 
     for (let word of words) {
-        // Checks if the word is entirely alphabetic, in uppercase, and either a known abbreviation or longer than one character
-        if (/^[A-Z]+$/.test(word) && (word.length > 1 && !acceptedAbbreviations.includes(word))) {
+        if (
+            /^[A-Z]+$/.test(word) &&
+            word.length > 1 &&
+            !acceptedAbbreviations.includes(word)
+        ) {
             cappedWords.push(word);
             containsCaps = true;
         }
     }
-    cappedWords = [...new Set(cappedWords)]
+    cappedWords = [...new Set(cappedWords)];
     return { containsCaps, cappedWords };
 }
-
-function containsHTMLTags(str) {
-    const regex = /<\/?[\w\s="/.':;#-\/]+>/gi;
-    return regex.test(str);
-}
-
-
-
 
 // function detectNumberWords(text) {
 //     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
@@ -139,63 +132,54 @@ function containsHTMLTags(str) {
 //     return matches !== null;
 // }
 
-
-const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
+const obj = JSON.parse(await fs.readFile("json/rules.json", "utf8"));
 
 const paymentEmailJoi = Joi.object({
-    email:Joi.string().required().email(),
-    name:Joi.string().required().min(2),
-    credits:Joi.number().required().min(1),
-    paymentDetails:Joi.string().required(),
-})
+    email: Joi.string().required().email(),
+    name: Joi.string().required().min(2),
+    credits: Joi.number().required().min(1),
+    paymentDetails: Joi.string().required(),
+});
 
-   function mergeObjects(obj1, obj2) {
-    const result = { ...obj2 };  // Start with a copy of obj2
-  
-    // Iterate over the keys of obj1
+function mergeObjects(obj1, obj2) {
+    const result = { ...obj2 }; 
     for (const key in obj1) {
-      const value1 = obj1[key];
-      // Check if the value from obj1 is an empty string or an empty array
-      if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
-        // If obj2 doesn't have the key, add it as empty from obj1
-        if (!obj2.hasOwnProperty(key)) {
-          result[key] = value1;
+        const value1 = obj1[key];
+        if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
+            if (!obj2.hasOwnProperty(key)) {
+                result[key] = value1;
+            }
+        } else {
+            result[key] = value1;
         }
-      } else {
-        // For non-empty values from obj1, or values not checked, override or add to the result
-        result[key] = value1;
-      }
     }
-  
     return result;
-  }
-
-
-
+}
 
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
+        console.log(`${keywords}`);
+        if (!category) return res.status(400).json({ success: false, message: "category is required" });
 
-        console.log(`${keywords}`)
-        if(!category) return res.status(400).json({success:false, message:"category is required"})
-
-
-            const verifyTextJoi = Joi.object({
-
-                title: Joi
-                .string()
+        const verifyTextJoi = Joi.object({
+            title: Joi.string()
                 .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value);
+                    const { containsWords, usedWords } =
+                        containsBlacklistedWord(value);
                     if (containsWords) {
-                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                        return helper.message(
+                            `this text contains the words: (${usedWords.map(
+                                (word) => " " + word
+                            )} ) which are blacklisted`
+                        );
                     }
                     return value;
                 })
                 .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
                 .min(0)
-                .max(obj[category]+1)
+                .max(obj[category] + 1)
                 // .custom((value,helper)=>{
                 //     const {check,checkArray} = correctCapitalisations(value)
                 //     if(!check){
@@ -204,107 +188,139 @@ export const verifyText = async (req, res) => {
                 //     return value
                 // })
                 .custom((value, helper) => {
-                    if(value.length > 0 && /^\s*$/.test(value)){
-                        return helper.message(`this text only consists of whitespace, please Enter a Value`);
-                    }
-                    return value
-                })
-                .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max":`title for category: "${category}" must be less than ${obj[category]} characters long`
-                }),
-              
-                description: Joi
-                .string()
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value);
-                    if (containsWords) {
-                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                    if (value.length > 0 && /^\s*$/.test(value)) {
+                        return helper.message(
+                            `this text only consists of whitespace, please Enter a Value`
+                        );
                     }
                     return value;
                 })
-                // .regex(/^[\u0020-\u007E\u2010-\u2015\u2212\u23E4\u2500\u2501\u2796\u2E0F\u3161\u1173\u4E00\u2043\u1428\uFF0D\uFE63\u2E3A-\u2E3B]*$/)
+                .messages({
+                    "string.pattern.base": "These Characters Are Not Allowed",
+                    "string.max": `title for category: "${category}" must be less than ${obj[category]} characters long`,
+                }),
+
+            description: Joi.string()
+                .custom((value, helper) => {
+                    const { containsWords, usedWords } =
+                        containsBlacklistedWord(value);
+                    if (containsWords) {
+                        return helper.message(
+                            `this text contains the words: (${usedWords.map(
+                                (word) => " " + word
+                            )} ) which are blacklisted`
+                        );
+                    }
+                    return value;
+                })
                 .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
                 .min(0)
                 .max(obj.descriptionCharacters)
                 .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed"
-                })
-                .custom((value,helper) => {
-                    const {containsCaps,cappedWords} = containsAllCapsWords(value)
-                    if(containsCaps){
-                        return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
-                    }
-                    return value
+                    "string.pattern.base": "These Characters Are Not Allowed",
                 })
                 .custom((value, helper) => {
-                    if(value.length > 0 && /^\s*$/.test(value)){
-                        return helper.message(`this text only consists of whitespace, please Enter a Value`);
+                    const { containsCaps, cappedWords } =
+                        containsAllCapsWords(value);
+                    if (containsCaps) {
+                        return helper.message(
+                            `The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} )`
+                        );
                     }
-                    return value
+                    return value;
                 })
                 .custom((value, helper) => {
-                    if ((category !== "Books" && /<(?!\/?br\s*\/?>)[^>]*>/g.test(value)) ||
-                    (category === "Books" && /<[^>]+>/g.test(value))) {
-                  return helper.message(
-                    "Only <br> tags are allowed outside the 'Books' category.",
-                  );
-                }
+                    if (value.length > 0 && /^\s*$/.test(value)) {
+                        return helper.message(
+                            `this text only consists of whitespace, please Enter a Value`
+                        );
+                    }
+                    return value;
+                })
+                .custom((value, helper) => {
+                    if (
+                        (category !== "Books" &&
+                            /<(?!\/?br\s*\/?>)[^>]*>/g.test(value)) ||
+                        (category === "Books" && /<[^>]+>/g.test(value))
+                    ) {
+                        return helper.message(
+                            "Only <br> tags are allowed outside the 'Books' category."
+                        );
+                    }
                     return value;
                 }),
-            
-                bulletpoints: Joi
-                .array()
+
+            bulletpoints: Joi.array()
                 .items(
-                    Joi
-                    .string()
-                    .allow('')
-                    .custom((value, helper) => {
-                        const { containsWords, usedWords } = containsBlacklistedWord(value);
-                        if (containsWords) {
-                            return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
-                        }
-                        return value;
-                    })
-                    .custom((value, helper) => {
-                        if(value.length > 0 && /^\s*$/.test(value)){
-                            return helper.message(`this text only consists of whitespace, please Enter a Value`);
-                        }
-                        return value
-                    })
-                    .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/).min(0).max(obj.bulletCharacters).messages({
-                        "string.pattern.base": "These Characters Are Not Allowed",
-                        "string.max":"length must be less than or equal to 250 characters long to be fully indexed"
-                    })
-                    .custom((value,helper) => {
-                        const {containsCaps,cappedWords} = containsAllCapsWords(value)
-                        if(containsCaps){
-                            return helper.message(`The given value has words that are in all caps: (${cappedWords.map(word => " " + word)} )`);
-                        }
-                        return value
-                    })
+                    Joi.string()
+                        .allow("")
+                        .custom((value, helper) => {
+                            const { containsWords, usedWords } =
+                                containsBlacklistedWord(value);
+                            if (containsWords) {
+                                return helper.message(
+                                    `this text contains the words: (${usedWords.map(
+                                        (word) => " " + word
+                                    )} ) which are blacklisted`
+                                );
+                            }
+                            return value;
+                        })
+                        .custom((value, helper) => {
+                            if (value.length > 0 && /^\s*$/.test(value)) {
+                                return helper.message(
+                                    `this text only consists of whitespace, please Enter a Value`
+                                );
+                            }
+                            return value;
+                        })
+                        .regex(/^[ -~–—―‑֊־‐‒−⎴─━➖⸏ㅣㅡー一⁃ᐨ－﹣⸻⸺]*$/)
+                        .min(0)
+                        .max(obj.bulletCharacters)
+                        .messages({
+                            "string.pattern.base":"These Characters Are Not Allowed",
+                            "string.max":"length must be less than or equal to 250 characters long to be fully indexed",
+                        })
+                        .custom((value, helper) => {
+                            const { containsCaps, cappedWords } =
+                                containsAllCapsWords(value);
+                            if (containsCaps) {
+                                return helper.message(
+                                    `The given value has words that are in all caps: (${cappedWords.map(
+                                        (word) => " " + word
+                                    )} )`
+                                );
+                            }
+                            return value;
+                        })
                 )
-                .custom((value,helper) => {
-                    if(value.join('').length>obj.totalBulletsLength){
-                        return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed`)
+                .custom((value, helper) => {
+                    if (value.join("").length > obj.totalBulletsLength) {
+                        return helper.message(
+                            `length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed`
+                        );
                     }
-                    return value
+                    return value;
                 })
                 .min(0)
                 .max(obj.bulletNum)
-                .label('bulletpoints')
+                .label("bulletpoints")
                 .messages({
                     "array.base": "bulletpoints must be an array of strings",
-                    "array.includes": "each bulletpoint must be a valid string according to the specified rules"
+                    "array.includes":
+                        "each bulletpoint must be a valid string according to the specified rules",
                 }),
 
-            
-                keywords: Joi
-                .string()
+            keywords: Joi.string()
                 .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value);
+                    const { containsWords, usedWords } =
+                        containsBlacklistedWord(value);
                     if (containsWords) {
-                        return helper.message(`this text contains the words: (${usedWords.map(word => " " + word)} ) which are blacklisted`);
+                        return helper.message(
+                            `this text contains the words: (${usedWords.map(
+                                (word) => " " + word
+                            )} ) which are blacklisted`
+                        );
                     }
                     return value;
                 })
@@ -312,308 +328,314 @@ export const verifyText = async (req, res) => {
                 .min(0)
                 .max(obj.searchTerms)
                 .custom((value, helper) => {
-                    if(value.length > 0 && /^\s*$/.test(value)){
-                        return helper.message(`this text only consists of whitespace, please Enter a Value`);
+                    if (value.length > 0 && /^\s*$/.test(value)) {
+                        return helper.message(
+                            `this text only consists of whitespace, please Enter a Value`
+                        );
                     }
-                    return value
+                    return value;
                 })
                 .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed"
+                    "string.pattern.base": "These Characters Are Not Allowed",
                 }),
 
-            
-                category: Joi
-                .string()
-                .required()
-                .min(0)
-                .max(200)
-                .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed"
-                }),
-            });
+            category: Joi.string().required().min(0).max(200).messages({
+                "string.pattern.base": "These Characters Are Not Allowed",
+            }),
+        });
 
-
-
-        bulletpoints=bulletpoints.map(e=>{
-            return e.value
-        })
-        bulletpoints=bulletpoints.filter(e=>e)
+        bulletpoints = bulletpoints.map((e) => {
+            return e.value;
+        });
+        bulletpoints = bulletpoints.filter((e) => e);
 
         title = title.replace(/[\x00-\x1F]/g, "");
         description = description.replace(/[\x00-\x1F]/g, "");
-        bulletpoints = bulletpoints.map(e => e.replace(/[\x00-\x1F]/g, ""));
+        bulletpoints = bulletpoints.map((e) => e.replace(/[\x00-\x1F]/g, ""));
         keywords = keywords.replace(/[\x00-\x1F]/g, "");
         category = category.replace(/[\x00-\x1F]/g, "");
 
+        let collectiveString = title + description + bulletpoints.join("") + keywords;
 
-        let collectiveString=title+description+bulletpoints.join('')+keywords
-
-        const calcStringCost = (stringToCalc)=>{
-            const fullChunks = Math.floor(stringToCalc.length / obj.characterCost);
+        const calcStringCost = (stringToCalc) => {
+            const fullChunks = Math.floor(
+                stringToCalc.length / obj.characterCost
+            );
             const partialChunk = stringToCalc.length % obj.characterCost;
-            const valtosend = Math.ceil((fullChunks * obj.creditCost) + (partialChunk > 0 ? (partialChunk / obj.characterCost) * obj.creditCost : 0)) 
+            const valtosend = Math.ceil(
+                fullChunks * obj.creditCost +
+                    (partialChunk > 0
+                        ? (partialChunk / obj.characterCost) * obj.creditCost
+                        : 0)
+            );
             return valtosend;
-        }
+        };
 
-        const creditPrice = calcStringCost(title)+calcStringCost(description)+calcStringCost(bulletpoints.join(''))+calcStringCost(keywords)
+        const creditPrice =
+            calcStringCost(title) +
+            calcStringCost(description) +
+            calcStringCost(bulletpoints.join("")) +
+            calcStringCost(keywords);
 
-        let user=await User.findOne({email:req.user.email})
+        let user = await User.findOne({ email: req.user.email });
 
-        if(user.credits<creditPrice){
+        if (user.credits < creditPrice) {
+            if (user.autocharge == true) {
+                const paymentMethods =
+                    await stripe.customers.listPaymentMethods(
+                        req.user.customerId
+                    );
+                const paymentId = paymentMethods.data[0].id;
 
-            if (user.autocharge==true){
-
-                const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
-                const paymentId = paymentMethods.data[0].id
-                
-                if (!paymentId){
-                    return res.status(400).json({ message: "No Payment Method Detected, add credits, or add payment method", success: false });
+                if (!paymentId) {
+                    return res
+                        .status(400)
+                        .json({
+                            message:
+                                "No Payment Method Detected, add credits, or add payment method",
+                            success: false,
+                        });
                 }
 
-                const offer = await Offer.findOne({variant:-1})
-
+                const offer = await Offer.findOne({ variant: -1 });
 
                 const paymentIntent = await stripe.paymentIntents.create({
-                    amount:user.preferredCredits*offer.amount,
-                    currency: 'usd',
+                    amount: user.preferredCredits * offer.amount,
+                    currency: "usd",
                     customer: req.user.customerId,
                     payment_method: paymentId,
                     off_session: true,
                     confirm: true,
-                    metadata:{
-                        variant:-1,
-                        credits:user.preferredCredits
-                    }
+                    metadata: {
+                        variant: -1,
+                        credits: user.preferredCredits,
+                    },
                 });
 
-                user=await User.findOne({email:req.user.email})
+                user = await User.findOne({ email: req.user.email });
 
-                if(user.credits+user.preferredCredits < creditPrice){
-                    return res.status(400).json({ message: "your Auto Credits are not enough to cover for this analyzation, please recharge", success: false, error:{} });
+                if (user.credits + user.preferredCredits < creditPrice) {
+                    return res
+                        .status(400)
+                        .json({
+                            message:
+                                "your Auto Credits are not enough to cover for this analyzation, please recharge",
+                            success: false,
+                            error: {},
+                        });
                 }
-
-            }else{
-                return res.status(400).json({ message: "Not enough credits, please recharge", success: false, error:{} });
+            } else {
+                return res
+                    .status(400)
+                    .json({
+                        message: "Not enough credits, please recharge",
+                        success: false,
+                        error: {},
+                    });
             }
         }
 
-        user.credits-=creditPrice
-        user.save()
+        user.credits -= creditPrice;
+        user.save();
 
-        const { error } = verifyTextJoi.validate({ title, description, bulletpoints, keywords, category }, { abortEarly: false });
-        
+        const { error } = verifyTextJoi.validate(
+            { title, description, bulletpoints, keywords, category },
+            { abortEarly: false }
+        );
+
         let errObj = {
             TE: [],
             DE: [],
             BE: [],
             KE: [],
-            CE: []
+            CE: [],
         };
 
         if (error) {
-
-
-            error.details.forEach(field => {
+            error.details.forEach((field) => {
                 const fieldKeyMap = {
-                    title: 'TE',
-                    description: 'DE',
-                    bulletpoints: 'BE',
-                    keywords: 'KE',
-                    category: 'CE'
+                    title: "TE",
+                    description: "DE",
+                    bulletpoints: "BE",
+                    keywords: "KE",
+                    category: "CE",
                 };
                 const fieldKey = fieldKeyMap[field.path[0]];
 
-                console.log("path",field.path[0]=="bulletpoints")
+                console.log("path", field.path[0] == "bulletpoints");
 
                 if (field.type === "string.pattern.base") {
-                    const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
-                    field.message = `${field.message}: ${invalidChars}`
+                    const invalidChars = findInvalidCharacters(
+                        field.context.value,
+                        field.context.regex
+                    );
+                    field.message = `${field.message}: ${invalidChars}`;
                 }
 
-                if(field.path[0]=="bulletpoints"){
+                if (field.path[0] == "bulletpoints") {
+                    console.log("hoi");
+                    errObj.joi = true;
 
-                    console.log("hoi")
-                    errObj.joi=true
+                    let exists = false;
 
-                    let exists = false
-
-                    errObj[fieldKey].forEach((e)=>{
-                        if(e.point==(field.path[1]+1)){
-                            e.message=e.message+`|-|${field.message}`
-                            exists = true
+                    errObj[fieldKey].forEach((e) => {
+                        if (e.point == field.path[1] + 1) {
+                            e.message = e.message + `|-|${field.message}`;
+                            exists = true;
                         }
-                    })
+                    });
 
-                    if(!exists){
-                        errObj[fieldKey].push({point:(field.path[1]+1)|| -10,message:field.message})
+                    if (!exists) {
+                        errObj[fieldKey].push({
+                            point: field.path[1] + 1 || -10,
+                            message: field.message,
+                        });
                     }
-                    
-
-                    
-                }else {
-                    errObj[fieldKey].push(field.message)
+                } else {
+                    errObj[fieldKey].push(field.message);
                 }
-
-
-
             });
-
-            
-            // const history = await History.create({
-            //     userID:req.user.id,
-            //     title,
-            //     description,
-            //     keywords,
-            //     bullets:bulletpoints,
-            //     error:errObj,
-            //     credits:creditPrice
-    
-            // })
-
-
-
-            // return res.status(200).json({ error: errObj, success: false });
-
         }
 
-        let latest_message
+        // let latest_message;
+        // const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId,});
+        // console.log("threadId", thread_id);
+        // let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
 
-        //head this is where the ai starts
+        // while (
+        //     threadrun.status === "running" ||
+        //     threadrun.status === "queued" ||
+        //     threadrun.status === "in_progress"
+        // ) {
+        //     console.log("waiting for completion");
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     threadrun = await openai.beta.threads.runs.retrieve(
+        //         thread_id,
+        //         threadrun.id
+        //     );
+        //     console.log(`threadrun status: ${threadrun.status}`);
+        // }
 
-                const {thread_id,id} = await openai.beta.threads.createAndRun({
-                    assistant_id:assId,
-                })
-                console.log("threadId",thread_id)
-                let threadrun=await openai.beta.threads.runs.retrieve(thread_id, id);
-        
-                while (threadrun.status === "running" || threadrun.status === "queued" || threadrun.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    threadrun = await openai.beta.threads.runs.retrieve(thread_id, threadrun.id);
-                    console.log(`threadrun status: ${threadrun.status}`);
-                }
-        
-                const message = await createMessage(thread_id, "user", `TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map(e=>` -${e}`).join('')}`);
-        
-                let run = await createRun(thread_id, assId);
-                console.log(`run created: ${run.id} at ${thread_id}`);
-        
-                while (run.status === "running" || run.status === "queued" || run.status === "in_progress") {
-                    console.log("waiting for completion");
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
-                    console.log(`run status: ${run.status}`);
-                }
-                console.log(`run completed: ${run.id}`);
-        
-                const message_response = await openai.beta.threads.messages.list(thread_id);
-                const messages = message_response.data;
-        
-                latest_message = messages[0]?.content[0]?.text?.value;
-        
-                // Clean the JSON string properly
-                latest_message = latest_message
-                    ?.replace(/```json/g, "")
-                    ?.replace(/```/g, "")
-                    ?.replace(/\\n/g, "")
-                    ?.trim();
-        
-                console.log("msg", latest_message);
+        // const message = await createMessage(thread_id,"user",`TITLE: ${title} DESCRIPTION:${description} BULLETPOINTS:${bulletpoints.map((e) => ` -${e}`).join("")}`);
 
+        // let run = await createRun(thread_id, assId);
+        // console.log(`run created: ${run.id} at ${thread_id}`);
 
+        // while (
+        //     run.status === "running" ||
+        //     run.status === "queued" ||
+        //     run.status === "in_progress"
+        // ) {
+        //     console.log("waiting for completion");
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        //     console.log(`run status: ${run.status}`);
+        // }
+        // console.log(`run completed: ${run.id}`);
 
+        // const message_response = await openai.beta.threads.messages.list(
+        //     thread_id
+        // );
+        // const messages = message_response.data;
 
-                latest_message = latest_message.replace(/[\x00-\x1F]/g, "")
-        
-                const parsedMessage = JSON.parse(latest_message)
+        // latest_message = messages[0]?.content[0]?.text?.value;
 
-                let keys = Object.keys(parsedMessage)
+        // // Clean the JSON string properly
+        // latest_message = latest_message
+        //     ?.replace(/```json/g, "")
+        //     ?.replace(/```/g, "")
+        //     ?.replace(/\\n/g, "")
+        //     ?.trim();
+        // console.log("msg", latest_message);
 
-                keys.forEach(e=>{
-                    if(!Array.isArray(parsedMessage[e])){
-                        parsedMessage[e] = [parsedMessage[e]]
-                    }
-                })
+        // latest_message = latest_message.replace(/[\x00-\x1F]/g, "");
+        // const parsedMessage = JSON.parse(latest_message);
 
-                const changedObject = {
-                    TE:parsedMessage.titleErrors,
-                    TF:parsedMessage.titleFixed,
-                    DE:parsedMessage.descriptionErrors,
-                    DF:parsedMessage.descriptionFixed,
-                    BE:parsedMessage.bulletPointErrors,
-                    BF:parsedMessage.bulletPointFixed
-                }
+        //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
-                
+        const errors = []
 
-            const mergedObject = mergeObjects(errObj,changedObject)    
+        if(errObj.TE.length == 0&&title!=''){
+            errors.push(analyzeValue(title, 'title'))
+        }
+        if(errObj.DE.length == 0&&description!=''){
+            errors.push(analyzeValue(description, 'desc'))
+        }
+        if(errObj.BE.length == 1&&bulletpoints[0].value!=''){
+            errors.push(analyzeValue(bulletpoints, 'bullets'))
+        }
+        const parsedMessage = Object.assign({}, ...(await Promise.all(errors)));
 
+        const changedObject = {
+            TE: parsedMessage.titleErrors || [],
+            TF: parsedMessage.titleFixed || [],
+            DE: parsedMessage.descriptionErrors || [],
+            DF: parsedMessage.descriptionFixed || [],
+            BE: parsedMessage.bulletPointErrors || [],
+            BF: parsedMessage.bulletPointFixed || []
+        };
+
+        console.log(changedObject)
+
+        const mergedObject = mergeObjects(errObj, changedObject);
 
         const newHistory = await History.create({
-            userID:req.user.id,
+            userID: req.user.id,
             title,
             description,
-            bullets:bulletpoints,
+            bullets: bulletpoints,
             keywords,
-            error:mergedObject
+            error: mergedObject,
+        });
 
-        })
+        console.log(newHistory);
 
-        console.log(newHistory)
-
-        return res.status(200).json({ message: "text verified", error: mergedObject, success: true });
-        // res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"}) 
-        // res.json({error:errObj,message:"success"})
-
-        
+        return res.status(200).json({message: "text verified",error: mergedObject,success: true});
+        // res.json({error:{TE:["hi"],BE:[""],KE:[""],CE:[""],DE:[""]},message:"success"})
+        // res.json({message:"success",errObj})
     } catch (error) {
-        if(error.code=='authentication_required'){
-            return res.status(200).json({ message: "not enough credits, autopay failed, authentication required", success: false });
-        }else{
-
+        if (error.code == "authentication_required") {
+            return res.status(200).json({message: "not enough credits, autopay failed, authentication required",success: false,});
+        } else {
             console.log(error);
-            return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
+            return res.status(400).json({message: "something went wrong, please try again or contact support",success: false,});
         }
     }
 };
 
-export const generateThread=async (req,res)=>{
-    try{
-
+export const generateThread = async (req, res) => {
+    try {
         const emptyThread = await openai.beta.threads.createAndRun({
-            assistant_id:assId,
-        })
+            assistant_id: assId,
+        });
 
-        return res.json({thread:emptyThread})
-    }catch(err){
-        console.log(err)
-        return res.json(err)
+        return res.json({ thread: emptyThread });
+    } catch (err) {
+        console.log(err);
+        return res.json(err);
     }
-}
+};
 
+// async function createRun(thread_id, assistantId) {
+//     const run = await openai.beta.threads.runs.create(thread_id, {
+//         assistant_id: assistantId,
+//     });
 
+//     return run;
+// }
 
-async function createRun(thread_id, assistantId) {
+// async function createMessage(thread_id, role, content) {
+//     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-
-
-    const run = await openai.beta.threads.runs.create(thread_id, {
-      assistant_id: assistantId,
-    });
-  
-    return run;
-}
-  
-async function createMessage(thread_id, role, content) {
-    const openai = new OpenAI({apiKey:process.env.OPENAI_API_KEY})
-
-  const threadMessages = await openai.beta.threads.messages.create(thread_id, {
-    role,
-    content,
-  });
-  return threadMessages;
-}
-
+//     const threadMessages = await openai.beta.threads.messages.create(
+//         thread_id,
+//         {
+//             role,
+//             content,
+//         }
+//     );
+//     return threadMessages;
+// }
 
 export const getUserHistory = async (req, res) => {
     try {
@@ -621,9 +643,14 @@ export const getUserHistory = async (req, res) => {
         const limit = parseInt(req.query.limit) || 5;
         const skip = (page - 1) * limit;
 
-        const Histories = await History.find({ userID: req.user.id }).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        const Histories = await History.find({ userID: req.user.id })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
-        const totalHistories = await History.countDocuments({ userID: req.user.id });
+        const totalHistories = await History.countDocuments({
+            userID: req.user.id,
+        });
 
         res.status(200).json({
             success: true,
@@ -631,112 +658,111 @@ export const getUserHistory = async (req, res) => {
             limit,
             totalHistories,
             totalPages: Math.ceil(totalHistories / limit),
-            Histories
+            Histories,
         });
-
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Server Error' });
-    }
-}
-
-
-export const getUser = async (req,res) =>{
-    try {
-        const user = await User.findOne({email:req.query.email})
-        res.status(200).json({user})
-    } catch (error) {
-        console.log(error)
-    }
-}
-  
-export const buyCredits = async (req, res) => {
-    try{
-    const { variant,email } = req.body;
-
-    if (!variant||!email){
-        return res.status(400).json({message:"data incomplete"})
-    }
-
-    const user = await User.findOne({email:req.user.email})
-
-    if(!user.customerId){
-        const customer = await stripe.customers.create({
-            email: req.user.email,
-            name: req.user.userName,
-        });
-
-        user.customerId=customer.id
-        req.user.customerId=customer.id
-        user.save()
-        console.log(user)
-    }
-
-    const offer = await Offer.findOne({variant})
-
-    const paymentIntent = await stripe.paymentIntents.create({
-        amount: offer.amount,
-        currency: "usd",
-        automatic_payment_methods: {
-        enabled: true,
-        },
-        customer:req.user.customerId,
-        metadata:{
-            variant,
-            credits:offer.credits
-        },
-        payment_method_options:{
-            card:{
-                setup_future_usage:'off_session'
-            }
-        }
-    });
-
-    res.status(200).json({
-        clientSecret: paymentIntent.client_secret,
-        success:true
-    });
-
-    }catch(error){
-        console.log(error)
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 
-export const addPaymentMethod = async (req,res) =>{
-    try{
-        const user = await User.findOne({email:req.user.email})
+export const getUser = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.query.email });
+        res.status(200).json({ user });
+    } catch (error) {
+        console.log(error);
+    }
+};
 
-        if(!user.customerId){
+export const buyCredits = async (req, res) => {
+    try {
+        const { variant, email } = req.body;
+
+        if (!variant || !email) {
+            return res.status(400).json({ message: "data incomplete" });
+        }
+
+        const user = await User.findOne({ email: req.user.email });
+
+        if (!user.customerId) {
             const customer = await stripe.customers.create({
                 email: req.user.email,
                 name: req.user.userName,
             });
-    
-            user.customerId=customer.id
-            req.user.customerId=customer.id
-            user.save()
-            console.log(user)
+
+            user.customerId = customer.id;
+            req.user.customerId = customer.id;
+            user.save();
+            console.log(user);
+        }
+
+        const offer = await Offer.findOne({ variant });
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: offer.amount,
+            currency: "usd",
+            automatic_payment_methods: {
+                enabled: true,
+            },
+            customer: req.user.customerId,
+            metadata: {
+                variant,
+                credits: offer.credits,
+            },
+            payment_method_options: {
+                card: {
+                    setup_future_usage: "off_session",
+                },
+            },
+        });
+
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            success: true,
+        });
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const addPaymentMethod = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.user.email });
+
+        if (!user.customerId) {
+            const customer = await stripe.customers.create({
+                email: req.user.email,
+                name: req.user.userName,
+            });
+
+            user.customerId = customer.id;
+            req.user.customerId = customer.id;
+            user.save();
+            console.log(user);
         }
 
         const setupIntent = await stripe.setupIntents.create({
-          customer: req.user.customerId,
-          automatic_payment_methods: {enabled: true,},
+            customer: req.user.customerId,
+            automatic_payment_methods: { enabled: true },
         });
-        console.log(setupIntent)
-        res.status(200).json({success:true, clientSecret:setupIntent.client_secret})
-    }catch(err){
-        console.log(err)
+        console.log(setupIntent);
+        res.status(200).json({
+            success: true,
+            clientSecret: setupIntent.client_secret,
+        });
+    } catch (err) {
+        console.log(err);
         return res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 export const BuyCreditWebhook = async (req, res) => {
     try {
         const details = req.body.data.object;
-        if (!details || details.object=="charge") {
+        if (!details || details.object == "charge") {
             return res.status(400).json({ message: "Invalid webhook data" });
         }
-
 
         let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
@@ -751,7 +777,7 @@ export const BuyCreditWebhook = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const variant = Number(details.metadata.variant)
+        const variant = Number(details.metadata.variant);
 
         user.credits = Number(user.credits) + Number(details.metadata.credits);
         await user.save();
@@ -763,144 +789,188 @@ export const BuyCreditWebhook = async (req, res) => {
     }
 };
 
-export const getPurchaseHistory = async (req,res) => {
-    try{
-        const {customerId} = req.user
-        if(!customerId){
-            return res.status(200).json({payments:[]})
+export const getPurchaseHistory = async (req, res) => {
+    try {
+        const { customerId } = req.user;
+        if (!customerId) {
+            return res.status(200).json({ payments: [] });
         }
-        const charges = await stripe.charges.list({customer:customerId})
+        const charges = await stripe.charges.list({ customer: customerId });
 
-        
-        
-        let payments = charges.data.map(e=>{
-            return {id:e.id,currency:e.currency,amount:e.amount,currency:e.currency,credits:e.metadata.credits,date:e.created,status:e.status}
-        })
+        let payments = charges.data.map((e) => {
+            return {
+                id: e.id,
+                currency: e.currency,
+                amount: e.amount,
+                currency: e.currency,
+                credits: e.metadata.credits,
+                date: e.created,
+                status: e.status,
+            };
+        });
 
-        payments = payments.filter(e=>e.status==='succeeded')
+        payments = payments.filter((e) => e.status === "succeeded");
 
-        return res.status(200).json({success:true,payments})
-    }catch(error){
-        console.log(error)
+        return res.status(200).json({ success: true, payments });
+    } catch (error) {
+        console.log(error);
     }
-}
+};
 
-export const numberOfAnalysed = async (req,res) => {
-    try{
-        const count = await History.countDocuments({userID:req.user.id})
-        res.status(200).json({success:true,count})
-    }catch(error){
-        console.log(error)
+export const numberOfAnalysed = async (req, res) => {
+    try {
+        const count = await History.countDocuments({ userID: req.user.id });
+        res.status(200).json({ success: true, count });
+    } catch (error) {
+        console.log(error);
     }
-}
+};
 
-export const getCardInfo = async (req,res) => {
-    try{
-        const user = await User.findOne({email:req.user.email})
+export const getCardInfo = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.user.email });
 
-        console.log(user)
+        console.log(user);
 
-        if (!req.user.customerId){
-            return res.status(200).json({message:"no customer detected"})
+        if (!req.user.customerId) {
+            return res.status(200).json({ message: "no customer detected" });
         }
-        const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId)
+        const paymentMethods = await stripe.customers.listPaymentMethods(
+            req.user.customerId
+        );
 
         // console.log(req.user,paymentMethods)
-        const cards=paymentMethods.data.map(e=>{
-            return {expMonth:e.card.exp_month,expYear:e.card.exp_year,last4:e.card.last4}
-        })
-        res.status(200).json({cards})
-    }catch(error){
-        console.log(error)
-    }
-}
-
-export const toggleAutoCredit = async (req,res) =>{
-    try{
-        const {preferredCredits} = req.query
-        console.log(preferredCredits)
-        if(preferredCredits < 0){
-            return res.status(400).json({success:false, message:"preferred Credits can not be less than 0"})
-        }
-        const user = await User.findOne({email:req.user.email})
-        const uac = user.autocharge
-        user.autocharge=!user.autocharge
-        user.preferredCredits=preferredCredits
-        user.save()
-        return res.status(200).json({success:true, message:`auto credits: ${uac?"off":"on"}`})
-    }catch(err){
-        console.log(err)
-    }
-}
-
-export const getGraphData = async (req,res) =>{
-    try{
-        const userId=req.user.id
-        const histories = await History.find({ userID: userId, createdAt: { $gte: new Date(Date.now() - 15768000000) } });
-    
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthlyCredits = {};
-        
-        histories.forEach(history => {
-          const month = monthNames[history.createdAt.getMonth()];
-          if (!monthlyCredits[month]) {
-            monthlyCredits[month] = 0;
-          }
-          monthlyCredits[month] += history.credits;
+        const cards = paymentMethods.data.map((e) => {
+            return {
+                expMonth: e.card.exp_month,
+                expYear: e.card.exp_year,
+                last4: e.card.last4,
+            };
         });
-        
-        const result = Object.keys(monthlyCredits).map(month => ({
-          name: month,
-          credits: monthlyCredits[month]
+        res.status(200).json({ cards });
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const toggleAutoCredit = async (req, res) => {
+    try {
+        const { preferredCredits } = req.query;
+        console.log(preferredCredits);
+        if (preferredCredits < 0) {
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: "preferred Credits can not be less than 0",
+                });
+        }
+        const user = await User.findOne({ email: req.user.email });
+        const uac = user.autocharge;
+        user.autocharge = !user.autocharge;
+        user.preferredCredits = preferredCredits;
+        user.save();
+        return res
+            .status(200)
+            .json({
+                success: true,
+                message: `auto credits: ${uac ? "off" : "on"}`,
+            });
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+export const getGraphData = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const histories = await History.find({
+            userID: userId,
+            createdAt: { $gte: new Date(Date.now() - 15768000000) },
+        });
+
+        const monthNames = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ];
+        const monthlyCredits = {};
+
+        histories.forEach((history) => {
+            const month = monthNames[history.createdAt.getMonth()];
+            if (!monthlyCredits[month]) {
+                monthlyCredits[month] = 0;
+            }
+            monthlyCredits[month] += history.credits;
+        });
+
+        const result = Object.keys(monthlyCredits).map((month) => ({
+            name: month,
+            credits: monthlyCredits[month],
         }));
 
-
-        res.status(200).json(result)
-
-        
-
-
-    }catch(err){
-        console.log(err)
+        res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
     }
-}
+};
 
-export const getOffers = async (req,res) => {
-    try{
-        const offers = await Offer.find()
-        res.status(200).json({success:true,offers})
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+export const getOffers = async (req, res) => {
+    try {
+        const offers = await Offer.find();
+        res.status(200).json({ success: true, offers });
+    } catch (err) {
+        console.log(err);
+        return res
+            .status(500)
+            .json({
+                message:
+                    "something went wrong, please try again later or contact support",
+            });
     }
-}
+};
 
-export const getRules = async (req,res)=>{
-    try{
-        const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
-        res.status(200).json(obj)
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again or contact support"})
+export const getRules = async (req, res) => {
+    try {
+        const obj = JSON.parse(await fs.readFile("json/rules.json", "utf8"));
+        res.status(200).json(obj);
+    } catch (err) {
+        console.log(err);
+        return res
+            .status(500)
+            .json({
+                message:
+                    "something went wrong, please try again or contact support",
+            });
     }
-}
+};
 
-export const paymentEmail = (req,res) =>{
-    try{
+export const paymentEmail = (req, res) => {
+    try {
+        const { error } = paymentEmailJoi.validate(req.body);
 
-        const {error} = paymentEmailJoi.validate(req.body)
-
-        if(error){
-            console.log(error)
-            return res.status(400).json({success:false,message:"invalid data provided"})
+        if (error) {
+            console.log(error);
+            return res
+                .status(400)
+                .json({ success: false, message: "invalid data provided" });
         }
 
-        const {email,name,credits,paymentDetails} = req.body
+        const { email, name, credits, paymentDetails } = req.body;
 
         transporter.sendMail({
-            to:"haris.markcoders@gmail.com",
-            subject:"payment request",
-            text:`
+            to: "haris.markcoders@gmail.com",
+            subject: "payment request",
+            text: `
             
             sender: ${email}
             name: ${name}
@@ -908,15 +978,23 @@ export const paymentEmail = (req,res) =>{
 
             ${paymentDetails}
             
-            `
-        })
-        res.status(200).json({success:true,message:"email sent successfully"})
-    }catch(error){
-        console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again or contact support ... directly."})
+            `,
+        });
+        res.status(200).json({
+            success: true,
+            message: "email sent successfully",
+        });
+    } catch (error) {
+        console.log(err);
+        return res
+            .status(500)
+            .json({
+                message:
+                    "something went wrong, please try again or contact support ... directly.",
+            });
     }
-}
+};
 
-export const getMessage = (req,res)=>{
-    run_9yI0Bp8yzlRziVarpSO6dquG
-}
+export const getMessage = (req, res) => {
+    run_9yI0Bp8yzlRziVarpSO6dquG;
+};
