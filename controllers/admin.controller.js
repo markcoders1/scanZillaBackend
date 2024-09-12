@@ -500,13 +500,13 @@ export const updateAssInstructions = async (req,res) =>{
         }
 
         const updates = []
-        if(titleDo||titleDont){
+        if(titleDo||titleDont||true){
             updates.push(updatefunc('asst_3nOxuR6z7N3xY1ZC1WKYAIhe','title',titleSchema))
         }
-        if(descriptionDo||descriptionDont){
+        if(descriptionDo||descriptionDont||true){
             updates.push(updatefunc('asst_GokOIlMbjA1jlvKb8pLNMR51','description',descriptionSchema))
         }
-        if(bulletsDo||bulletsDont){
+        if(bulletsDo||bulletsDont||true){
             updates.push(updatefunc('asst_vZhSQFlyB4lcTEaJhk0FitZa','bullets',bulletsSchema))
         }
         const update = await Promise.all(updates)
