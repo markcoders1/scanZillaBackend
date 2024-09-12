@@ -232,7 +232,7 @@ export const verifyText = async (req, res) => {
                 })
                 .custom((value, helper) => {
                     if (
-                        (category !== "Books" && /<(?!\/?br\s*\/?>)[^>]*>/g.test(value))
+                        category!=="Books" && /<(?!\/?\s*br\s*\/?>)[^>]+>/.test(value)
                     ) {
                         return helper.message(
                             "Only <br> tags are allowed outside the 'Books' category."
