@@ -177,7 +177,7 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~‚„ˆŽ‘-˜žŸ¯°À-ÿ]*$/)
+                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
                 .min(0)
                 .max(obj[category] + 1)
                 .custom((value, helper) => {
@@ -206,7 +206,7 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~‚„ˆŽ‘-˜žŸ¯°À-ÿ]*$/)
+                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
                 .min(0)
                 .max(obj.descriptionCharacters)
                 .messages({
@@ -265,7 +265,7 @@ export const verifyText = async (req, res) => {
                             }
                             return value;
                         })
-                        .regex(/^[ -~‚„ˆŽ‘-˜žŸ¯°À-ÿ]*$/)
+                        .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
                         .min(0)
                         .max(obj.bulletCharacters)
                         .messages({
@@ -315,7 +315,7 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .regex(/^[ -~‚„ˆŽ‘-˜žŸ¯°À-ÿ]*$/)
+                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
                 .min(0)
                 .max(obj.searchTerms)
                 .custom((value, helper) => {
