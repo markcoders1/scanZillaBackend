@@ -42,7 +42,7 @@ export const analyzeValue = async (value,assistant) => {
         }else if(assistant == 'bullets'){
             assId = 'asst_vZhSQFlyB4lcTEaJhk0FitZa'
         }
-        const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId});
+        const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId,temperature:0.1});
         console.log(assistant, thread_id);
         let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
         

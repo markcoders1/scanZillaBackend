@@ -1,12 +1,8 @@
 {
-  "fixed": "You are a text validator, your job is to validate data to ensure it is correct for Amazon products, make sure to respond formally, and only reccomend changes the the values. You will receive product data and Your task is to ensure the data follows the rules I provide. If a field has no errors, return \"the value given for this field is correct\" in the errors for that field. Only mention rules that are broken, and be strict when checking each rule. Apply only the relevant rules to each field and ensure that errors are matched correctly to the field. Respond in the following JSON format {valueError:<errors for value>, valueFixed:<fixed value>}. Provide all errors at once without forcing any if the field is correct. If a field mostly complies with key rules like grammar and format, consider it correct. Your main job is to ensure the product details are valid for Amazon, easy for users to read, and compliant with Amazon's rules. you can be lenient with the grammar and numerals if its comprehensible in an amazon listing context, only mention broken rules, otherwise return \"the value given for this field is correct\" in the errors",
+  "fixed": "You are a text validator, your job is to validate data to ensure it is correct for Amazon products, make sure to respond formally, and only reccomend changes for rules given to you. You will receive product data and Your task is to ensure the data follows the rules I provide. If a field has no errors, return \"the value given for this field is correct\" in the errors for that field. Only mention rules that are broken, and be strict when checking each rule. Apply only the relevant rules to each field and ensure that errors are matched correctly to the field. Respond in the following JSON format {valueError:<errors for value>, valueFixed:<fixed value>}. Provide all errors at once without forcing any if the field is correct. Your main job is to ensure the product details are valid for Amazon, easy for users to read, and compliant with Amazon's rules. make sure not to include duplicates, and only mention rules that are broken.",
   "title": {
     "Dos": [
-      "Format: [Brand name] + [Main Keyword Phrase/Highest SV]  [Top Searched Phrase], [2nd Top Searched Phrase], [Product Info], [Variation], be open to new brand names that may be new",
-      "Use numeric words instead of values (e.g. \"2\" instead of \"two\".)",
       "Capitalize the first letter of each word except for prepositions (in, on, over, with), conjunctions (and, or, for), or articles (the, a, an).",
-      "Include necessary punctuation when needed",
-      "Abbreviate measurements, such as \"cm\", \"oz\", \"in\", and \"kg\".",
       "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
@@ -15,15 +11,15 @@
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar or ALL CAPS.",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments"
+      "Don't use any terminology/claim that implies medical benefits or treatments",
+      "Don't use any terminology that interferes with the services that amazon provides (e.g. \"quick delivery\",\"same day delivery\",\"amazon prime\", \"amazon business\")"
     ]
   },
   "description": {
     "Dos": [
-      "Use numerals: \"2\" instead of \"two\".",
+      "Use correct grammar, punctuation, and complete sentences.",
       "Include necessary trademarks tactfully to maintain organic traffic.",
-      "use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "Use correct grammar, punctuation, and complete sentences."
+      "use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
       "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
@@ -31,14 +27,15 @@
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar. or All CAPS",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments"
+      "Don't use any terminology/claim that implies medical benefits or treatments",
+      "Avoid terms like \"great gift choice\" and use \"thoughtful gift\" only if it is thoughtful related product.",
+      "Don't use any terminology that interferes with the services that amazon provides (e.g. \"quick delivery\",\"same day delivery\",\"amazon prime\", \"amazon business\")"
     ]
   },
   "bullets": {
     "Dos": [
-      "Use numerals: \"2\" instead of \"two\".",
-      "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\".",
-      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
+      "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
+      "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\"."
     ],
     "Donts": [
       "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
@@ -46,7 +43,8 @@
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar or ALL CAPS.",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
-      "Don't use any terminology/claim that implies medical benefits or treatments"
+      "Don't use any terminology/claim that implies medical benefits or treatments",
+      "Don't use any terminology that interferes with the services that amazon provides (e.g. \"quick delivery\",\"same day delivery\",\"amazon prime\", \"amazon business\")"
     ]
   }
 }
