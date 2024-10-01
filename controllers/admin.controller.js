@@ -445,7 +445,7 @@ export const analysisgraph = async (req,res)=>{
             return date.getDate()
         })
 
-        const maxNumber = Math.max(...histories);
+        const maxNumber = Math.max([...histories,0]);
         const counts = Array(maxNumber).fill(0);
         
         histories.forEach(num => {
