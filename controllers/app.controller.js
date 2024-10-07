@@ -144,7 +144,7 @@ const paymentEmailJoi = Joi.object({
 const supportEmailJoi = Joi.object({
     email: Joi.string().required().email(),
     name: Joi.string().required().min(2),
-    content: Joi.string().required().email()
+    content: Joi.string().required()
 })
 
 function mergeObjects(obj1, obj2) {
