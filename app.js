@@ -37,14 +37,13 @@ app.use(express.static("public"));
 
 //rate limits
 
-// app.use('/',defaultLimiter)
+app.use('/',defaultLimiter)
 
 // routes declaration
 
 app.use("/", authRouter);
 app.use("/", appRouter)
 app.use("/", adminRouter)
-// app.post('/buycreditwebhook',rawBodyMiddleware,BuyCreditWebhook)
 app.use("*",(req,res)=>res.status(404).json({error:"route not found",code:404}))
 
 

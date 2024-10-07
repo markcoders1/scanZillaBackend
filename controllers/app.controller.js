@@ -141,6 +141,12 @@ const paymentEmailJoi = Joi.object({
     paymentDetails: Joi.string().required(),
 });
 
+const supportEmailJoi = Joi.object({
+    email: Joi.string().required().email(),
+    name: Joi.string().required().min(2),
+    content: Joi.string().required().email()
+})
+
 function mergeObjects(obj1, obj2) {
     const result = { ...obj2 }; 
     for (const key in obj1) {
@@ -921,7 +927,7 @@ export const paymentEmail = (req, res) => {
         const { email, name, credits, paymentDetails } = req.body;
 
         transporter.sendMail({
-            to: "haris.markcoders@gmail.com",
+            to: "amz@blazecopywriting.com",
             subject: "payment request",
             text: `
             
@@ -938,15 +944,55 @@ export const paymentEmail = (req, res) => {
             message: "email sent successfully",
         });
     } catch (error) {
+        console.log(error);
+        return res
+            .status(500)
+            .json({
+                message:
+                    "something went wrong, please try again or contact support ",
+            });
+    }
+};
+
+export const supportEmail = async (req,res) =>{
+    try{
+        const { error } = supportEmailJoi.validate(req.body);
+
+        if (error) {
+            console.log(error);
+            return res
+                .status(400)
+                .json({ success: false, message: "invalid data provided" });
+        }
+
+        const { email, name, content } = req.body;
+
+        transporter.sendMail({
+            to: "amz@blazecopywriting.com",
+            subject: "support",
+            text: `
+            
+            sender: ${email}
+            name: ${name}
+
+            ${content}
+            
+            `,
+        });
+        res.status(200).json({
+            success: true,
+            message: "email sent successfully",
+        });
+    }catch(err){
         console.log(err);
         return res
             .status(500)
             .json({
                 message:
-                    "something went wrong, please try again or contact support ... directly.",
+                    "something went wrong, please try again or contact support",
             });
     }
-};
+}
 
 export const getMessage = (req, res) => {
     run_9yI0Bp8yzlRziVarpSO6dquG;
