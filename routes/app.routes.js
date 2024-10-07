@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/app.middleware.js";
-import { generateThread, verifyText, getUserHistory, getUser, buyCredits, BuyCreditWebhook, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit,getGraphData, getOffers, addPaymentMethod, getRules, paymentEmail, getMessage} from "../controllers/app.controller.js";
+import { generateThread, verifyText, getUserHistory, getUser, buyCredits, BuyCreditWebhook, getPurchaseHistory, numberOfAnalysed, getCardInfo, toggleAutoCredit,getGraphData, getOffers, addPaymentMethod, getRules, paymentEmail, getMessage, supportEmail} from "../controllers/app.controller.js";
 // import { deleteAssistant, listAssistants,retreiveRun,getMessages } from "../ignore/ai.code.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
@@ -37,6 +37,8 @@ router.route('/rules').get(verifyJWT, getRules)
 router.route('/PaymentEmail').post(paymentEmail)
 
 router.route('/getlastmessage').get(getMessage)
+
+router.route('/supportEmail').post(supportEmail)
 
 // router.route('/temp').get(listAssistants)
 
