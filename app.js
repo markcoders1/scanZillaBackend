@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:["*","http://localhost:5173","https://scan-zilla-frontend.vercel.app","https://scanzilla.blazecopywriting.com"],
+    origin:["*","http://localhost:5173","https://scan-zilla-frontend.vercel.app"],
     credentials:true
   })
 );
