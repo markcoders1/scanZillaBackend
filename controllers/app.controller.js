@@ -135,14 +135,12 @@ function containsAllCapsWords(str) {
 const obj = JSON.parse(await fs.readFile("json/rules.json", "utf8"));
 
 const paymentEmailJoi = Joi.object({
-    email: Joi.string().required().email(),
     name: Joi.string().required().min(2),
     credits: Joi.number().required().min(1),
     paymentDetails: Joi.string().required(),
 });
 
 const supportEmailJoi = Joi.object({
-    email: Joi.string().required().email(),
     name: Joi.string().required().min(2),
     content: Joi.string().required()
 })
@@ -924,14 +922,14 @@ export const paymentEmail = (req, res) => {
                 .json({ success: false, message: "invalid data provided" });
         }
 
-        const { email, name, credits, paymentDetails } = req.body;
+        const { name, credits, paymentDetails } = req.body;
 
         transporter.sendMail({
             to: "amz@blazecopywriting.com",
             subject: "payment request",
             text: `
             
-            sender: ${email}
+            sender: ${req.user.email}
             name: ${name}
             number of credits Requested: ${credits}
 
@@ -965,14 +963,14 @@ export const supportEmail = async (req,res) =>{
                 .json({ success: false, message: "invalid data provided" });
         }
 
-        const { email, name, content } = req.body;
+        const { name, content } = req.body;
 
         transporter.sendMail({
             to: "haris.markcoders@gmail.com",
             subject: "support",
             text: `
             
-            sender: ${email}
+            sender: ${req.user.email}
             name: ${name}
 
             ${content}

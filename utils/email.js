@@ -15,6 +15,7 @@ export const transporterConstructor = () => {
   });
   return transporter;
 };
+
 // Configure handlebars options
 export const handlebarConfig =() => {
 // Configure handlebars options
