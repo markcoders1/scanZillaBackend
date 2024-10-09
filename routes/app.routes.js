@@ -34,11 +34,11 @@ router.route('/addPaymentMethod').get(verifyJWT, addPaymentMethod)
 
 router.route('/rules').get(verifyJWT, getRules)
 
-router.route('/PaymentEmail').post(paymentEmail)
+router.route('/PaymentEmail').post(verifyJWT,paymentEmail)
 
 router.route('/getlastmessage').get(getMessage)
 
-router.route('/supportEmail').post(supportEmail)
+router.route('/supportEmail').post(verifyJWT,supportEmail)
 
 // router.route('/temp').get(listAssistants)
 

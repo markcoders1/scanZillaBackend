@@ -964,6 +964,7 @@ export const supportEmail = async (req,res) =>{
         }
 
         const { name, content } = req.body;
+        console.log(req.user)
 
         transporter.sendMail({
             to: "haris.markcoders@gmail.com",
