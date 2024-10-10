@@ -494,6 +494,8 @@ export const verifyText = async (req, res) => {
             });
         }
 
+        console.log(errObj.BE)
+
         //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
         const errors = [];
