@@ -534,7 +534,7 @@ export const verifyText = async (req, res) => {
             BF: parsedMessage.bulletPointFixed || []
         };
 
-        console.log(changedObject)
+        // console.log(changedObject)
 
         const mergedObject = mergeObjects(errObj, changedObject);
 
@@ -547,7 +547,9 @@ export const verifyText = async (req, res) => {
             error: mergedObject,
         });
 
-        console.log(newHistory);
+        // console.log(newHistory);
+
+        console.log(mergedObject)
 
         return res.status(200).json({message: "text verified",error: mergedObject,success: true});
     } catch (error) {
