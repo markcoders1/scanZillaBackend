@@ -498,32 +498,32 @@ export const verifyText = async (req, res) => {
 
         const errors = [];
 
-        // // Collect promises for each condition
-        // if (errObj.TE.length === 0 && title !== '') {
-        //     errors.push(analyzeValue(title, 'title'));
-        // }
-        // if (errObj.DE.length === 0 && description !== '') {
-        //     errors.push(analyzeValue(description, 'desc'));
-        // }
-        // if (errObj.BE.length === 0 && bulletpoints.length > 0 && bulletpoints[0] !== '') {
-        //     errors.push(analyzeValue(bulletpoints, 'bullets'));
-        // }
+        // Collect promises for each condition
+        if (errObj.TE.length === 0 && title !== '') {
+            errors.push(analyzeValue(title, 'title'));
+        }
+        if (errObj.DE.length === 0 && description !== '') {
+            errors.push(analyzeValue(description, 'desc'));
+        }
+        if (errObj.BE.length === 0 && bulletpoints.length > 0 && bulletpoints[0] !== '') {
+            errors.push(analyzeValue(bulletpoints, 'bullets'));
+        }
         
         // // Run all promises in parallel using Promise.all
         const parsedMessage = {}; // Initialize parsedMessage
         
-        // await Promise.all(errors)
-        //     .then((results) => {
-        //         // Merge the results into parsedMessage
-        //         results.forEach(result => {
-        //             Object.assign(parsedMessage, result);
-        //         });
-        //         console.log('message data', parsedMessage);
-        //     })
-        //     .catch((error) => {
-        //         // Handle any errors
-        //         console.error('Error processing values:', error);
-        //     });
+        await Promise.all(errors)
+            .then((results) => {
+                // Merge the results into parsedMessage
+                results.forEach(result => {
+                    Object.assign(parsedMessage, result);
+                });
+                console.log('message data', parsedMessage);
+            })
+            .catch((error) => {
+                // Handle any errors
+                console.error('Error processing values:', error);
+            });
 
         const changedObject = {
             TE: parsedMessage.titleErrors || [],
