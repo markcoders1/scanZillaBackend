@@ -48,7 +48,7 @@ const containsBlacklistedWord = (paragraph) => {
 
     for (const phrase of blacklistedWords) {
         const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
-        if (regex.test(lowerCaseParagraph)) {
+        if (regex.test(lowerCaseParagraph) && ! /^\s*$/.test(phrase)) {
             usedWords.push(phrase);
             containsWords = true;
         }
