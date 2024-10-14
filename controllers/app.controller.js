@@ -929,7 +929,7 @@ export const paymentEmail = (req, res) => {
         const { name, credits, paymentDetails } = req.body;
 
         transporter.sendMail({
-            to: "haris.markcoders@gmail.com",
+            to: "amz@blazecopywriting.com",
             subject: "payment request",
             text: `
             
@@ -971,7 +971,7 @@ export const supportEmail = async (req,res) =>{
         console.log(req.user)
 
         transporter.sendMail({
-            to: "haris.markcoders@gmail.com",
+            to: "amz@blazecopywriting.com",
             subject: "support",
             text: `
             
