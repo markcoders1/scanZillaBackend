@@ -101,118 +101,6 @@ export const getUser = async (req, res) => {
     }
 };
 
-
-const getWordsFromFile = async (filepath) => {
-    try {
-        let path = filepath || "blacklistedWords.csv"
-        const fileContent = await fs.readFile(path);
-        const words = parse(fileContent).map(row => row[0]);
-        return words;
-    } catch (error) {
-        console.log(error);
-        throw new Error('Failed to read words from file');
-    }
-};
-
-const writeWordsToFile = async (words) => {
-    try {
-        const data = stringify(words.map(word => [word]));
-        await fs.writeFile("blacklistedWords.csv", data, (err) => {
-            if (err) console.log(err);
-        });
-    } catch (error) {
-        console.log(error);
-        throw new Error('Failed to write words to file');
-    }
-};
-
-export const getWords= async (req,res)=>{
-    try {
-        const words = await getWordsFromFile("blacklistedWords.csv");
-        res.status(200).json(words);
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Failed to read words from file' });
-    }
-
-}
-
-export const addWords = async (req,res) => {
-    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
-    })
-    const newWord = req.body.word;
-    const {error} = wordjoi.validate(newWord)
-
-    if (error){
-        return res.status(400).json({success:false,message: error.details[0].message})
-    }
-
-    try {
-        const words = await getWordsFromFile();
-        if (words.includes(newWord)){
-            return res.status(400).json({success:false,message:"word already exists"})
-        }
-        words.push(newWord);
-        words.sort()
-        await writeWordsToFile(words);
-        return res.status(201).json({ success:true,message: 'Word added successfully',words });
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({ error: 'Failed to add word to file' });
-    }
-}
-
-export const removeWords = async (req,res) =>{
-    const wordToRemove = req.query.word;
-
-    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
-    })
-
-    const {error} = wordjoi.validate(wordToRemove)
-
-    if(error){
-        return res.status(400).json({success:false,message:"word invalid"})
-    }
-
-    try {
-        let words = await getWordsFromFile();
-        words = words.filter(word => word !== wordToRemove);
-        await writeWordsToFile(words);
-        res.status(200).json({ message: 'Word removed successfully' });
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Failed to remove word from file' });
-    }
-}
-
-export const uploadCsv = async (req,res) => {
-    try{
-        if(req.file.mimetype!="text/csv"){
-            return res.status(400).json({message:"incorrect filetype",success:false})
-        }
-        const words = await getWordsFromFile(req.file.path)
-        await fs.rm(`./${req.file.path}`)
-        await writeWordsToFile(words)
-        res.status(200).json({message:"uploaded csv successfully",words})
-    }catch(error){
-        console.log(error)
-    }
-}
-
-export const downloadCsv = async (req,res)=>{
-    try{
-        res.download("./blacklistedWords.csv")
-    }catch(error){
-        console.log(error)
-    }
-}
-
 export const changeRules = async (req,res) => {
     try{
 
@@ -528,5 +416,216 @@ export const makeAdmin = async (req,res) =>{
     }catch(error){
         console.log(error)
         return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+    }
+}
+
+const getWordsFromFile = async (filepath) => {
+    try {
+        let path = filepath || "blacklistedWords.csv"
+        const fileContent = await fs.readFile(path);
+        const words = parse(fileContent).map(row => row[0]);
+        return words;
+    } catch (error) {
+        console.log(error);
+        throw new Error('Failed to read words from file');
+    }
+};
+
+const writeWordsToFile = async (words) => {
+    try {
+        const data = stringify(words.map(word => [word]));
+        await fs.writeFile("blacklistedWords.csv", data, (err) => {
+            if (err) console.log(err);
+        });
+    } catch (error) {
+        console.log(error);
+        throw new Error('Failed to write words to file');
+    }
+};
+
+export const getWords= async (req,res)=>{
+    try {
+        const words = await getWordsFromFile("blacklistedWords.csv");
+        res.status(200).json(words);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'Failed to read words from file' });
+    }
+
+}
+
+export const addWords = async (req,res) => {
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
+    const newWord = req.body.word;
+    const {error} = wordjoi.validate(newWord)
+
+    if (error){
+        return res.status(400).json({success:false,message: error.details[0].message})
+    }
+
+    try {
+        const words = await getWordsFromFile();
+        if (words.includes(newWord)){
+            return res.status(400).json({success:false,message:"word already exists"})
+        }
+        words.push(newWord);
+        words.sort()
+        await writeWordsToFile(words);
+        return res.status(201).json({ success:true,message: 'Word added successfully',words });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Failed to add word to file' });
+    }
+}
+
+export const removeWords = async (req,res) =>{
+    const wordToRemove = req.query.word;
+
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
+
+    const {error} = wordjoi.validate(wordToRemove)
+
+    if(error){
+        return res.status(400).json({success:false,message:"word invalid"})
+    }
+
+    try {
+        let words = await getWordsFromFile();
+        words = words.filter(word => word !== wordToRemove);
+        await writeWordsToFile(words);
+        res.status(200).json({ message: 'Word removed successfully' });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'Failed to remove word from file' });
+    }
+}
+
+export const uploadCsv = async (req,res) => {
+    try{
+        if(req.file.mimetype!="text/csv"){
+            return res.status(400).json({message:"incorrect filetype",success:false})
+        }
+        const words = await getWordsFromFile(req.file.path)
+        await fs.rm(`./${req.file.path}`)
+        await writeWordsToFile(words)
+        res.status(200).json({message:"uploaded csv successfully",words})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const downloadCsv = async (req,res)=>{
+    try{
+        res.download("./blacklistedWords.csv")
+    }catch(error){
+        console.log(error)
+    }
+}
+
+
+const writeAbbWordsToFile = async (words) => {
+    try {
+        const data = stringify(words.map(word => [word]));
+        await fs.writeFile("allowedAbbreviations.csv", data, (err) => {
+            if (err) console.log(err);
+        });
+    } catch (error) {
+        console.log(error);
+        throw new Error('Failed to write words to file');
+    }
+};
+
+export const getAbbWords= async (req,res)=>{
+    try {
+        const words = await getWordsFromFile("allowedAbbreviations.csv");
+        res.status(200).json(words);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'Failed to read words from file' });
+    }
+
+}
+
+export const addAbbWords = async (req,res) => {
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
+    const newWord = req.body.word;
+    const {error} = wordjoi.validate(newWord)
+
+    if (error){
+        return res.status(400).json({success:false,message: error.details[0].message})
+    }
+
+    try {
+        const words = await getWordsFromFile("allowedAbbreviations.csv");
+        if (words.includes(newWord)){
+            return res.status(400).json({success:false,message:"word already exists"})
+        }
+        words.push(newWord);
+        words.sort()
+        await writeAbbWordsToFile(words);
+        return res.status(201).json({ success:true,message: 'Word added successfully',words });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Failed to add word to file' });
+    }
+}
+
+export const removeAbbWords = async (req,res) =>{
+    const wordToRemove = req.query.word;
+
+    const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
+        "string.empty":"word cannot be null",
+        "string.min":"word must contain atleast 1 character",
+        "any.required":"word is required"
+    })
+
+    const {error} = wordjoi.validate(wordToRemove)
+
+    if(error){
+        return res.status(400).json({success:false,message:"word invalid"})
+    }
+
+    try {
+        let words = await getWordsFromFile("allowedAbbreviations.csv");
+        words = words.filter(word => word !== wordToRemove);
+        await writeAbbWordsToFile(words);
+        res.status(200).json({ message: 'Word removed successfully' });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'Failed to remove word from file' });
+    }
+}
+
+export const uploadAbbCsv = async (req,res) => {
+    try{
+        if(req.file.mimetype!="text/csv"){
+            return res.status(400).json({message:"incorrect filetype",success:false})
+        }
+        const words = await getWordsFromFile(req.file.path)
+        await fs.rm(`./${req.file.path}`)
+        await writeAbbWordsToFile(words)
+        res.status(200).json({message:"uploaded csv successfully",words})
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const downloadAbbCsv = async (req,res)=>{
+    try{
+        res.download("./allowedAbbreviations.csv")
+    }catch(error){
+        console.log(error)
     }
 }

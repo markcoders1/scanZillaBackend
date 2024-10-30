@@ -28,6 +28,15 @@ const loadBlacklistedWords = async () => {
     return words;
 };
 
+const loadAllowedAbbreviations = async () => {
+    const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
+    const words = new Set(
+        data.split(/\r?\n/).map((word) => word.toUpperCase())
+    );
+    return words;
+};
+
+const allowedAbbreviations = await loadAllowedAbbreviations()
 const blacklistedWords = await loadBlacklistedWords();
 
 function findInvalidCharacters(input, regex) {
@@ -94,7 +103,7 @@ const containsBlacklistedWord = (paragraph) => {
 // };
 
 function containsAllCapsWords(str) {
-    const acceptedAbbreviations = ["UPF","ABA","SOS","US","CA","GB","FR","DE","AU","IN","JP","CN","BR","MX","RU","ZA","NG","KE","EG","IT","ES","NL","SE","NO","DK","FI","IS","PT","PL","GR","TR","SA","AE","IL","IR","PK","ID","KR","MY","TH","VN","SG","NZ","AR","CL","PE","CO","VE","UY","PA","CR","CU","DO","GT","HN","SV","JM","TT","HT","BO","PY","EC","BW","TZ","UG","GH","DZ","LY","SD","MR","SN","CI","ML","CM","CD","ZM","MW","ZW","MZ","MG","ET","SO","DJ","QA","KW","OM","BH","YE","IQ","SY","JO","LB","AM","AZ","GE","KZ","UZ","TM","KG","TJ","AF","LK","BD","NP","MM","KH","LA","BT","MN","PH","PG","FJ","SB","VU","NR","TV","TO","WS","KI","MH","FM","PW","AL","BA","RS","MK","MT","CY","RO","HU","CZ","SK","SI","BG","HR","BY","MD","UA","EE","LV","LT","UAE","UK","USA","RGB","OLED","LED","USB","HDMI","LCD","SSD","DDR","GPU","CPU","AI","AC","DC","UV","HD","VR","FAQ","PVC","ABS","NFC","RFID","LG","AND","NAND","OS","OMDIA","NOT","XOR","XNOR","OR","NOR","AMD","WiFi","RAM","ROM","TF","CCTV","GPS","DPI","PPI","USB-C","VGA","DVI","SATA","PCIe","HDCP","HDR","UHD","QLED","IPS","MP","FPS","Mbps","Gbps","TB","MHz","GHz","mAh","Li-ion","Li-Po","PSU","UPS","POE","VoIP","AIoT","IoT","CAT5","CAT6","FTTH","EPUB","PDF","MIMO","BPSK","QPSK","FHD","WQHD","TFT","LGA","SO-DIMM","mSATA","NVMe","APU","FPU","AVR","DLP","DMX","IP","ISP","DSP","PMP","PTZ","STB","OIS","XLR","MIDI","BNC","SFP","MAC","WAN","LAN","VLAN","SSL","HTTPS","DNS","DHCP","IC","PWM","LDO","BMS","CAGR","TPU","TDP","RMS","THD","I2C","SPI","UART","TTL","DP","DTS","DAC","ADC","JTAG","SOC","BIOS","UFS","PD","QC","8K","DND","DIY","FAT32","NTFS","EXT4","HDD","RAID","E-ATX","MID","OD","AV","S/PDIF","LLC","RoHS","UL","FCC","CE","API","GUI","CLI","DVD","MHL","XGA","WXGA","QR","NVR","NAS","ECC","SAS","GDDR","SMD","MOSFET","IGBT","VFD","HMI","AP","SSID","WPA","WPA2","WPA3","LTE","3G","4G","5G","SIM","eSIM","CMOS","CCD","LIDAR","SONAR","SISO","PON","AIO","ODI","CDN","TLS","AES","DES","IPX","ATM","PTP","XMPP","SSH","SMTP","POP3","IMAP","PSTN","POTS","BPS","RF","EMI","EMC","EIRP","SMPS","BLE","COFDM","QAM","OFDM","FDD","TDD","TDMA","FDMA","SDR","EPC","ESD","ACPI","DVI-D","DVI-I","XMP","RS-232","RS-485","USB-PD","M.2","QHD","XQD","UHS","NVM","ATA","IDE","GSM","CDMA","WCDMA","VoLTE","IPTV","TFT-LCD","OLED-QLED","DCR","ICR","HFR","ITX","ZIF","PDIP","SOIC","QFN","BGA","PCB","RFQ","RFP","OEM","ODM","COTS","MMU","DMA","VPN","VPS","SLA","QoS","RISC","CISC","IOT","NLP","VPU","MIC","DVR","CVR","MLC","TLC","QLC","UVLO","OTP","DLNA","HSI","CSI","PIR","GPIO","RTC","PFC","PMIC","VCXO","LVDS","SDIO","WiDi","UWB","Z-Wave","Zigbee","SFP+","QFP","HVAC","PDM","DFT","DFA","DC-DC","OP-AMP","PLL","SNR","THX","IPFS","EIGRP","OSPF","BGP","MPLS","NAT","PAT","ACL","IDS","AVC","HEVC","H.264","H.265","SDXC","SMB","CIFS","SFTP","BTS","RTOS","FAT","EXIF","LGA1151","VESA","MIPI","RTP","RTCP","HLS","DASH","SIP","SVC","MP3","WAV","AAC","FLAC","OPUS","TWS","ANC","UPnP","IMU","DMP","MSP","PABX","PBX","CATV","IFTTT","FMC","APC","SMSC"];
+    
 
     const words = str.split(" ");
     let cappedWords = [];
@@ -104,7 +113,7 @@ function containsAllCapsWords(str) {
         if (
             /^[A-Z]+$/.test(word) &&
             word.length > 2 &&
-            !acceptedAbbreviations.includes(word)
+            !allowedAbbreviations.includes(word)
         ) {
             cappedWords.push(word);
             containsCaps = true;
