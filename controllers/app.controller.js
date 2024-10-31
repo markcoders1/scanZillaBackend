@@ -20,25 +20,6 @@ const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
 const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ";
 
-const loadBlacklistedWords = async () => {
-    const data = await fs.readFile("blacklistedWords.csv", "utf-8");
-    const words = new Set(
-        data.split(/\r?\n/).map((word) => word.toLowerCase())
-    );
-    return words;
-};
-
-const loadAllowedAbbreviations = async () => {
-    const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
-    const words = new Set(
-        data.split(/\r?\n/).map((word) => word.toUpperCase())
-    );
-    return words;
-};
-
-const allowedAbbreviations = await loadAllowedAbbreviations()
-const blacklistedWords = await loadBlacklistedWords();
-
 function findInvalidCharacters(input, regex) {
     let invalidChars = [];
 
@@ -50,10 +31,20 @@ function findInvalidCharacters(input, regex) {
     return invalidChars.join(" ");
 }
 
-const containsBlacklistedWord = (paragraph) => {
+const containsBlacklistedWord = async (paragraph) => {
     const lowerCaseParagraph = paragraph.toLowerCase();
     let usedWords = [];
     let containsWords = false;
+
+    const loadBlacklistedWords = async () => {
+        const data = await fs.readFile("blacklistedWords.csv", "utf-8");
+        const words = new Set(
+            data.split(/\r?\n/).map((word) => word.toLowerCase())
+        );
+        return words;
+    };
+
+    loadBlacklistedWords = await loadBlacklistedWords();
 
     for (const phrase of blacklistedWords) {
         const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
@@ -102,12 +93,22 @@ const containsBlacklistedWord = (paragraph) => {
 //     return { check, checkArray };
 // };
 
-function containsAllCapsWords(str) {
+async function containsAllCapsWords(str) {
     
 
     const words = str.split(" ");
     let cappedWords = [];
     let containsCaps = false;
+
+    const loadAllowedAbbreviations = async () => {
+        const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
+        const words = new Set(
+            data.split(/\r?\n/).map((word) => word.toUpperCase())
+        );
+        return words;
+    };
+
+    const allowedAbbreviations = await loadAllowedAbbreviations
 
     let allowedWords = [...allowedAbbreviations]
 
