@@ -44,7 +44,7 @@ const containsBlacklistedWord = async (paragraph) => {
         return words;
     };
 
-    loadBlacklistedWords = await loadBlacklistedWords();
+    const blacklistedWords = await loadBlacklistedWords();
 
     for (const phrase of blacklistedWords) {
         const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
