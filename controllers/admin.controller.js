@@ -381,7 +381,8 @@ export const updateAssInstructions = async (req,res) =>{
             {
               instructions:`${instructions.fixed}       here are the dos and donts for the ${valUpdate}:     DOs: ${instructions[valUpdate].Dos.join("-")}      DONTs: ${instructions[valUpdate].Donts.join("-")}`,
               response_format:zodResponseFormat(schema,`${valUpdate}`),
-              model:"gpt-4o-2024-08-06"
+              model:"gpt-4o-2024-08-06",
+              temperature:0.6
             }
             );
         }
