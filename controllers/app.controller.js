@@ -564,7 +564,37 @@ export const verifyText = async (req, res) => {
 
         console.log(mergedObject)
 
-        return res.status(200).json({message: "text verified",error: mergedObject,success: true});
+
+        //head reccomendations
+
+        let reccomendations=[]
+        if(title && title.length <= 0.9 * obj[category]){
+            reccomendations.push(`Title can be Indexed upto ${obj[category]} for the ${category} category`)
+        }
+        if(description && description.length <= 0.9 * obj.descriptionCharacters){
+            reccomendations.push(`description can be indexed upto ${obj.descriptionCharacters} characters`)
+        }
+        let bulletReccomend = false
+        bulletpoints.forEach((e)=>{
+            if(e && e.length <= 0.9 * obj.bulletCharacters){
+                bulletReccomend = true
+            }
+        })
+        if(bulletReccomend){
+            reccomendations.push(`individual bullet points can be indexed upto ${obj.bulletCharacters} characters`)
+        }
+        let bulletString = ""
+        bulletpoints.forEach(e=>bulletString = bulletString + e)
+        if(bulletString && bulletString.length <= 0.9 * obj.totalBulletsLength){
+            reccomendations.push(`Bullet Points can be collectively indexed upto ${obj.totalBulletsLength}`)
+        }
+        if(keywords && keywords.length <= 0.9 * obj.searchTerms){
+            reccomendations.push(`Search Terms (Generic Keywords) can be indexed upto ${obj.searchTerms}`)
+        }
+
+        
+
+        return res.status(200).json({message: "text verified",error: mergedObject,reccomendations,success: true});
     } catch (error) {
         if (error.code == "authentication_required") {
             return res.status(200).json({message: "not enough credits, autopay failed, authentication required",success: false,});
