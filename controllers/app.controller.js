@@ -108,7 +108,7 @@ async function containsAllCapsWords(str) {
         return words;
     };
 
-    const allowedAbbreviations = await loadAllowedAbbreviations
+    const allowedAbbreviations = await loadAllowedAbbreviations()
 
     let allowedWords = [...allowedAbbreviations]
 
