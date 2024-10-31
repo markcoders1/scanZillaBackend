@@ -109,11 +109,13 @@ function containsAllCapsWords(str) {
     let cappedWords = [];
     let containsCaps = false;
 
+    let allowedWords = [...allowedAbbreviations]
+
     for (let word of words) {
         if (
             /^[A-Z]+$/.test(word) &&
             word.length > 2 &&
-            !allowedAbbreviations.includes(word)
+            !allowedWords.includes(word)
         ) {
             cappedWords.push(word);
             containsCaps = true;
