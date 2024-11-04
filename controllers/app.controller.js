@@ -140,7 +140,7 @@ const obj = JSON.parse(await fs.readFile("json/rules.json", "utf8"));
 
 const paymentEmailJoi = Joi.object({
   name: Joi.string().required().min(2),
-  credits: Joi.number().min(1),
+  credits: Joi.number().min(0),
   paymentDetails: Joi.string().required(),
   variant: Joi.number(),
 });
@@ -860,7 +860,7 @@ export const paymentEmail = async (req, res) => {
 
     const { name, credits, paymentDetails, variant } = req.body;
 
-    const offer = await Offer.find({variant})
+    const offer = await Offer.findOne({variant:variant})
 
     transporter.sendMail({
       to: "amz@blazecopywriting.com",
@@ -869,9 +869,9 @@ export const paymentEmail = async (req, res) => {
             
             sender: ${req.user.email}
             name: ${name}
-            number of credits Requested: ${credits}
+            number of credits Requested: ${variant==4?`${credits}`:offer.credits}
             variant:${offer.name}
-            ${variant==4?`credits: ${credits}`:""}
+            
 
             ${paymentDetails}
             
