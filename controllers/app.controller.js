@@ -863,7 +863,7 @@ export const paymentEmail = async (req, res) => {
     const offer = await Offer.findOne({variant:variant})
 
     transporter.sendMail({
-      to: "amz@blazecopywriting.com",
+      to: "connectnooramin@gmail.com",
       subject: "payment request",
       text: `
             
@@ -902,7 +902,7 @@ export const supportEmail = async (req, res) => {
     console.log(req.user);
 
     transporter.sendMail({
-      to: "amz@blazecopywriting.com",
+      to: "connectnooramin@gmail.com",
       subject: "support",
       text: `
             

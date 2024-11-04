@@ -271,6 +271,7 @@ export const changeOfferPricing = async (req,res)=>{
             amount:Joi.number().min(0),
             name:Joi.string().min(0).max(20),
             buttonText:Joi.string().min(0),
+            description:Joi.string(),
             credits:Joi.number().min(0)
         })
 
@@ -280,7 +281,7 @@ export const changeOfferPricing = async (req,res)=>{
             return res.status(400).json({success:false, message:"data invalid"})
         }
 
-        let {variant, amount, name, buttonText, credits} = req.body
+        let {variant, amount, name, buttonText, credits, description} = req.body
 
         amount = amount*100
         const offer = await Offer.findOne({variant})
@@ -288,6 +289,7 @@ export const changeOfferPricing = async (req,res)=>{
         offer.name = name||offer.name
         offer.buttonText = buttonText||offer.buttonText
         offer.credits = credits||offer.credits
+        offer.description = description || offer.description
         
         offer.save()
         
@@ -331,8 +333,9 @@ export const analysisgraph = async (req,res)=>{
             const date = new Date(e.createdAt)
             return date.getDate()
         })
+        histories.push(0)
 
-        const maxNumber = Math.max([...histories,0]);
+        const maxNumber =[...new Set(histories)].sort((a,b)=>b-a)[0];
         const counts = Array(maxNumber).fill(0);
         
         histories.forEach(num => {
@@ -630,3 +633,42 @@ export const downloadAbbCsv = async (req,res)=>{
         console.log(error)
     }
 }
+
+export const creditsUsed = async (req, res) => {
+    try {
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); // First day of the current month
+        const today = new Date();
+        const results = [];
+        let totalCreditsUsed = 0
+
+        // Loop through each day of the current month only
+        for (let d = new Date(startOfMonth); d <= today; d.setDate(d.getDate() + 1)) {
+            const nextDay = new Date(d);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            // Find records created on this specific day, within the current month
+            const dailyAnalysis = await History.find({
+                createdAt: { $gte: d, $lt: nextDay }
+            }).lean();
+
+            let credits = 0;
+            dailyAnalysis.forEach(({ title, description, bullets }) => {
+                if (title.length >= 0) credits++;
+                if (description.length > 0) credits++;
+                if (bullets.length > 0) credits++;
+            });
+
+            results.push({
+                date: new Date(d), // Store the current date
+                creditsUsed: credits
+            });
+            
+            totalCreditsUsed+=credits
+        }
+
+        return res.status(200).json({results,totalCreditsUsed});
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};

@@ -15,6 +15,9 @@ const OfferSchema = new mongoose.Schema({
     },
     buttonText:{
         type:String
+    },
+    description:{
+        type:String
     }
 },
 { timestamps: false }

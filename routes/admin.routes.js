@@ -26,6 +26,7 @@ import {
     changeOfferPricing,
     getAssInstructions,
     updateAssInstructions,
+    creditsUsed,
 } from "../controllers/admin.controller.js"
 
 const upload = multer({ dest: './' });
@@ -83,5 +84,8 @@ router.route('/assistant').post(verifyJWT, verifyAdmin, updateAssInstructions)
 
 router.route('/makeAdmin').get(verifyJWT,verifyAdmin,makeAdmin)
 
+router.route("/getCredits").get(verifyJWT,verifyAdmin,creditsUsed);
+
+router.route("/creditsSent").get(verifyJWT,verifyAdmin)
 
 export default router
