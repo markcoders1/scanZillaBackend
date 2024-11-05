@@ -50,8 +50,19 @@ export const analyzeValue = async (value,assistant) => {
             await new Promise((resolve) => setTimeout(resolve, 1000));
             threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
         }
+
+        // console.log(`${value}`)
         
-        const message = await createMessage(thread_id,"user",`${value}`);
+        if(assistant == 'bullets'){
+            let valueToSend = ""
+            value.forEach((element,i) => {
+                valueToSend+= `${i+1}. ${element}`
+            });
+            console.log(valueToSend)
+            const message = await createMessage(thread_id,"user",valueToSend);
+        }else{
+            const message = await createMessage(thread_id,"user",`${value}`);
+        }
         
         let run = await createRun(thread_id, assId);
         console.log(`run created: ${run.id} at ${thread_id} for ${assistant}`);
