@@ -429,7 +429,7 @@ export const verifyText = async (req, res) => {
       });
     }
 
-    console.log(errObj.BE);
+    console.log(errObj.KE);
 
     //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
@@ -475,14 +475,7 @@ export const verifyText = async (req, res) => {
 
     const mergedObject = mergeObjects(errObj, changedObject);
 
-    const newHistory = await History.create({
-      userID: req.user.id,
-      title,
-      description,
-      bullets: bulletpoints,
-      keywords,
-      error: mergedObject,
-    });
+    
 
     // console.log(newHistory);
 
@@ -514,6 +507,16 @@ export const verifyText = async (req, res) => {
     if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
       reccomendations.push(`Search Terms (Generic Keywords) can be indexed upto ${obj.searchTerms}`);
     }
+
+    const newHistory = await History.create({
+      userID: req.user.id,
+      title,
+      description,
+      bullets: bulletpoints,
+      keywords,
+      error: mergedObject,
+      reccomendations
+    });
 
     return res.status(200).json({ message: "text verified", error: mergedObject, reccomendations, success: true });
   } catch (error) {

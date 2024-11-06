@@ -30,6 +30,10 @@ const HistorySchema = new mongoose.Schema({
     },
     credits:{
         type:Number
+    },
+    reccomendations:{
+        type:Array,
+        required:false
     }
 },
 { timestamps: true }
