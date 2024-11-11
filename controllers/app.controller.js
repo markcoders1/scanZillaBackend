@@ -30,19 +30,22 @@ function findInvalidCharacters(input, regex) {
   }
   return invalidChars.join(" ");
 }
+const loadBlacklistedWords = async () => {
+  const data = await fs.readFile("blacklistedWords.csv", "utf-8");
+  const words = [...new Set(data.split(/\r?\n/).map((word) => word.toLowerCase()))];
+  return words;
+};
+const loadAllowedAbbreviations = async () => {
+  const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
+  const words = [...new Set(data.split(/\r?\n/).map((word) => word.toUpperCase()))];
+  return words;
+};
 
-const containsBlacklistedWord = async (paragraph) => {
+const containsBlacklistedWord = (paragraph,blacklistedWords) => {
   const lowerCaseParagraph = paragraph.toLowerCase();
   let usedWords = [];
   let containsWords = false;
 
-  const loadBlacklistedWords = async () => {
-    const data = await fs.readFile("blacklistedWords.csv", "utf-8");
-    const words = new Set(data.split(/\r?\n/).map((word) => word.toLowerCase()));
-    return words;
-  };
-
-  const blacklistedWords = await loadBlacklistedWords();
 
   for (const phrase of blacklistedWords) {
     const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
@@ -53,6 +56,7 @@ const containsBlacklistedWord = async (paragraph) => {
   }
 
   usedWords = [...new Set(usedWords)];
+
 
   return { containsWords, usedWords };
 };
@@ -91,30 +95,20 @@ const containsBlacklistedWord = async (paragraph) => {
 //     return { check, checkArray };
 // };
 
-async function containsAllCapsWords(str) {
+function containsAllCapsWords(str,allowedAbbreviations) {
   const words = str.split(" ");
   let cappedWords = [];
   let containsCaps = false;
-
-  const loadAllowedAbbreviations = async () => {
-    const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
-    const words = new Set(data.split(/\r?\n/).map((word) => word.toUpperCase()));
-    return words;
-  };
-
-  const allowedAbbreviations = await loadAllowedAbbreviations();
 
   let allowedWords = [...allowedAbbreviations];
 
   for (let word of words) {
     if (/^[A-Z]+$/.test(word) && word.length > 2 && !allowedWords.includes(word)) {
-      console.log("working");
       cappedWords.push(word);
       containsCaps = true;
     }
   }
   cappedWords = [...new Set(cappedWords)];
-  console.log("containsCaps", containsCaps);
   return { containsCaps, cappedWords };
 }
 
@@ -169,13 +163,16 @@ export const verifyText = async (req, res) => {
   try {
     let { title, description, bulletpoints, keywords, category } = req.body;
 
-    console.log(`${keywords}`);
     if (!category) return res.status(400).json({ success: false, message: "category is required" });
+
+    let blacklistedWords = await loadBlacklistedWords();
+
+    let allowedAbbreviations = await loadAllowedAbbreviations();
 
     const verifyTextJoi = Joi.object({
       title: Joi.string()
         .custom((value, helper) => {
-          const { containsWords, usedWords } = containsBlacklistedWord(value);
+          const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
             return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
           }
@@ -197,7 +194,7 @@ export const verifyText = async (req, res) => {
 
       description: Joi.string()
         .custom((value, helper) => {
-          const { containsWords, usedWords } = containsBlacklistedWord(value);
+          const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
             return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
           }
@@ -210,8 +207,7 @@ export const verifyText = async (req, res) => {
           "string.pattern.base": "These Characters Are Not Allowed",
         })
         .custom((value, helper) => {
-          const { containsCaps, cappedWords } = containsAllCapsWords(value);
-          console.log("containsCaps 2", containsCaps);
+          const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
           if (containsCaps) {
             return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} )`);
           }
@@ -235,7 +231,7 @@ export const verifyText = async (req, res) => {
           Joi.string()
             .allow("")
             .custom((value, helper) => {
-              const { containsWords, usedWords } = containsBlacklistedWord(value);
+              const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
               if (containsWords) {
                 return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
               }
@@ -255,7 +251,7 @@ export const verifyText = async (req, res) => {
               "string.max": "length must be less than or equal to 250 characters long to be fully indexed",
             })
             .custom((value, helper) => {
-              const { containsCaps, cappedWords } = containsAllCapsWords(value);
+              const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
               if (containsCaps) {
                 return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} )`);
               }
@@ -278,7 +274,7 @@ export const verifyText = async (req, res) => {
 
       keywords: Joi.string()
         .custom((value, helper) => {
-          const { containsWords, usedWords } = containsBlacklistedWord(value);
+          const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
             return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
           }
@@ -315,14 +311,9 @@ export const verifyText = async (req, res) => {
 
     let collectiveString = title + description + bulletpoints.join("") + keywords;
 
-    const calcStringCost = (stringToCalc) => {
-      const fullChunks = Math.floor(stringToCalc.length / obj.characterCost);
-      const partialChunk = stringToCalc.length % obj.characterCost;
-      const valtosend = Math.ceil(fullChunks * obj.creditCost + (partialChunk > 0 ? (partialChunk / obj.characterCost) * obj.creditCost : 0));
-      return valtosend;
-    };
+    const calcStringCost = (stringToCalc) => stringToCalc?1:0;
 
-    const creditPrice = calcStringCost(title) + calcStringCost(description) + calcStringCost(bulletpoints.join("")) + calcStringCost(keywords);
+    const creditPrice = calcStringCost(title) + calcStringCost(description) + bulletpoints.length*0.5 + calcStringCost(keywords);
 
     let user = await User.findOne({ email: req.user.email });
 
@@ -397,7 +388,7 @@ export const verifyText = async (req, res) => {
         };
         const fieldKey = fieldKeyMap[field.path[0]];
 
-        console.log("path", field.path[0] == "bulletpoints");
+        // console.log("path", field.path[0] == "bulletpoints");
 
         if (field.type === "string.pattern.base") {
           const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
@@ -405,7 +396,6 @@ export const verifyText = async (req, res) => {
         }
 
         if (field.path[0] == "bulletpoints") {
-          console.log("hoi");
           errObj.joi = true;
 
           let exists = false;
@@ -428,8 +418,6 @@ export const verifyText = async (req, res) => {
         }
       });
     }
-
-    console.log(errObj.KE);
 
     //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
@@ -455,7 +443,7 @@ export const verifyText = async (req, res) => {
         results.forEach((result) => {
           Object.assign(parsedMessage, result);
         });
-        console.log("message data", parsedMessage);
+        // console.log("message data", parsedMessage);
       })
       .catch((error) => {
         // Handle any errors
@@ -471,15 +459,13 @@ export const verifyText = async (req, res) => {
       BF: parsedMessage.bulletPointFixed || [],
     };
 
-    // console.log(changedObject)
 
     const mergedObject = mergeObjects(errObj, changedObject);
 
     
 
-    // console.log(newHistory);
 
-    console.log(mergedObject);
+    // console.log(mergedObject);
 
     //head reccomendations
 
@@ -617,7 +603,6 @@ export const buyCredits = async (req, res) => {
       user.customerId = customer.id;
       req.user.customerId = customer.id;
       user.save();
-      console.log(user);
     }
 
     const offer = await Offer.findOne({ variant });
@@ -760,7 +745,6 @@ export const getCardInfo = async (req, res) => {
     }
     const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId);
 
-    // console.log(req.user,paymentMethods)
     const cards = paymentMethods.data.map((e) => {
       return {
         expMonth: e.card.exp_month,

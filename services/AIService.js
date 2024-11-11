@@ -56,9 +56,8 @@ export const analyzeValue = async (value,assistant) => {
         if(assistant == 'bullets'){
             let valueToSend = ""
             value.forEach((element,i) => {
-                valueToSend+= `${i+1}. ${element}`
+                valueToSend+= `${i+1}. ${element} `
             });
-            console.log(valueToSend)
             const message = await createMessage(thread_id,"user",valueToSend);
         }else{
             const message = await createMessage(thread_id,"user",`${value}`);

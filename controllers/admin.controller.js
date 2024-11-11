@@ -573,10 +573,10 @@ export const addAbbWords = async (req,res) => {
 
     try {
         const words = await getWordsFromFile("allowedAbbreviations.csv");
-        if (words.includes(newWord)){
+        if (words.includes(newWord.toUpperCase())){
             return res.status(400).json({success:false,message:"word already exists"})
         }
-        words.push(newWord);
+        words.push(newWord.toUpperCase());
         words.sort()
         await writeAbbWordsToFile(words);
         return res.status(201).json({ success:true,message: 'Word added successfully',words });
@@ -603,7 +603,7 @@ export const removeAbbWords = async (req,res) =>{
 
     try {
         let words = await getWordsFromFile("allowedAbbreviations.csv");
-        words = words.filter(word => word !== wordToRemove);
+        words = words.filter(word => word !== wordToRemove.toUpperCase());
         await writeAbbWordsToFile(words);
         res.status(200).json({ message: 'Word removed successfully' });
     } catch (error) {
