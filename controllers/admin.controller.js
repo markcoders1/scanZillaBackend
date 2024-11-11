@@ -655,7 +655,7 @@ export const creditsUsed = async (req, res) => {
             dailyAnalysis.forEach(({ title, description, bullets }) => {
                 if (title.length >= 0) credits++;
                 if (description.length > 0) credits++;
-                if (bullets.length > 0) credits++;
+                if (bullets.length > 0) credits+=bullets.length*0.5;
             });
 
             results.push({
