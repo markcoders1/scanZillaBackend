@@ -144,18 +144,28 @@ const supportEmailJoi = Joi.object({
   content: Joi.string().required(),
 });
 
+// function mergeObjects(obj1, obj2) {
+//   const result = { ...obj2 };
+//   for (const key in obj1) {
+//     const value1 = obj1[key];
+//     if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
+//       if (!obj2.hasOwnProperty(key)) {
+//         result[key] = value1;
+//       }
+//     } else {
+//       result[key] = value1;
+//     }
+//   }
+//   return result;
+// }
+
 function mergeObjects(obj1, obj2) {
-  const result = { ...obj2 };
-  for (const key in obj1) {
-    const value1 = obj1[key];
-    if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
-      if (!obj2.hasOwnProperty(key)) {
-        result[key] = value1;
-      }
-    } else {
-      result[key] = value1;
-    }
+  const result = {};
+
+  for (const key of new Set([...Object.keys(obj1), ...Object.keys(obj2)])) {
+      result[key] = (obj1[key] || []).concat(obj2[key] || []);
   }
+
   return result;
 }
 
@@ -424,13 +434,13 @@ export const verifyText = async (req, res) => {
     const errors = [];
 
     // Collect promises for each condition
-    if (errObj.TE.length === 0 && title !== "") {
+    if (title !== "") {
       errors.push(analyzeValue(title, "title"));
     }
-    if (errObj.DE.length === 0 && description !== "") {
+    if (description !== "") {
       errors.push(analyzeValue(description, "desc"));
     }
-    if (errObj.BE.length === 0 && bulletpoints.length > 0 && bulletpoints[0] !== "") {
+    if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
       errors.push(analyzeValue(bulletpoints, "bullets"));
     }
 
@@ -452,11 +462,8 @@ export const verifyText = async (req, res) => {
 
     const changedObject = {
       TE: parsedMessage.titleErrors || [],
-      TF: parsedMessage.titleFixed || [],
       DE: parsedMessage.descriptionErrors || [],
-      DF: parsedMessage.descriptionFixed || [],
       BE: parsedMessage.bulletPointErrors || [],
-      BF: parsedMessage.bulletPointFixed || [],
     };
 
 

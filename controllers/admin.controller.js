@@ -24,26 +24,20 @@ import { stringify } from 'csv-stringify/sync';
 */
 const responseSchema = z.object({
     titleErrors:z.array(z.string()),
-    titleFixed:z.array(z.string()),
     descriptionErrors:z.array(z.string()),
-    descriptionFixed:z.array(z.string()),
     bulletPointErrors:z.array(z.string()),
-    bulletPointFixed:z.array(z.string()),
 })
 
 const titleSchema = z.object({
     titleErrors:z.array(z.string()),
-    titleFixed:z.array(z.string()),
 })
 
 const descriptionSchema = z.object({
     descriptionErrors:z.array(z.string()),
-    descriptionFixed:z.array(z.string()),
 })
 
 const bulletsSchema = z.object({
     bulletPointErrors:z.array(z.string()),
-    bulletPointFixed:z.array(z.string()),
 })
 
 
