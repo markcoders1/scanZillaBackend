@@ -173,7 +173,7 @@ export const verifyText = async (req, res) => {
   try {
     let { title, description, bulletpoints, keywords, category } = req.body;
 
-    if (!category) return res.status(400).json({ success: false, message: "category is required" });
+    if (!category) return res.status(400).json({ success: false, message: "Category is required." });
 
     let blacklistedWords = await loadBlacklistedWords();
 
@@ -184,7 +184,7 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
+            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
           }
           return value;
         })
@@ -193,20 +193,20 @@ export const verifyText = async (req, res) => {
         .max(obj[category] + 1)
         .custom((value, helper) => {
           if (value.length > 0 && /^\s*$/.test(value)) {
-            return helper.message(`this text only consists of whitespace, please Enter a Value`);
+            return helper.message(`This text only consists of whitespace, please Enter a Value.`);
           }
           return value;
         })
         .messages({
-          "string.pattern.base": "These Characters Are Not Allowed",
-          "string.max": `title for category: "${category}" must be up to ${obj[category]} characters long`,
+          "string.pattern.base": "These Characters Are Not Allowed.",
+          "string.max": `Title for category: "${category}" must be up to ${obj[category]} characters long.`,
         }),
 
       description: Joi.string()
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
+            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
           }
           return value;
         })
@@ -214,18 +214,18 @@ export const verifyText = async (req, res) => {
         .min(0)
         .max(obj.descriptionCharacters)
         .messages({
-          "string.pattern.base": "These Characters Are Not Allowed",
+          "string.pattern.base": "These Characters Are Not Allowed.",
         })
         .custom((value, helper) => {
           const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
           if (containsCaps) {
-            return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} )`);
+            return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} ).`);
           }
           return value;
         })
         .custom((value, helper) => {
           if (value.length > 0 && /^\s*$/.test(value)) {
-            return helper.message(`this text only consists of whitespace, please Enter a Value`);
+            return helper.message(`This text only consists of whitespace, please Enter a Value.`);
           }
           return value;
         })
@@ -243,13 +243,13 @@ export const verifyText = async (req, res) => {
             .custom((value, helper) => {
               const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
               if (containsWords) {
-                return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
+                return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
               }
               return value;
             })
             .custom((value, helper) => {
               if (value.length > 0 && /^\s*$/.test(value)) {
-                return helper.message(`this text only consists of whitespace, please Enter a Value`);
+                return helper.message(`This text only consists of whitespace, please Enter a Value.`);
               }
               return value;
             })
@@ -257,20 +257,20 @@ export const verifyText = async (req, res) => {
             .min(0)
             .max(obj.bulletCharacters)
             .messages({
-              "string.pattern.base": "These Characters Are Not Allowed",
-              "string.max": "length must be less than or equal to 250 characters long to be fully indexed",
+              "string.pattern.base": "These Characters Are Not Allowed.",
+              "string.max": "Length must be less than or equal to 250 characters long to be fully indexed.",
             })
             .custom((value, helper) => {
               const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
               if (containsCaps) {
-                return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} )`);
+                return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} ).`);
               }
               return value;
             })
         )
         .custom((value, helper) => {
           if (value.join("").length > obj.totalBulletsLength) {
-            return helper.message(`length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed`);
+            return helper.message(`Length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed.`);
           }
           return value;
         })
@@ -278,15 +278,15 @@ export const verifyText = async (req, res) => {
         .max(obj.bulletNum)
         .label("bulletpoints")
         .messages({
-          "array.base": "bulletpoints must be an array of strings",
-          "array.includes": "each bulletpoint must be a valid string according to the specified rules",
+          "array.base": "Bulletpoints must be an array of strings.",
+          "array.includes": "Each bulletpoint must be a valid string according to the specified rules.",
         }),
 
       keywords: Joi.string()
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`this text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
+            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
           }
           return value;
         })
@@ -295,7 +295,7 @@ export const verifyText = async (req, res) => {
         .max(obj.searchTerms)
         .custom((value, helper) => {
           if (value.length > 0 && /^\s*$/.test(value)) {
-            return helper.message(`this text only consists of whitespace, please Enter a Value`);
+            return helper.message(`This text only consists of whitespace, please Enter a Value.`);
           }
           return value;
         })
@@ -334,7 +334,7 @@ export const verifyText = async (req, res) => {
 
         if (!paymentId) {
           return res.status(400).json({
-            message: "No Payment Method Detected, add credits, or add payment method",
+            message: "No Payment Method Detected, add credits, or add payment method.",
             success: false,
           });
         }
@@ -358,14 +358,14 @@ export const verifyText = async (req, res) => {
 
         if (user.credits + user.preferredCredits < creditPrice) {
           return res.status(400).json({
-            message: "your Auto Credits are not enough to cover for this analyzation, please recharge",
+            message: "Your Auto Credits are not enough to cover for this analyzation, Please recharge.",
             success: false,
             error: {},
           });
         }
       } else {
         return res.status(400).json({
-          message: "Not enough credits, please recharge",
+          message: "Not enough credits, please recharge.",
           success: false,
           error: {},
         });
@@ -478,10 +478,10 @@ export const verifyText = async (req, res) => {
 
     let reccomendations = [];
     if (title && title.length <= 0.9 * obj[category]) {
-      reccomendations.push(`Title can be Indexed upto ${obj[category]} for the ${category} category`);
+      reccomendations.push(`Title can be Indexed upto ${obj[category]} for the ${category} category.`);
     }
     if (description && description.length <= 0.9 * obj.descriptionCharacters) {
-      reccomendations.push(`description can be indexed upto ${obj.descriptionCharacters} characters`);
+      reccomendations.push(`Description can be indexed upto ${obj.descriptionCharacters} characters.`);
     }
     let bulletReccomend = false;
     bulletpoints.forEach((e) => {
@@ -490,15 +490,15 @@ export const verifyText = async (req, res) => {
       }
     });
     if (bulletReccomend) {
-      reccomendations.push(`individual bullet points can be indexed upto ${obj.bulletCharacters} characters`);
+      reccomendations.push(`Individual bullet points can be indexed upto ${obj.bulletCharacters} characters.`);
     }
     let bulletString = "";
     bulletpoints.forEach((e) => (bulletString = bulletString + e));
     if (bulletString && bulletString.length <= 0.9 * obj.totalBulletsLength) {
-      reccomendations.push(`Bullet Points can be collectively indexed upto ${obj.totalBulletsLength}`);
+      reccomendations.push(`Bullet Points can be collectively indexed upto ${obj.totalBulletsLength}.`);
     }
     if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
-      reccomendations.push(`Search Terms (Generic Keywords) can be indexed upto ${obj.searchTerms}`);
+      reccomendations.push(`Search Terms (Generic Keywords) can be indexed upto ${obj.searchTerms}.`);
     }
 
     const newHistory = await History.create({
@@ -511,13 +511,13 @@ export const verifyText = async (req, res) => {
       reccomendations
     });
 
-    return res.status(200).json({ message: "text verified", error: mergedObject, reccomendations, success: true });
+    return res.status(200).json({ message: "Text verified.", error: mergedObject, reccomendations, success: true });
   } catch (error) {
     if (error.code == "authentication_required") {
-      return res.status(200).json({ message: "not enough credits, autopay failed, authentication required", success: false });
+      return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required.", success: false });
     } else {
       console.log(error);
-      return res.status(400).json({ message: "something went wrong, please try again or contact support", success: false });
+      return res.status(400).json({ message: "Something went wrong, Please try again or contact support.", success: false });
     }
   }
 };
@@ -578,7 +578,7 @@ export const getUserHistory = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    res.status(500).json({ success: false, message: "Server Error." });
   }
 };
 
@@ -596,7 +596,7 @@ export const buyCredits = async (req, res) => {
     const { variant, email } = req.body;
 
     if (!variant || !email) {
-      return res.status(400).json({ message: "data incomplete" });
+      return res.status(400).json({ message: "Data incomplete." });
     }
 
     const user = await User.findOne({ email: req.user.email });
@@ -668,7 +668,7 @@ export const addPaymentMethod = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -676,13 +676,13 @@ export const BuyCreditWebhook = async (req, res) => {
   try {
     const details = req.body.data.object;
     if (!details || details.object == "charge") {
-      return res.status(400).json({ message: "Invalid webhook data" });
+      return res.status(400).json({ message: "Invalid webhook data." });
     }
 
     let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
     if (webhookCall) {
-      return res.status(200).json({ message: "webhook already called" });
+      return res.status(200).json({ message: "Webhook already called." });
     }
 
     webhookCall = await ProcessedEvent.create({ id: details.id });
@@ -700,7 +700,7 @@ export const BuyCreditWebhook = async (req, res) => {
     return res.status(200).json({ success: true, credits: user.credits });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -748,7 +748,7 @@ export const getCardInfo = async (req, res) => {
     console.log(user);
 
     if (!req.user.customerId) {
-      return res.status(200).json({ message: "no customer detected" });
+      return res.status(200).json({ message: "No customer detected." });
     }
     const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId);
 
@@ -772,7 +772,7 @@ export const toggleAutoCredit = async (req, res) => {
     if (preferredCredits < 0) {
       return res.status(400).json({
         success: false,
-        message: "preferred Credits can not be less than 0",
+        message: "Preferred Credits can not be less than 0.",
       });
     }
     const user = await User.findOne({ email: req.user.email });
@@ -782,7 +782,7 @@ export const toggleAutoCredit = async (req, res) => {
     user.save();
     return res.status(200).json({
       success: true,
-      message: `auto credits: ${uac ? "off" : "on"}`,
+      message: `Auto credits: ${uac ? "off" : "on"}.`,
     });
   } catch (err) {
     console.log(err);
@@ -826,7 +826,7 @@ export const getOffers = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      message: "something went wrong, please try again later or contact support",
+      message: "Something went wrong, Please try again later or contact support.",
     });
   }
 };
@@ -838,7 +838,7 @@ export const getRules = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      message: "something went wrong, please try again or contact support",
+      message: "Something went wrong, Please try again or contact support",
     });
   }
 };
@@ -849,7 +849,7 @@ export const paymentEmail = async (req, res) => {
 
     if (error) {
       console.log(error);
-      return res.status(400).json({ success: false, message: "invalid data provided" });
+      return res.status(400).json({ success: false, message: "Invalid data provided." });
     }
 
     const { name, credits, paymentDetails, variant } = req.body;
@@ -857,14 +857,14 @@ export const paymentEmail = async (req, res) => {
     const offer = await Offer.findOne({variant:variant})
 
     transporter.sendMail({
-      to: "connectnooramin@gmail.com",
-      subject: "payment request",
+      to: "amz@blazecopywriting.com",
+      subject: "Payment Request",
       text: `
             
-            sender: ${req.user.email}
-            name: ${name}
-            number of credits Requested: ${variant==4?`${credits}`:offer.credits}
-            variant:${offer.name}
+            Sender: ${req.user.email}
+            Name: ${name}
+            Number of credits Requested: ${variant==4?`${credits}`:offer.credits}
+            Variant:${offer.name}
             
 
             ${paymentDetails}
@@ -873,12 +873,12 @@ export const paymentEmail = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      message: "email sent successfully",
+      message: "Email sent successfully.",
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: "something went wrong, please try again or contact support ",
+      message: "Something went wrong, Please try again or contact support.",
     });
   }
 };
@@ -889,19 +889,19 @@ export const supportEmail = async (req, res) => {
 
     if (error) {
       console.log(error);
-      return res.status(400).json({ success: false, message: "invalid data provided" });
+      return res.status(400).json({ success: false, message: "Invalid data provided." });
     }
 
     const { name, content } = req.body;
     console.log(req.user);
 
     transporter.sendMail({
-      to: "connectnooramin@gmail.com",
-      subject: "support",
+      to: "amz@blazecopywriting.com",
+      subject: "Support",
       text: `
             
-            sender: ${req.user.email}
-            name: ${name}
+            Sender: ${req.user.email}
+            Name: ${name}
 
             ${content}
             
@@ -909,12 +909,12 @@ export const supportEmail = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      message: "email sent successfully",
+      message: "Email sent successfully.",
     });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      message: "something went wrong, please try again or contact support",
+      message: "Something went wrong, Please try again or contact support.",
     });
   }
 };

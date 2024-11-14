@@ -72,7 +72,7 @@ export const toggleUserAccount = async (req, res) => {
             .json({ message: "user account toggled successfully" });
     } catch (error) {
         return res.status(400).json({
-            message: "something went wrong, please contact management",
+            message: "Something went wrong, Please contact management.",
         });
     }
 };
@@ -81,11 +81,11 @@ export const getUser = async (req, res) => {
     try {
         const userId = req.query.id;
         if (typeof userId !== "string") {
-            return res.status(401).json({ message: "ID must be string" });
+            return res.status(401).json({ message: "ID must be string." });
         }
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(401).json({ message: "user does not exist" });
+            return res.status(401).json({ message: "User does not exist." });
         }
         console.log(user);
         return res.status(200).json(user);
@@ -99,15 +99,15 @@ export const changeRules = async (req,res) => {
     try{
 
         const rulesjoi = Joi.object({
-            titleCharacters:Joi.number().min(0).message("incorrect value"),
-            bulletNum:Joi.number().min(0).message("incorrect value"),
-            bulletCharacters:Joi.number().min(0).message("incorrect value"),
-            descriptionCharacters:Joi.number().min(0).message("incorrect value"),
-            creditCost:Joi.number().min(0).message("incorrect value"),
-            characterCost:Joi.number().min(0).message("incorrect value"),
+            titleCharacters:Joi.number().min(0).message("Incorrect value."),
+            bulletNum:Joi.number().min(0).message("Incorrect value."),
+            bulletCharacters:Joi.number().min(0).message("Incorrect value."),
+            descriptionCharacters:Joi.number().min(0).message("Incorrect value."),
+            creditCost:Joi.number().min(0).message("Incorrect value."),
+            characterCost:Joi.number().min(0).message("Incorrect value."),
             category:Joi.string().min(0),
-            totalBulletsLength:Joi.number().min(0).message("incorrect value"),
-            searchTerms:Joi.number().min(0).message("incorrect value")
+            totalBulletsLength:Joi.number().min(0).message("Incorrect value."),
+            searchTerms:Joi.number().min(0).message("Incorrect value.")
         })
 
         const {
@@ -130,7 +130,7 @@ export const changeRules = async (req,res) => {
 
         if (error){
             console.log(error.details)
-            return res.status(400).json({message:"incorrect values"})
+            return res.status(400).json({message:"Incorrect values."})
         }
     
         const obj = JSON.parse(await fs.readFile('json/rules.json', 'utf8'));
@@ -147,12 +147,12 @@ export const changeRules = async (req,res) => {
     
         await fs.writeFile('json/rules.json', JSON.stringify(obj, null, 2), 'utf8');
 
-        res.status(200).send({ message: 'Rules updated successfully' });
+        res.status(200).send({ message: 'Rules updated successfully.' });
 
     } catch (error) {
 
         console.error('Error updating rules:', error);
-        res.status(500).send({ message: 'Error updating rules' });
+        res.status(500).send({ message: 'Error updating rules.' });
         
     }
 
@@ -163,7 +163,7 @@ export const getTotalUsers = async (req,res)=>{
         const users = await User.countDocuments({role:"user",active:true})
         res.status(200).json({users})
     }catch(err){
-        return res.status(500).json({message:"something went wrong, please try again or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again or contact support."})
     }
 }
 
@@ -181,7 +181,7 @@ export const getUserPurchases = async (req,res)=>{
 
     }catch(err){
         console.log(err)
-        res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -192,7 +192,7 @@ export const getUserHistory = async (req,res)=>{
         res.status(200).json(Histories)
     }catch(err){
         console.log(err)
-        res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -253,7 +253,7 @@ export const getIncome = async (req,res)=>{
         res.status(200).json({value,result})
     }catch(err){
         console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -272,7 +272,7 @@ export const changeOfferPricing = async (req,res)=>{
         const {error} = offerJoi.validate(req.body)
         if (error){
             console.log(error)
-            return res.status(400).json({success:false, message:"data invalid"})
+            return res.status(400).json({success:false, message:"Data Invalid"})
         }
 
         let {variant, amount, name, buttonText, credits, description} = req.body
@@ -291,7 +291,7 @@ export const changeOfferPricing = async (req,res)=>{
 
     }catch(err){
         console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -300,7 +300,7 @@ export const giveUserCredits = async (req,res) => {
         let {userId,credits} = req.body
 
         if (!userId||!credits){
-            return res.status(400).json({message:"values not found"})
+            return res.status(400).json({message:"Values not found."})
         }
 
         const user = await User.findById(userId)
@@ -310,11 +310,11 @@ export const giveUserCredits = async (req,res) => {
         user.credits+=credits
         user.save()
 
-        return res.status(200).json({success:true, userCredits:user.credits, message:`you have successfully sent ${credits} credits to user: ${user.userName}`})
+        return res.status(200).json({success:true, userCredits:user.credits, message:`You have successfully sent ${credits} credits to user: ${user.userName}`})
 
     }catch(err){
         console.log(err)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -344,7 +344,7 @@ export const analysisgraph = async (req,res)=>{
         res.status(200).json(result)
     }catch(error){
         console.log(error)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -354,7 +354,7 @@ export const getAssInstructions = async (req,res) => {
         res.status(200).json({title:instructions.title,description:instructions.description,bullets:instructions.bullets})
     }catch(error){
         console.log(error)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -400,7 +400,7 @@ export const updateAssInstructions = async (req,res) =>{
         res.status(200).json({success:true, message:"AI rules changed successfully", update})
     }catch(error){
         console.log(error)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -413,7 +413,7 @@ export const makeAdmin = async (req,res) =>{
         res.status(200).json({success:true,message:`user toggled ${user.role} successfully`,role:user.role})
     }catch(error){
         console.log(error)
-        return res.status(500).json({message:"something went wrong, please try again later or contact support"})
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
     }
 }
 
@@ -454,9 +454,9 @@ export const getWords= async (req,res)=>{
 
 export const addWords = async (req,res) => {
     const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
+        "string.empty":"Word cannot be null",
+        "string.min":"Word must contain atleast 1 character",
+        "any.required":"Word is required"
     })
     const newWord = req.body.word;
     const {error} = wordjoi.validate(newWord)
@@ -468,15 +468,15 @@ export const addWords = async (req,res) => {
     try {
         const words = await getWordsFromFile();
         if (words.includes(newWord)){
-            return res.status(400).json({success:false,message:"word already exists"})
+            return res.status(400).json({success:false,message:"Word already exists."})
         }
         words.push(newWord);
         words.sort()
         await writeWordsToFile(words);
-        return res.status(201).json({ success:true,message: 'Word added successfully',words });
+        return res.status(201).json({ success:true,message: 'Word added successfully.',words });
     } catch (error) {
         console.log(error)
-        return res.status(500).json({ error: 'Failed to add word to file' });
+        return res.status(500).json({ error: 'Failed to add word to file.' });
     }
 }
 
@@ -484,15 +484,15 @@ export const removeWords = async (req,res) =>{
     const wordToRemove = req.query.word;
 
     const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
+        "string.empty":"Word cannot be null.",
+        "string.min":"Word must contain atleast 1 character.",
+        "any.required":"Word is required."
     })
 
     const {error} = wordjoi.validate(wordToRemove)
 
     if(error){
-        return res.status(400).json({success:false,message:"word invalid"})
+        return res.status(400).json({success:false,message:"Word Invalid."})
     }
 
     try {
@@ -509,12 +509,12 @@ export const removeWords = async (req,res) =>{
 export const uploadCsv = async (req,res) => {
     try{
         if(req.file.mimetype!="text/csv"){
-            return res.status(400).json({message:"incorrect filetype",success:false})
+            return res.status(400).json({message:"Incorrect Filetype.",success:false})
         }
         const words = await getWordsFromFile(req.file.path)
         await fs.rm(`./${req.file.path}`)
         await writeWordsToFile(words)
-        res.status(200).json({message:"uploaded csv successfully",words})
+        res.status(200).json({message:"Uploaded csv successfully.",words})
     }catch(error){
         console.log(error)
     }
@@ -547,16 +547,16 @@ export const getAbbWords= async (req,res)=>{
         res.status(200).json(words);
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: 'Failed to read words from file' });
+        res.status(500).json({ error: 'Failed to read words from file.' });
     }
 
 }
 
 export const addAbbWords = async (req,res) => {
     const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
+        "string.empty":"Word cannot be null",
+        "string.min":"Word must contain atleast 1 character.",
+        "any.required":"Word is required."
     })
     const newWord = req.body.word;
     const {error} = wordjoi.validate(newWord)
@@ -568,15 +568,15 @@ export const addAbbWords = async (req,res) => {
     try {
         const words = await getWordsFromFile("allowedAbbreviations.csv");
         if (words.includes(newWord.toUpperCase())){
-            return res.status(400).json({success:false,message:"word already exists"})
+            return res.status(400).json({success:false,message:"Word already exists."})
         }
         words.push(newWord.toUpperCase());
         words.sort()
         await writeAbbWordsToFile(words);
-        return res.status(201).json({ success:true,message: 'Word added successfully',words });
+        return res.status(201).json({ success:true,message: 'Word added successfully.',words });
     } catch (error) {
         console.log(error)
-        return res.status(500).json({ error: 'Failed to add word to file' });
+        return res.status(500).json({ error: 'Failed to add word to file.' });
     }
 }
 
@@ -584,37 +584,37 @@ export const removeAbbWords = async (req,res) =>{
     const wordToRemove = req.query.word;
 
     const wordjoi = Joi.string().min(1).required().max(100).label("word").messages({
-        "string.empty":"word cannot be null",
-        "string.min":"word must contain atleast 1 character",
-        "any.required":"word is required"
+        "string.empty":"Word cannot be null.",
+        "string.min":"Word must contain atleast 1 character.",
+        "any.required":"Word is required."
     })
 
     const {error} = wordjoi.validate(wordToRemove)
 
     if(error){
-        return res.status(400).json({success:false,message:"word invalid"})
+        return res.status(400).json({success:false,message:"Word Invalid"})
     }
 
     try {
         let words = await getWordsFromFile("allowedAbbreviations.csv");
         words = words.filter(word => word !== wordToRemove.toUpperCase());
         await writeAbbWordsToFile(words);
-        res.status(200).json({ message: 'Word removed successfully' });
+        res.status(200).json({ message: 'Word removed successfully.' });
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: 'Failed to remove word from file' });
+        res.status(500).json({ error: 'Failed to remove word from file.' });
     }
 }
 
 export const uploadAbbCsv = async (req,res) => {
     try{
         if(req.file.mimetype!="text/csv"){
-            return res.status(400).json({message:"incorrect filetype",success:false})
+            return res.status(400).json({message:"incorrect filetype.",success:false})
         }
         const words = await getWordsFromFile(req.file.path)
         await fs.rm(`./${req.file.path}`)
         await writeAbbWordsToFile(words)
-        res.status(200).json({message:"uploaded csv successfully",words})
+        res.status(200).json({message:"Uploaded csv successfully.",words})
     }catch(error){
         console.log(error)
     }
@@ -663,6 +663,6 @@ export const creditsUsed = async (req, res) => {
         return res.status(200).json({results,totalCreditsUsed});
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ error: "Server error." });
     }
 };

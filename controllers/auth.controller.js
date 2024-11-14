@@ -22,7 +22,7 @@ export const test = (req,res)=>{
     try{
         return res.status(200).json({message:req.world})
     }catch(err){
-        return res.status(400).json({message:"goodbye world!"})
+        return res.status(400).json({message:"Goodbye world!"})
         console.log(err)
     }
 }
@@ -32,7 +32,7 @@ export const createUser = async (req,res)=>{
         const {email,password,userName}=req.body
         const userSearch = await User.findOne({$or: [ { email: email }, { userName: userName }]})
 
-        if(userSearch) return res.status(400).json({message:"user already exists"})
+        if(userSearch) return res.status(400).json({message:"User already exists."})
 
         const user=await User.create({email,password,userName})
 
@@ -44,9 +44,9 @@ export const createUser = async (req,res)=>{
 
         const usr = await User.findOne({email:email}).select('-password')
 
-        return res.status(200).json({"message":"signed up successfully",...usr._doc,accessToken, refreshToken, success:true})
+        return res.status(200).json({"message":"Signed up successfully",...usr._doc,accessToken, refreshToken, success:true})
     }catch(err){
-        return res.status(400).json({message:"goodbye world!"})
+        return res.status(400).json({message:"Goodbye world!"})
         console.log(err)
     }
 }
@@ -59,8 +59,8 @@ const loginUserJoi = Joi.object({
     }),
   
     password: Joi.string().required().messages({
-        "any.required": "password is required.",
-        "string.empty":"password Cannot be empty"
+        "any.required": "Password is required.",
+        "string.empty":"Password Cannot be empty."
     })
 });
 
@@ -77,7 +77,7 @@ const generateAccessAndRefreshToken = async (userId) => {
       return { accessToken, refreshToken };
     } catch (error) {
       throw new Error(
-        "Something went wrong while generating Access and Refresh Tokens"
+        "Something went wrong while generating Access and Refresh Tokens."
       );
     }
   };
@@ -89,16 +89,16 @@ export const loginUser = async (req,res)=>{
 
         const user = await User.findOne({email:email});
         if (!user) {
-         return res.status(400).send({message:"user not found",success:false,errorType:"email"})
+         return res.status(400).send({message:"User not found.",success:false,errorType:"email"})
         }
 
         if (!user.active) {
-            return res.status(400).send({message:"user has been blocked",success:false})
+            return res.status(400).send({message:"User has been blocked.",success:false})
         }
 
         const isPasswordValid = await user.isPasswordCorrect(password);
         if (!isPasswordValid) {
-            return res.status(400).json({message:"email or password incorrect",success:false,errorType:"password"})
+            return res.status(400).json({message:"Email or password incorrect.",success:false,errorType:"password"})
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -110,7 +110,7 @@ export const loginUser = async (req,res)=>{
         return res
             .status(200)
             .json({
-               "message":"logged in successfully",
+               "message":"Logged in successfully.",
                accessToken,
                refreshToken,
                ...usr._doc,
@@ -150,7 +150,7 @@ export const Oauth = async (req,res)=>{
         return res
             .status(200)
             .json({
-               "message":"logged in successfully",
+               "message":"Logged in successfully.",
                accessToken,
                refreshToken,
                success:true,
@@ -217,9 +217,9 @@ export const forgetpassword = async (req,res)=>{
         if (user.isotpCorrect(otp) && user.otpExpiry>=Date.now()){
             user.password=password
             user.save()
-            return res.status(200).json({message:"password changed successfully"})
+            return res.status(200).json({message:"Password changed successfully"})
         }else{
-            return res.status(400).json({message:"otp incorrect or expired"})
+            return res.status(400).json({message:"OTP incorrect or expired"})
         }
 
     }catch(err){
