@@ -478,10 +478,10 @@ export const verifyText = async (req, res) => {
 
     let reccomendations = [];
     if (title && title.length <= 0.9 * obj[category]) {
-      reccomendations.push(`Title can be Indexed upto ${obj[category]} for the ${category} category.`);
+      reccomendations.push(`Title can be Indexed up to ${obj[category]} for the ${category} category.`);
     }
     if (description && description.length <= 0.9 * obj.descriptionCharacters) {
-      reccomendations.push(`Description can be indexed upto ${obj.descriptionCharacters} characters.`);
+      reccomendations.push(`Description can be indexed up to ${obj.descriptionCharacters} characters.`);
     }
     let bulletReccomend = false;
     bulletpoints.forEach((e) => {
@@ -490,15 +490,15 @@ export const verifyText = async (req, res) => {
       }
     });
     if (bulletReccomend) {
-      reccomendations.push(`Individual bullet points can be indexed upto ${obj.bulletCharacters} characters.`);
+      reccomendations.push(`Individual bullet points can be indexed up to ${obj.bulletCharacters} characters.`);
     }
     let bulletString = "";
     bulletpoints.forEach((e) => (bulletString = bulletString + e));
     if (bulletString && bulletString.length <= 0.9 * obj.totalBulletsLength) {
-      reccomendations.push(`Bullet Points can be collectively indexed upto ${obj.totalBulletsLength}.`);
+      reccomendations.push(`Bullet Points can be collectively indexed up to ${obj.totalBulletsLength}.`);
     }
     if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
-      reccomendations.push(`Search Terms (Generic Keywords) can be indexed upto ${obj.searchTerms}.`);
+      reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
     }
 
     const newHistory = await History.create({
