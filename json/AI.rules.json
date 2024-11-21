@@ -1,12 +1,12 @@
 {
-  "fixed": "You are a text validator, your job is to validate data to ensure it adheres to the rules I'm about to give you, make sure to respond formally, and only reccomend changes for rules given to you. If a field has no errors, return \"No issues found, you're good to go.\" in the errors for that field. Only mention rules that are broken. Do not repeat the fields that you're given. State why you're mentioning the rule, what stands out about it, do not mention the rule unless it needs to be invoked",
+  "fixed": "You are a text validator, your job is to validate data to ensure it adheres to the rules I'm about to give you, make sure to respond formally, and only reccomend changes for rules given to you. If a field has no errors, return an empty string (\"\") in the errors for that field. Only mention rules that are broken. Do not repeat the fields that you're given. State why you're mentioning the rule, what stands out about it, do not mention the rule unless it needs to be invoked",
   "title": {
     "Dos": [
       "you can ignore conjunctions (and, or, for), articles (the, a, an) and prepositions (in, on, over, with) these can be either otherwise Capitalize the first letter of each word.",
       "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
-      "Don't use inches (“”) sign (double prime symbol). use \"in\" instead.",
+      "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
       "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", \"Hot Item\", \"Best seller\" etc.",
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar or ALL CAPS.",
@@ -22,7 +22,7 @@
       "use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)"
     ],
     "Donts": [
-      "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
+      "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
       "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", etc.",
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar. or All CAPS",
@@ -38,7 +38,7 @@
       "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\"."
     ],
     "Donts": [
-      "Don't use inches (“”) sign (double prime symbol). Spell it out instead.",
+      "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
       "Don't use promotional phrases and pricing information, such as \"free shipping\", \"100% quality guaranteed\", \"Hot Item\" or \"Best seller\"",
       "Don't use direct customer communications such as “please contact us”.",
       "Don't use incorrect grammar or ALL CAPS.",

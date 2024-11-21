@@ -160,13 +160,23 @@ const supportEmailJoi = Joi.object({
 // }
 
 function mergeObjects(obj1, obj2) {
-  const result = {};
+  const merged = { ...obj1 };
 
-  for (const key of new Set([...Object.keys(obj1), ...Object.keys(obj2)])) {
-      result[key] = (obj1[key] || []).concat(obj2[key] || []);
+  for (const key in obj2) {
+      if (Array.isArray(obj2[key])) {
+          merged[key] = Array.isArray(merged[key])
+              ? merged[key].concat(obj2[key])
+              : obj2[key];
+      } else if (typeof obj2[key] === "boolean") {
+          merged[key] = merged[key] === undefined
+              ? obj2[key]
+              : merged[key] || obj2[key];
+      } else if (!(key in merged)) {
+          merged[key] = obj2[key];
+      }
   }
 
-  return result;
+  return merged;
 }
 
 export const verifyText = async (req, res) => {
