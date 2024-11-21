@@ -500,13 +500,10 @@ export const verifyText = async (req, res) => {
       }
     });
     if (bulletReccomend) {
-      reccomendations.push(`Individual bullet points can be indexed up to ${obj.bulletCharacters} characters.`);
+      reccomendations.push(`Ensure the total character count for all bullet points combined does not exceed 1000, while each individual bullet point remains within the ${obj.bulletCharacters}-character indexing limit.`);
     }
     let bulletString = "";
     bulletpoints.forEach((e) => (bulletString = bulletString + e));
-    if (bulletString && bulletString.length <= 0.9 * obj.totalBulletsLength) {
-      reccomendations.push(`Bullet Points can be collectively indexed up to ${obj.totalBulletsLength}.`);
-    }
     if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
       reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
     }
