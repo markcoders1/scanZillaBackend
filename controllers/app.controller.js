@@ -518,6 +518,19 @@ export const verifyText = async (req, res) => {
       reccomendations
     });
 
+    if (title !== "" && mergedObject.TE.length === 0) {
+        mergedObject.TE.push("No issues found, you're good to go.")
+    }
+    if (description !== "" && mergedObject.DE.length === 0) {
+        mergedObject.DE.push("No issues found, you're good to go.")
+    }
+    if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
+        mergedObject.BE.push("No issues found, you're good to go.")
+    }
+    if(keywords !== "" && mergeObjects.KE.length === 0){
+        mergedObject.KE.push("No issues found, you're good to go.")
+    }
+
     return res.status(200).json({ message: "Text verified.", error: mergedObject, reccomendations, success: true });
   } catch (error) {
     if (error.code == "authentication_required") {
