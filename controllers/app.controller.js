@@ -241,7 +241,7 @@ export const verifyText = async (req, res) => {
         })
         .custom((value, helper) => {
           if (category !== "Books" && /<(?!\/br>)[^>]+>/.test(value)) {
-            return helper.message("Only </br> tags are allowed outside the 'Books' category.");
+            return helper.message("Only </br> tags are allowed");
           }
           return value;
         }),
