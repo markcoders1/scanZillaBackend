@@ -527,7 +527,7 @@ export const verifyText = async (req, res) => {
     if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
         mergedObject.BE.push("No issues found, you're good to go.")
     }
-    if(keywords !== "" && mergeObjects.KE.length === 0){
+    if(keywords !== "" && mergedObject.KE.length === 0){
         mergedObject.KE.push("No issues found, you're good to go.")
     }
 
