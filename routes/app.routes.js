@@ -16,6 +16,7 @@ import {
   getRules,
   paymentEmail,
   supportEmail,
+  changeName,
 } from "../controllers/app.controller.js";
 // import { deleteAssistant, listAssistants,retreiveRun,getMessages } from "../ignore/ai.code.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
@@ -24,7 +25,9 @@ const router = Router();
 
 router.route("/verifyText").post(verifyJWT, verifyText);
 
-router.route("/getUserHistory").get(verifyJWT, getUserHistory), router.route("/buycredits").post(verifyJWT, buyCredits);
+router.route("/getUserHistory").get(verifyJWT, getUserHistory)
+
+router.route("/buycredits").post(verifyJWT, buyCredits);
 
 router.route("/buycreditwebhook").post(BuyCreditWebhook);
 
@@ -51,6 +54,8 @@ router.route("/rules").get(verifyJWT, getRules);
 router.route("/PaymentEmail").post(verifyJWT, paymentEmail);
 
 router.route("/supportEmail").post(verifyJWT, supportEmail);
+
+router.route("/changeName").post(verifyJWT,changeName)
 
 // router.route('/temp').get(listAssistants)
 

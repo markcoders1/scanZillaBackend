@@ -183,7 +183,7 @@ export const verifyText = async (req, res) => {
   try {
     let { title, description, bulletpoints, keywords, category } = req.body;
 
-    if (!category) return res.status(400).json({ success: false, message: "Category is required." });
+    if (!category) return res.status(400).json({ success: false, message: "Category is required" });
 
     let blacklistedWords = await loadBlacklistedWords();
 
@@ -194,7 +194,7 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
+            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
           }
           return value;
         })
@@ -203,20 +203,20 @@ export const verifyText = async (req, res) => {
         .max(obj[category] + 1)
         .custom((value, helper) => {
           if (value.length > 0 && /^\s*$/.test(value)) {
-            return helper.message(`This text only consists of whitespace, please Enter a Value.`);
+            return helper.message(`This text only consists of whitespace, please Enter a Value`);
           }
           return value;
         })
         .messages({
-          "string.pattern.base": "These Characters Are Not Allowed.",
-          "string.max": `Title for category: "${category}" must be up to ${obj[category]} characters long.`,
+          "string.pattern.base": "These Characters Are Not Allowed",
+          "string.max": `Title for category: "${category}" must be up to ${obj[category]} characters long`,
         }),
 
       description: Joi.string()
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted.`);
+            return helper.message(`This text contains the words: (${usedWords.map((word) => " " + word)} ) which are blacklisted`);
           }
           return value;
         })
@@ -224,7 +224,7 @@ export const verifyText = async (req, res) => {
         .min(0)
         .max(obj.descriptionCharacters)
         .messages({
-          "string.pattern.base": "These Characters Are Not Allowed.",
+          "string.pattern.base": "These Characters Are Not Allowed",
         })
         .custom((value, helper) => {
           const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
@@ -267,8 +267,8 @@ export const verifyText = async (req, res) => {
             .min(0)
             .max(obj.bulletCharacters)
             .messages({
-              "string.pattern.base": "These Characters Are Not Allowed.",
-              "string.max": "Length must be less than or equal to 250 characters long to be fully indexed.",
+              "string.pattern.base": "These Characters Are Not Allowed",
+              "string.max": "Length must be less than or equal to 250 characters long to be fully indexed",
             })
             .custom((value, helper) => {
               const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
@@ -288,8 +288,8 @@ export const verifyText = async (req, res) => {
         .max(obj.bulletNum)
         .label("bulletpoints")
         .messages({
-          "array.base": "Bulletpoints must be an array of strings.",
-          "array.includes": "Each bulletpoint must be a valid string according to the specified rules.",
+          "array.base": "Bulletpoints must be an array of strings",
+          "array.includes": "Each bulletpoint must be a valid string according to the specified rules",
         }),
 
       keywords: Joi.string()
@@ -344,7 +344,7 @@ export const verifyText = async (req, res) => {
 
         if (!paymentId) {
           return res.status(400).json({
-            message: "No Payment Method Detected, add credits, or add payment method.",
+            message: "No Payment Method Detected, add credits, or add payment method",
             success: false,
           });
         }
@@ -368,14 +368,14 @@ export const verifyText = async (req, res) => {
 
         if (user.credits + user.preferredCredits < creditPrice) {
           return res.status(400).json({
-            message: "Your Auto Credits are not enough to cover for this analyzation, Please recharge.",
+            message: "Your Auto Credits are not enough to cover for this analyzation, Please recharge",
             success: false,
             error: {},
           });
         }
       } else {
         return res.status(400).json({
-          message: "Not enough credits, please recharge.",
+          message: "Not enough credits, please recharge",
           success: false,
           error: {},
         });
@@ -531,13 +531,13 @@ export const verifyText = async (req, res) => {
         mergedObject.KE.push("No issues found, you're good to go.")
     }
 
-    return res.status(200).json({ message: "Text verified.", error: mergedObject, reccomendations, success: true });
+    return res.status(200).json({ message: "Text verified", error: mergedObject, reccomendations, success: true });
   } catch (error) {
     if (error.code == "authentication_required") {
-      return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required.", success: false });
+      return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
     } else {
       console.log(error);
-      return res.status(400).json({ message: "Something went wrong, Please try again or contact support.", success: false });
+      return res.status(400).json({ message: "Something went wrong, Please try again or contact support", success: false });
     }
   }
 };
@@ -598,7 +598,7 @@ export const getUserHistory = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, message: "Server Error." });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -616,7 +616,7 @@ export const buyCredits = async (req, res) => {
     const { variant, email } = req.body;
 
     if (!variant || !email) {
-      return res.status(400).json({ message: "Data incomplete." });
+      return res.status(400).json({ message: "Data incomplete" });
     }
 
     const user = await User.findOne({ email: req.user.email });
@@ -688,7 +688,7 @@ export const addPaymentMethod = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -696,13 +696,13 @@ export const BuyCreditWebhook = async (req, res) => {
   try {
     const details = req.body.data.object;
     if (!details || details.object == "charge") {
-      return res.status(400).json({ message: "Invalid webhook data." });
+      return res.status(400).json({ message: "Invalid webhook data" });
     }
 
     let webhookCall = await ProcessedEvent.findOne({ id: details.id });
 
     if (webhookCall) {
-      return res.status(200).json({ message: "Webhook already called." });
+      return res.status(200).json({ message: "Webhook already called" });
     }
 
     webhookCall = await ProcessedEvent.create({ id: details.id });
@@ -720,7 +720,7 @@ export const BuyCreditWebhook = async (req, res) => {
     return res.status(200).json({ success: true, credits: user.credits });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -768,7 +768,7 @@ export const getCardInfo = async (req, res) => {
     console.log(user);
 
     if (!req.user.customerId) {
-      return res.status(200).json({ message: "No customer detected." });
+      return res.status(200).json({ message: "No customer detected" });
     }
     const paymentMethods = await stripe.customers.listPaymentMethods(req.user.customerId);
 
@@ -792,7 +792,7 @@ export const toggleAutoCredit = async (req, res) => {
     if (preferredCredits < 0) {
       return res.status(400).json({
         success: false,
-        message: "Preferred Credits can not be less than 0.",
+        message: "Preferred Credits can not be less than 0",
       });
     }
     const user = await User.findOne({ email: req.user.email });
@@ -846,7 +846,7 @@ export const getOffers = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      message: "Something went wrong, Please try again later or contact support.",
+      message: "Something went wrong, Please try again later or contact support",
     });
   }
 };
@@ -869,7 +869,7 @@ export const paymentEmail = async (req, res) => {
 
     if (error) {
       console.log(error);
-      return res.status(400).json({ success: false, message: "Invalid data provided." });
+      return res.status(400).json({ success: false, message: "Invalid data provided" });
     }
 
     const { name, credits, paymentDetails, variant } = req.body;
@@ -893,12 +893,12 @@ export const paymentEmail = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      message: "Email sent successfully.",
+      message: "Email sent successfully",
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: "Something went wrong, Please try again or contact support.",
+      message: "Something went wrong, Please try again or contact support",
     });
   }
 };
@@ -909,7 +909,7 @@ export const supportEmail = async (req, res) => {
 
     if (error) {
       console.log(error);
-      return res.status(400).json({ success: false, message: "Invalid data provided." });
+      return res.status(400).json({ success: false, message: "Invalid data provided" });
     }
 
     const { name, content } = req.body;
@@ -929,12 +929,35 @@ export const supportEmail = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      message: "Email sent successfully.",
+      message: "Email sent successfully",
     });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      message: "Something went wrong, Please try again or contact support.",
+      message: "Something went wrong, Please try again or contact support",
     });
   }
 };
+
+export const changeName = async (req,res) => {
+    try{
+        const {name} = req.body
+        
+        const {error} = Joi.string().min(2).max(30).validate(name)
+
+        if(error){
+            return res.status(400).json({success:false,message:"Invalid data"})
+        }
+        
+        const user = await User.findOne({email:req.user.email})
+        user.userName = name
+        user.save()
+
+        return res.status(200).json({success:true,user})
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+          message: "Something went wrong, Please try again or contact support",
+        });
+    }
+}

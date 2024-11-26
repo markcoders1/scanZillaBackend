@@ -181,7 +181,7 @@ export const refreshAccessToken = (req,res)=>{
             const user = await User.findOne({email:decoded.email})
             if(user.refreshToken!==refreshToken) return res.sendStatus(403);
 
-            const accessToken =jwt.sign({email:decoded.email},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15m"})
+            const accessToken =jwt.sign({email:decoded.email},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"5m"})
             res.status(200).json({message:"access Token refreshed",accessToken})
 
         })
