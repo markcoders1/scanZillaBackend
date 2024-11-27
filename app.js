@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:["*","http://localhost:5173","https://scanzilla.netlify.app","https://gxsvhh4z-5173.euw.devtunnels.ms/"],
+    origin:"https://gxsvhh4z-5173.euw.devtunnels.ms/",
     credentials:true
   })
 );
