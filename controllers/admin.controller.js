@@ -172,15 +172,13 @@ export const getUserPurchases = async (req,res)=>{
         const {userId} = req.query
         const user = await User.findById(userId)
 
-        console.log(user.customerId)
-
         let payments = []
-        
+
         if(user.customerId){
             const charges = await stripe.charges.list({customer:user.customerId})
     
             payments = charges.data.map(e=>{
-                return {id:e.id,currency:e.currency,amount:e.amount,credits:e.metadata.credits,date:e.created}
+                return {currency:e.currency,amount:e.amount,credits:e.metadata.credits,date:e.created}
             })
         }
 

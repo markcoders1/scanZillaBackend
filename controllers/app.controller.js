@@ -515,7 +515,8 @@ export const verifyText = async (req, res) => {
       bullets: bulletpoints,
       keywords,
       error: mergedObject,
-      reccomendations
+      reccomendations,
+      credits:creditPrice
     });
 
     if (title !== "" && mergedObject.TE.length === 0) {
@@ -820,12 +821,14 @@ export const getGraphData = async (req, res) => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyCredits = {};
 
-    histories.forEach((history) => {
+    
+
+    histories.forEach((history,i) => {
       const month = monthNames[history.createdAt.getMonth()];
       if (!monthlyCredits[month]) {
         monthlyCredits[month] = 0;
       }
-      monthlyCredits[month] += history.credits;
+      monthlyCredits[month] += history.credits || 0;
     });
 
     const result = Object.keys(monthlyCredits).map((month) => ({
