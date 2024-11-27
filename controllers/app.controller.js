@@ -194,7 +194,8 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
           }
           return value;
         })
@@ -216,7 +217,8 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
           }
           return value;
         })
@@ -253,7 +255,8 @@ export const verifyText = async (req, res) => {
             .custom((value, helper) => {
               const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
               if (containsWords) {
-                return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+                // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+                return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
               }
               return value;
             })
@@ -296,7 +299,8 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsWords, usedWords } = containsBlacklistedWord(value,blacklistedWords);
           if (containsWords) {
-            return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
+            return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
           }
           return value;
         })
