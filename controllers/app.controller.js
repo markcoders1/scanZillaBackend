@@ -912,7 +912,7 @@ export const supportEmail = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid data provided" });
     }
 
-    const { name, content } = req.body;
+    const { content } = req.body;
     console.log(req.user);
 
     transporter.sendMail({
@@ -921,7 +921,7 @@ export const supportEmail = async (req, res) => {
       text: `
             
             Sender: ${req.user.email}
-            Name: ${name}
+            Name: ${req.user.userName}
 
             ${content}
             

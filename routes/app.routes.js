@@ -51,7 +51,7 @@ router.route("/addPaymentMethod").get(verifyJWT, addPaymentMethod);
 
 router.route("/rules").get(verifyJWT, getRules);
 
-router.route("/PaymentEmail").post(verifyJWT, paymentEmail);
+// router.route("/PaymentEmail").post(verifyJWT, paymentEmail);
 
 router.route("/supportEmail").post(verifyJWT, supportEmail);
 
