@@ -140,7 +140,6 @@ const paymentEmailJoi = Joi.object({
 });
 
 const supportEmailJoi = Joi.object({
-  name: Joi.string().required().min(2),
   content: Joi.string().required(),
 });
 
