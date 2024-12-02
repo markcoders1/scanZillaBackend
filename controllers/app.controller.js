@@ -949,11 +949,15 @@ export const changeName = async (req,res) => {
     try{
         const {firstName,lastName} = req.body
         
-        const {error:FNE} = Joi.string().min(2).max(30).alphanum().validate(firstName)
-        const {error:LNE} = Joi.string().min(2).max(30).alphanum().validate(lastName)
+        const schema = Joi.object({
+            firstName: Joi.string().min(2).max(30).alphanum().required(),
+            lastName: Joi.string().min(2).max(30).alphanum().required()
+        });
         
-        if(LNE || FNE){
-            return res.status(400).json({success:false,message:"Invalid data"})
+        const { error } = schema.validate(req.body);
+        
+        if (error) {
+            return res.status(400).json({ success: false, message: "Invalid data" });
         }
         
         const user = await User.findOne({email:req.user.email})
