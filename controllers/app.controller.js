@@ -947,16 +947,17 @@ export const supportEmail = async (req, res) => {
 
 export const changeName = async (req,res) => {
     try{
-        const {name} = req.body
+        const {firstName,lastName} = req.body
         
-        const {error} = Joi.string().min(2).max(30).validate(name)
-
-        if(error){
+        const {error:FNE} = Joi.string().min(2).max(30).alphanum().validate(firstName)
+        const {error:LNE} = Joi.string().min(2).max(30).alphanum().validate(lastName)
+        
+        if(LNE || FNE){
             return res.status(400).json({success:false,message:"Invalid data"})
         }
         
         const user = await User.findOne({email:req.user.email})
-        user.userName = name
+        user.userName = `${firstName} ${lastName}`
         user.save()
 
         return res.status(200).json({success:true,user})
