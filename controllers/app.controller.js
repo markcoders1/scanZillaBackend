@@ -947,11 +947,10 @@ export const supportEmail = async (req, res) => {
 
 export const changeName = async (req,res) => {
     try{
-        const {firstName,lastName} = req.body
+        const {fullName} = req.body
         
         const schema = Joi.object({
-            firstName: Joi.string().min(2).max(30).alphanum().required(),
-            lastName: Joi.string().min(2).max(30).alphanum().required()
+            fullName: Joi.string().required(),
         });
         
         const { error } = schema.validate(req.body);
@@ -961,7 +960,7 @@ export const changeName = async (req,res) => {
         }
         
         const user = await User.findOne({email:req.user.email})
-        user.userName = `${firstName} ${lastName}`
+        user.userName = fullName
         user.save()
 
         return res.status(200).json({success:true,user})

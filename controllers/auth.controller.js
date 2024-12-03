@@ -129,6 +129,8 @@ export const Oauth = async (req,res)=>{
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
 
+        console.log(decodedToken)
+
         let user = await User.findOne({email:decodedToken.email}).select('-password')
 
         if (!user){
