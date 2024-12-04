@@ -959,9 +959,8 @@ export const changeName = async (req,res) => {
             return res.status(400).json({ success: false, message: "Invalid data" });
         }
         
-        const user = await User.findOne({email:req.user.email})
-        user.userName = fullName
-        user.save()
+        const user = await User.findOneAndUpdate({email:req.user.email},{userName:fullName})
+        
 
         return res.status(200).json({success:true,user})
     }catch(err){
