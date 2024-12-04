@@ -959,7 +959,7 @@ export const changeName = async (req,res) => {
             return res.status(400).json({ success: false, message: "Invalid data" });
         }
         
-        const user = await User.findOneAndUpdate({email:req.user.email},{userName:fullName})
+        const user = await User.findOneAndUpdate({email:req.user.email},{userName:fullName},{new:true})
         
 
         return res.status(200).json({success:true,user})
