@@ -424,7 +424,7 @@ export const makeAdmin = async (req,res) =>{
 
 const getWordsFromFile = async (filepath) => {
     try {
-        let path = filepath || "blacklistedWords.csv"
+        let path = filepath || "BW1242.csv"
         const fileContent = await fs.readFile(path);
         const words = parse(fileContent).map(row => row[0]);
         return words;
@@ -436,8 +436,8 @@ const getWordsFromFile = async (filepath) => {
 
 const writeWordsToFile = async (words) => {
     try {
-        const data = stringify(words.map(word => [word]));
-        await fs.writeFile("blacklistedWords.csv", data, (err) => {
+        const data = stringify(words.map(word => [word]).sort());
+        await fs.writeFile("BW1242.csv", data, (err) => {
             if (err) console.log(err);
         });
     } catch (error) {
@@ -448,7 +448,7 @@ const writeWordsToFile = async (words) => {
 
 export const getWords= async (req,res)=>{
     try {
-        const words = await getWordsFromFile("blacklistedWords.csv");
+        const words = await getWordsFromFile("BW1242.csv");
         res.status(200).json(words);
     } catch (error) {
         console.log(error)
@@ -527,7 +527,7 @@ export const uploadCsv = async (req,res) => {
 
 export const downloadCsv = async (req,res)=>{
     try{
-        res.download("./blacklistedWords.csv")
+        res.download("./BW1242.csv")
     }catch(error){
         console.log(error)
     }
@@ -536,8 +536,8 @@ export const downloadCsv = async (req,res)=>{
 
 const writeAbbWordsToFile = async (words) => {
     try {
-        const data = stringify(words.map(word => [word]));
-        await fs.writeFile("allowedAbbreviations.csv", data, (err) => {
+        const data = stringify(words.map(word => [word.toUpperCase()]).sort());
+        await fs.writeFile("AA1242.csv", data, (err) => {
             if (err) console.log(err);
         });
     } catch (error) {
@@ -548,7 +548,7 @@ const writeAbbWordsToFile = async (words) => {
 
 export const getAbbWords= async (req,res)=>{
     try {
-        const words = await getWordsFromFile("allowedAbbreviations.csv");
+        const words = await getWordsFromFile("AA1242.csv");
         res.status(200).json(words);
     } catch (error) {
         console.log(error)
@@ -571,7 +571,7 @@ export const addAbbWords = async (req,res) => {
     }
 
     try {
-        const words = await getWordsFromFile("allowedAbbreviations.csv");
+        const words = await getWordsFromFile("AA1242.csv");
         if (words.includes(newWord.toUpperCase())){
             return res.status(400).json({success:false,message:"Word already exists."})
         }
@@ -601,7 +601,7 @@ export const removeAbbWords = async (req,res) =>{
     }
 
     try {
-        let words = await getWordsFromFile("allowedAbbreviations.csv");
+        let words = await getWordsFromFile("AA1242.csv");
         words = words.filter(word => word !== wordToRemove.toUpperCase());
         await writeAbbWordsToFile(words);
         res.status(200).json({ message: 'Word removed successfully.' });
@@ -627,7 +627,7 @@ export const uploadAbbCsv = async (req,res) => {
 
 export const downloadAbbCsv = async (req,res)=>{
     try{
-        res.download("./allowedAbbreviations.csv")
+        res.download("./AA1242.csv")
     }catch(error){
         console.log(error)
     }

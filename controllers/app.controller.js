@@ -31,12 +31,12 @@ function findInvalidCharacters(input, regex) {
   return invalidChars.join(" ");
 }
 const loadBlacklistedWords = async () => {
-  const data = await fs.readFile("blacklistedWords.csv", "utf-8");
+  const data = await fs.readFile("BW1242.csv", "utf-8");
   const words = [...new Set(data.split(/\r?\n/).map((word) => word.toLowerCase()))];
   return words;
 };
 const loadAllowedAbbreviations = async () => {
-  const data = await fs.readFile("allowedAbbreviations.csv", "utf-8");
+  const data = await fs.readFile("AA1242.csv", "utf-8");
   const words = [...new Set(data.split(/\r?\n/).map((word) => word.toUpperCase()))];
   return words;
 };
