@@ -27,6 +27,7 @@ import {
     getAssInstructions,
     updateAssInstructions,
     creditsUsed,
+    takeUserCredits,
 } from "../controllers/admin.controller.js"
 
 const upload = multer({ dest: './' });
@@ -75,6 +76,8 @@ router.route('/getIncome').get(verifyJWT, verifyAdmin, getIncome)
 router.route('/offers').post(verifyJWT, verifyAdmin, changeOfferPricing)
 
 router.route('/givecredits').post(verifyJWT, verifyAdmin, giveUserCredits)
+
+router.route('/takecredits').post(verifyJWT, verifyAdmin, takeUserCredits)
 
 router.route('/analysisgraph').get(verifyJWT, verifyAdmin, analysisgraph)
 

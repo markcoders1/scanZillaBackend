@@ -323,6 +323,34 @@ export const giveUserCredits = async (req,res) => {
     }
 }
 
+export const takeUserCredits = async (req,res) => {
+    try{
+        let {userId,credits} = req.body
+
+        if (!userId||!credits){
+            return res.status(400).json({message:"Values not found."})
+        }
+
+        const user = await User.findById(userId)
+
+        credits = Number(credits)
+
+        if(credits>user.credits){
+            user.credits=0
+        }else{
+            user.credits-=credits
+        }
+        user.save()
+
+
+        return res.status(200).json({success:true, userCredits:user.credits, message:`You have successfully removed ${credits} credits from user: ${user.userName}`})
+
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
+    }
+}
+
 export const analysisgraph = async (req,res)=>{
     try{
         const now = new Date()
