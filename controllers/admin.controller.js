@@ -544,7 +544,7 @@ export const uploadCsv = async (req,res) => {
         if(req.file.mimetype!="text/csv"){
             return res.status(400).json({message:"Incorrect Filetype.",success:false})
         }
-        const words = await getWordsFromFile(req.file.path)
+        let words = await getWordsFromFile(req.file.path)
         await fs.rm(`./${req.file.path}`)
         words = words.map(e=>e?.toLowerCase())
         words = [...new Set(words)]
@@ -646,7 +646,7 @@ export const uploadAbbCsv = async (req,res) => {
         if(req.file.mimetype!="text/csv"){
             return res.status(400).json({message:"incorrect filetype.",success:false})
         }
-        const words = await getWordsFromFile(req.file.path)
+        let words = await getWordsFromFile(req.file.path)
         words = words.map(e=>e?.toLowerCase())
         words = [...new Set(words)]
         await fs.rm(`./${req.file.path}`)
