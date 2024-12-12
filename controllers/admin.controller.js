@@ -546,6 +546,8 @@ export const uploadCsv = async (req,res) => {
         }
         const words = await getWordsFromFile(req.file.path)
         await fs.rm(`./${req.file.path}`)
+        words = words.map(e=>e?.toLowerCase())
+        words = [...new Set(words)]
         await writeWordsToFile(words)
         res.status(200).json({message:"Uploaded csv successfully.",words})
     }catch(error){
@@ -645,6 +647,8 @@ export const uploadAbbCsv = async (req,res) => {
             return res.status(400).json({message:"incorrect filetype.",success:false})
         }
         const words = await getWordsFromFile(req.file.path)
+        words = words.map(e=>e?.toLowerCase())
+        words = [...new Set(words)]
         await fs.rm(`./${req.file.path}`)
         await writeAbbWordsToFile(words)
         res.status(200).json({message:"Uploaded csv successfully.",words})
