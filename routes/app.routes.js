@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/app.middleware.js";
+import { History } from "../models/history.model.js";
 import {
   verifyText,
   getUserHistory,
@@ -57,7 +58,11 @@ router.route("/supportEmail").post(verifyJWT, supportEmail);
 
 router.route("/changeName").post(verifyJWT,changeName)
 
-// router.route('/temp').get(listAssistants)
+router.route('/temp').get(async (req,res)=>{
+    const values = await History.find();
+    let filtered = values.filter((e)=>true)
+    return res.json({filtered})
+})
 
 // router.route('/getHistory').get(getHistory)
 

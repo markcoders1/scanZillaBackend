@@ -37,7 +37,7 @@ export const analyzeValue = async (value,assistant) => {
         let assId
         if(assistant == 'title'){
             assId = 'asst_3nOxuR6z7N3xY1ZC1WKYAIhe'
-        }else if(assistant == 'desc'){
+        }else if(assistant == 'description'){
             assId = 'asst_GokOIlMbjA1jlvKb8pLNMR51'
         }else if(assistant == 'bullets'){
             assId = 'asst_vZhSQFlyB4lcTEaJhk0FitZa'
@@ -78,8 +78,10 @@ export const analyzeValue = async (value,assistant) => {
         let valToSend = JSON.parse(latest_message) 
 
         valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> e.replace("- ",""))
+
+        console.log(valToSend)
     
-        return valToSend;
+        return {valToSend,assistant};
     }catch(err){
         console.log(assistant,err);
         return {}

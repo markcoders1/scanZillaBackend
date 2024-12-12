@@ -451,7 +451,7 @@ export const verifyText = async (req, res) => {
       errors.push(analyzeValue(title, "title"));
     }
     if (description !== "") {
-      errors.push(analyzeValue(description, "desc"));
+      errors.push(analyzeValue(description, "description"));
     }
     if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
       errors.push(analyzeValue(bulletpoints, "bullets"));
@@ -464,19 +464,20 @@ export const verifyText = async (req, res) => {
       .then((results) => {
         // Merge the results into parsedMessage
         results.forEach((result) => {
-          Object.assign(parsedMessage, result);
+          parsedMessage[result.assistant] = result.valToSend
         });
         // console.log("message data", parsedMessage);
       })
       .catch((error) => {
         // Handle any errors
         console.error("Error processing values:", error);
-      });
+    });
+    console.log(parsedMessage)
 
     const changedObject = {
-      TE: parsedMessage.titleErrors || [],
-      DE: parsedMessage.descriptionErrors || [],
-      BE: parsedMessage.bulletPointErrors || [],
+      TE: parsedMessage.title || [],
+      DE: parsedMessage.description || [],
+      BE: parsedMessage.bullets || [],
     };
 
 
