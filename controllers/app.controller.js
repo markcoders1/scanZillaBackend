@@ -230,7 +230,7 @@ export const verifyText = async (req, res) => {
         .custom((value, helper) => {
           const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
           if (containsCaps) {
-            return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} ).`);
+            return helper.message(`The given value has words that are in all caps: ||||${cappedWords.join("||")}`);
           }
           return value;
         })
@@ -275,7 +275,7 @@ export const verifyText = async (req, res) => {
             .custom((value, helper) => {
               const { containsCaps, cappedWords } = containsAllCapsWords(value,allowedAbbreviations);
               if (containsCaps) {
-                return helper.message(`The given value has words that are in all caps: (${cappedWords.map((word) => " " + word)} ).`);
+                return helper.message(`The given value has words that are in all caps: ||||${cappedWords.join("||")}`);
               }
               return value;
             })
