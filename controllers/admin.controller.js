@@ -10,6 +10,11 @@ import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 import { z } from 'zod';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
+import path from 'path'
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 /*
@@ -539,21 +544,42 @@ export const removeWords = async (req,res) =>{
     }
 }
 
-export const uploadCsv = async (req,res) => {
-    try{
-        if(req.file.mimetype!="text/csv"){
-            return res.status(400).json({message:"Incorrect Filetype.",success:false})
+export const uploadCsv = async (req, res) => {
+    try {
+        if (req.file.mimetype !== "text/csv" || !req.file) {
+            return res.status(400).json({ message: "Incorrect Filetype or No file uploaded.", success: false });
         }
-        let words = await getWordsFromFile(req.file.path)
-        await fs.rm(`./${req.file.path}`)
-        words = words.map(e=>e?.toLowerCase())
-        words = [...new Set(words)]
-        await writeWordsToFile(words)
-        res.status(200).json({message:"Uploaded csv successfully.",words})
-    }catch(error){
-        console.log(error)
+
+        const allowedDir = path.resolve(__dirname,'./..');
+
+        const filePath = path.resolve(req.file.path);
+        if (!filePath.startsWith(allowedDir)) {
+            // Delete the potentially malicious file
+            await fs.rm(filePath, { force: true });
+            return res.status(400).json({ message: "Invalid file path.", success: false });
+        }
+
+        let words = await getWordsFromFile(filePath);
+        await fs.rm(filePath, { force: true });
+        words = words
+            .map(word => word?.toLowerCase())
+            .filter(Boolean);
+        words = [...new Set(words)];
+
+        const sanitizeWord = (word) => {
+            return word.replace(/[.*+?^${}()|[\]\\]/g, '');
+        };
+
+        words = words.map(sanitizeWord).filter(word => word.length > 0);
+
+        await writeWordsToFile(words);
+
+        res.status(200).json({ message: "Uploaded CSV successfully.", words });
+    } catch (error) {
+        console.error("Error uploading CSV:", error);
+        res.status(500).json({ message: "Internal server error.", success: false });
     }
-}
+};
 
 export const downloadCsv = async (req,res)=>{
     try{
@@ -641,21 +667,42 @@ export const removeAbbWords = async (req,res) =>{
     }
 }
 
-export const uploadAbbCsv = async (req,res) => {
-    try{
-        if(req.file.mimetype!="text/csv"){
-            return res.status(400).json({message:"incorrect filetype.",success:false})
+export const uploadAbbCsv = async (req, res) => {
+    try {
+        if (req.file.mimetype !== "text/csv" || !req.file) {
+            return res.status(400).json({ message: "Incorrect Filetype or No file uploaded.", success: false });
         }
-        let words = await getWordsFromFile(req.file.path)
-        words = words.map(e=>e?.toLowerCase())
-        words = [...new Set(words)]
-        await fs.rm(`./${req.file.path}`)
-        await writeAbbWordsToFile(words)
-        res.status(200).json({message:"Uploaded csv successfully.",words})
-    }catch(error){
-        console.log(error)
+
+        const allowedDir = path.resolve(__dirname,'./..');
+
+        const filePath = path.resolve(req.file.path);
+        if (!filePath.startsWith(allowedDir)) {
+            // Delete the potentially malicious file
+            await fs.rm(filePath, { force: true });
+            return res.status(400).json({ message: "Invalid file path.", success: false });
+        }
+
+        let words = await getWordsFromFile(filePath);
+        await fs.rm(filePath, { force: true });
+        words = words
+            .map(word => word?.toLowerCase())
+            .filter(Boolean);
+        words = [...new Set(words)];
+
+        const sanitizeWord = (word) => {
+            return word.replace(/[.*+?^${}()|[\]\\]/g, '');
+        };
+
+        words = words.map(sanitizeWord).filter(word => word.length > 0);
+
+        await writeAbbWordsToFile(words);
+
+        res.status(200).json({ message: "Uploaded CSV successfully.", words });
+    } catch (error) {
+        console.error("Error uploading CSV:", error);
+        res.status(500).json({ message: "Internal server error.", success: false });
     }
-}
+};
 
 export const downloadAbbCsv = async (req,res)=>{
     try{
