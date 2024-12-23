@@ -18,6 +18,7 @@ import {
   paymentEmail,
   supportEmail,
   changeName,
+  asin,
 } from "../controllers/app.controller.js";
 // import { deleteAssistant, listAssistants,retreiveRun,getMessages } from "../ignore/ai.code.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
@@ -63,6 +64,12 @@ router.route('/temp').get(async (req,res)=>{
     let filtered = values.filter((e)=>true)
     return res.json({filtered})
 })
+
+
+router.route('/prefill/:asin').get(asin)
+
+
+
 
 // router.route('/getHistory').get(getHistory)
 

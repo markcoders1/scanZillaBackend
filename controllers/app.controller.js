@@ -9,6 +9,7 @@ import { ProcessedEvent } from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
 import { analyzeValue } from "../services/AIService.js";
+import axios from "axios";
 
 const transporter = transporterConstructor();
 
@@ -971,3 +972,23 @@ export const changeName = async (req,res) => {
         });
     }
 }
+
+
+export const asin = async (req, res) => {
+    try {
+        const {asin} = req.params
+        const asinjoi = Joi.string().required()
+        const {error} = asinjoi.validate(asin)
+        if(error){
+            return res.status(400).json({success:false,message:"incorrect ASIN"})
+        }
+        const url = `https://api.keepa.com/product?key=9eie193sleqlv3u3trmfs8vmub7k76ue4gkobig9uk9fogit8a4hsctoq6kd7lm4&domain=1&asin=${asin}`;
+        let result = await axios.get(url)
+        result = result.data.products[0]
+
+        res.status(200).json({ success: true, title:result.title, description:result.description, bullets:result.features});
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
