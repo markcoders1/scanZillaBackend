@@ -986,7 +986,7 @@ export const asin = async (req, res) => {
         let result = await axios.get(url)
         result = result.data.products[0]
 
-        res.status(200).json({ success: true, title:result.title, description:result.description, bullets:result.features, message:"Values Filled in Successfully."});
+        res.status(200).json({ success: true, title:result.title, description:result.description, bullets:result.features, category:result.categoryTree[0].name,  message:"Values Filled in Successfully."});
     } catch (error) {
         console.log(error)
         res.status(500).json({ success: false, error: error.message, message:"Value Autofill Failed." });
