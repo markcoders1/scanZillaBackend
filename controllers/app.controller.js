@@ -970,6 +970,9 @@ export const asin = async (req, res) => {
         }
         const url = `https://api.keepa.com/product?key=9eie193sleqlv3u3trmfs8vmub7k76ue4gkobig9uk9fogit8a4hsctoq6kd7lm4&domain=1&asin=${asin}`;
         let result = await axios.get(url);
+        if(!result.data.products){
+            return res.status(400).json({success:false,message:"product not found please try another ASIN code."})
+        }
         result = result?.data?.products[0];
         let category = result?.categoryTree[0]?.name || "";
 
