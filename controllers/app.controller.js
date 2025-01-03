@@ -981,7 +981,12 @@ export const asin = async (req, res) => {
             return res.status(400).json({ success: false, message: "product not found please try another ASIN code." });
         }
         result = result?.data?.products[0];
-        let category = result?.categoryTree[0]?.name || "";
+        let category
+        if(result?.categoryTree){
+            category = result?.categoryTree[0]?.name||""
+        }else{
+            category = ""
+        }
 
         res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: "Values Filled in Successfully." });
     } catch (error) {
