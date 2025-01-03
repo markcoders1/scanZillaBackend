@@ -159,7 +159,7 @@ function mergeObjects(obj1, obj2) {
 }
 
 function checkLengthMessage(input) {
-    const regex = /length must be less than or equal to \d{1,5} characters long/;
+    const regex = /length must be less than or equal to \d{1,5} characters long to be fully indexed/;
     return regex.test(input);
 }
 
@@ -216,6 +216,7 @@ export const verifyText = async (req, res) => {
                 .max(obj.descriptionCharacters)
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
+                    "string.max":`Description length must be less than or equal to ${obj.descriptionCharacters} characters long to be fully indexed`
                 })
                 .custom((value, helper) => {
                     const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
@@ -260,7 +261,7 @@ export const verifyText = async (req, res) => {
                         .max(obj.bulletCharacters)
                         .messages({
                             "string.pattern.base": "These Characters Are Not Allowed",
-                            "string.max": "Length must be less than or equal to 250 characters long to be fully indexed",
+                            "string.max":`Bullet length must be less than or equal to ${obj.bulletCharacters} characters long to be fully indexed`
                         })
                         .custom((value, helper) => {
                             const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
