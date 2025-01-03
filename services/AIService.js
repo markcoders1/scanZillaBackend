@@ -116,8 +116,7 @@ export const analyzeValue = async (value,assistant) => {
             valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> ({priority:e.priority , error:e.error.replace("- ",""),point:e.point}))
         }
 
-        valToSend = valToSend.filter(e=>e?.message != "");
-        console.log(valToSend)
+        valToSend = valToSend.filter(e=>e?.error != "");
         valToSend = removeDuplicates(valToSend);
 
         return {valToSend,assistant};
