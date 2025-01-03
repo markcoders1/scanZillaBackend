@@ -4,3 +4,4 @@ ignore
 /utils/serviceAccountKey.json
 blacklistedWords.txt
 checklist.ts
+.idea

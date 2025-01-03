@@ -142,21 +142,6 @@ const supportEmailJoi = Joi.object({
     content: Joi.string().required(),
 });
 
-// function mergeObjects(obj1, obj2) {
-//   const result = { ...obj2 };
-//   for (const key in obj1) {
-//     const value1 = obj1[key];
-//     if (value1 === "" || (Array.isArray(value1) && value1.length === 0)) {
-//       if (!obj2.hasOwnProperty(key)) {
-//         result[key] = value1;
-//       }
-//     } else {
-//       result[key] = value1;
-//     }
-//   }
-//   return result;
-// }
-
 function mergeObjects(obj1, obj2) {
     const merged = { ...obj1 };
 
@@ -171,6 +156,16 @@ function mergeObjects(obj1, obj2) {
     }
 
     return merged;
+}
+
+function checkLengthMessage(input) {
+    const regex = /length must be less than or equal to \d{1,5} characters long/;
+    return regex.test(input);
+}
+
+function checkWordsMessage(input) {
+    const regex = /The given value contains the following blacklisted words:/;
+    return regex.test(input);
 }
 
 export const verifyText = async (req, res) => {
@@ -189,7 +184,7 @@ export const verifyText = async (req, res) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
                         // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
-                        return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
                 })
@@ -212,7 +207,7 @@ export const verifyText = async (req, res) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
                         // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
-                        return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
                 })
@@ -225,7 +220,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
                     if (containsCaps) {
-                        return helper.message(`The given value has words that are in all caps: ||||${cappedWords.join("||")}`);
+                        return helper.message(`The given value contains the following words that are in all caps: ||||${cappedWords.join("||")}`);
                     }
                     return value;
                 })
@@ -250,7 +245,7 @@ export const verifyText = async (req, res) => {
                             const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                             if (containsWords) {
                                 // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
-                                return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                                return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                             }
                             return value;
                         })
@@ -270,7 +265,7 @@ export const verifyText = async (req, res) => {
                         .custom((value, helper) => {
                             const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
                             if (containsCaps) {
-                                return helper.message(`The given value has words that are in all caps: ||||${cappedWords.join("||")}`);
+                                return helper.message(`The given value contains words that are in all caps: ||||${cappedWords.join("||")}`);
                             }
                             return value;
                         })
@@ -294,7 +289,7 @@ export const verifyText = async (req, res) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
                         // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
-                        return helper.message(`The text contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
                 })
@@ -319,6 +314,7 @@ export const verifyText = async (req, res) => {
         bulletpoints = bulletpoints.map((e) => {
             return e.value;
         });
+
         bulletpoints = bulletpoints.filter((e) => e);
 
         title = title.replace(/[\x00-\x1F]/g, "");
@@ -385,8 +381,6 @@ export const verifyText = async (req, res) => {
 
         const { error } = verifyTextJoi.validate({ title, description, bulletpoints, keywords, category }, { abortEarly: false });
 
-        // const error = ""
-
         let errObj = {
             TE: [],
             DE: [],
@@ -406,31 +400,25 @@ export const verifyText = async (req, res) => {
                 };
                 const fieldKey = fieldKeyMap[field.path[0]];
 
-                // console.log("path", field.path[0] == "bulletpoints");
-
                 if (field.type === "string.pattern.base") {
                     const invalidChars = findInvalidCharacters(field.context.value, field.context.regex);
                     field.message = `${field.message}: ${invalidChars}`;
                 }
 
                 if (field.path[0] == "bulletpoints") {
-                    errObj.joi = true;
+                    let priorityToSet = "medium";
 
-                    let exists = false;
-
-                    errObj[fieldKey].forEach((e) => {
-                        if (e.point == field.path[1] + 1) {
-                            e.message = e.message + `|-|${field.message}`;
-                            exists = true;
-                        }
-                    });
-
-                    if (!exists) {
-                        errObj[fieldKey].push({
-                            point: field.path[1] + 1 || -10,
-                            message: field.message,
-                        });
+                    if (checkLengthMessage(field.message)) {
+                        priorityToSet = "high";
+                    } else if (checkWordsMessage(field.message)) {
+                        priorityToSet = "high";
                     }
+
+                    errObj[fieldKey].push({
+                        point: field.path[1] + 1,
+                        error: field.message,
+                        priority: priorityToSet,
+                    });
                 } else {
                     errObj[fieldKey].push(field.message);
                 }
@@ -452,7 +440,9 @@ export const verifyText = async (req, res) => {
             errors.push(analyzeValue(bulletpoints, "bullets"));
         }
 
-        // // Run all promises in parallel using Promise.all
+        console.log(errors);
+
+        // Run all promises in parallel using Promise.all
         const parsedMessage = {}; // Initialize parsedMessage
 
         await Promise.all(errors)
@@ -461,13 +451,13 @@ export const verifyText = async (req, res) => {
                 results.forEach((result) => {
                     parsedMessage[result.assistant] = result.valToSend;
                 });
-                // console.log("message data", parsedMessage);
             })
             .catch((error) => {
                 // Handle any errors
                 console.error("Error processing values:", error);
             });
-        console.log(parsedMessage);
+
+        console.log("parsedMessage", parsedMessage);
 
         const changedObject = {
             TE: parsedMessage.title || [],
@@ -476,8 +466,6 @@ export const verifyText = async (req, res) => {
         };
 
         const mergedObject = mergeObjects(errObj, changedObject);
-
-        // console.log(mergedObject);
 
         //head reccomendations
 
@@ -515,17 +503,35 @@ export const verifyText = async (req, res) => {
         });
 
         if (title !== "" && mergedObject.TE.length === 0) {
-            mergedObject.TE.push("No issues found, you're good to go.");
+            mergedObject.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
         if (description !== "" && mergedObject.DE.length === 0) {
-            mergedObject.DE.push("No issues found, you're good to go.");
+            mergedObject.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
         if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
-            mergedObject.BE.push("No issues found, you're good to go.");
+            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
         if (keywords !== "" && mergedObject.KE.length === 0) {
-            mergedObject.KE.push("No issues found, you're good to go.");
+            mergedObject.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
+
+        Object.keys(mergedObject).forEach((key) => {
+            mergedObject[key].forEach((item, index) => {
+                if (typeof item == "string") {
+                    if (checkLengthMessage(item) || checkWordsMessage(item)) {
+                        mergedObject[key][index] = {
+                            error: item,
+                            priority: "high",
+                        };
+                    } else {
+                        mergedObject[key][index] = {
+                            error: item,
+                            priority: "medium",
+                        };
+                    }
+                }
+            });
+        });
 
         return res.status(200).json({ message: "Text verified", error: mergedObject, reccomendations, success: true });
     } catch (error) {
@@ -970,14 +976,14 @@ export const asin = async (req, res) => {
         }
         const url = `https://api.keepa.com/product?key=9eie193sleqlv3u3trmfs8vmub7k76ue4gkobig9uk9fogit8a4hsctoq6kd7lm4&domain=1&asin=${asin}`;
         let result = await axios.get(url);
-        if(!result.data.products){
-            return res.status(400).json({success:false,message:"product not found please try another ASIN code."})
+        if (!result.data.products) {
+            return res.status(400).json({ success: false, message: "product not found please try another ASIN code." });
         }
         result = result?.data?.products[0];
         let category = result?.categoryTree[0]?.name || "";
 
         res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: "Values Filled in Successfully." });
-    } catch (error){
+    } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, error: error.message, message: "Value Autofill Failed." });
     }
