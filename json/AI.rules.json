@@ -1,16 +1,16 @@
 {
-  "fixed": "You are a text validator responsible for ensuring data adheres to the rules provided, particularly for Amazon products. Validate each field strictly against the given rules, and respond formally. Only recommend changes when rules are broken. If a field is correct, return an empty string in the errors. Be strict but lenient with grammar and numerals if they are comprehensible for Amazon listings. Do not repeat fields or mention rules unless they are broken. Respond in the JSON format: {valueError: <errors for value>}. Provide all errors at once, ensuring product details are valid, readable, and compliant with Amazon's standards.",
+  "fixed": "You are a text validator responsible for ensuring data adheres to the rules provided, particularly for Amazon products. Validate each field strictly against the given rules, and respond formally. Only recommend changes when rules are broken. If a field is correct, return an empty string in the errors. Be strict but lenient with grammar and numerals if they are comprehensible for Amazon listings. Do not repeat fields or mention rules unless they are broken. Respond in the JSON format: {valueError: <errors for value>}. Provide all errors at once, ensuring product details are valid, readable, and compliant with Amazon's standards. make sure to take your time, and revise each point carefully, try to logically think of every response making sure that the errors you'll be giving makes sense to a user, validating their product's details, the user's language does not strictly need to be formal, and can be casual using a tone a potential buyer may be comfortable with",
   "title": {
     "Dos": [
       "you can ignore conjunctions (and, or, for), articles (the, a, an) and prepositions (in, on, over, with) these can be either otherwise Capitalize the first letter of each word.",
       "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at"
+      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at",
+      "Promotional language is allowed as long as it does not interfere with amazon's services, or other products on the platform, comparision is prohibited"
     ],
     "Donts": [
       "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
-      "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", \"Hot Item\", \"Best seller\" etc.",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use incorrect grammar or ALL CAPS.",
+      "Don't use incorrect grammar or ALL CAPS unless it's a brand name or common spelling",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
       "Don't use any terminology/claim that implies medical benefits or treatments",
       "Don't use any terminology that interferes with the services that amazon provides (e.g. \"quick delivery\",\"same day delivery\",\"amazon prime\", \"amazon business\""
@@ -21,13 +21,13 @@
       "Use correct grammar, punctuation, and complete sentences.",
       "Include necessary trademarks tactfully to maintain organic traffic.",
       "use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
-      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at"
+      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at",
+      "Promotional language is allowed as long as it does not interfere with amazon's services, or other products on the platform, comparision is prohibited"
     ],
     "Donts": [
       "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
-      "Don't use promotional phrases, such as \"free shipping\", \"100% quality guaranteed\", \"highest\", \"great\", etc.",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use incorrect grammar. or All CAPS",
+      "Don't use incorrect grammar. or All CAPS unless it's a brand name or common spelling",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
       "Don't use any terminology/claim that implies medical benefits or treatments",
       "Avoid terms like \"great gift choice\" and use \"thoughtful gift\" only if it is thoughtful related product.",
@@ -38,13 +38,13 @@
     "Dos": [
       "For organic traffic and product compatibility -  use known models, not brands. (e.g., Use \"iPhone 13\" instead of \"Apple\".)",
       "Use dash ( - ) instead of colon ( : ) after each bullet point \"title\".",
-      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at"
+      "Add age rating for products for certain items which may cause confusion as to what demographic its aimed at",
+      "Promotional language is allowed as long as it does not interfere with amazon's services, or other products on the platform, comparision is prohibited"
     ],
     "Donts": [
       "Don't use the inches symbols (\" or ') spell it out instead using either in. or inches",
-      "Don't use promotional phrases and pricing information, such as \"free shipping\", \"100% quality guaranteed\", \"Hot Item\" or \"Best seller\"",
       "Don't use direct customer communications such as “please contact us”.",
-      "Don't use incorrect grammar or ALL CAPS.",
+      "Don't use incorrect grammar or ALL CAPS unless it's a brand name or common spelling",
       "Don't write contradicting information. (e.g., Toy is for kids age 3+ but keyword phrase says 1-3.)",
       "Don't use any terminology/claim that implies medical benefits or treatments",
       "Don't use any terminology that interferes with the services that amazon provides (e.g. \"quick delivery\",\"same day delivery\",\"amazon prime\", \"amazon business\")"

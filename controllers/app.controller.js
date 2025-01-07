@@ -458,7 +458,7 @@ export const verifyText = async (req, res) => {
                 console.error("Error processing values:", error);
             });
 
-        console.log("parsedMessage", parsedMessage);
+        // console.log("parsedMessage", parsedMessage);
 
         const changedObject = {
             TE: parsedMessage.title || [],
@@ -510,7 +510,7 @@ export const verifyText = async (req, res) => {
             mergedObject.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
         if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
-            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none" });
+            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none", point: "-1" });
         }
         if (keywords !== "" && mergedObject.KE.length === 0) {
             mergedObject.KE.push({ error: "No issues found, you're good to go.", priority: "none" });

@@ -105,7 +105,7 @@ export const analyzeValue = async (value,assistant) => {
         let message_response = await openai.beta.threads.messages.list(thread_id);
         const messages = message_response.data;
 
-        console.log(messages)
+        // console.log(messages)
         latest_message = messages[0]?.content[0]?.text?.value;
 
         let valToSend = JSON.parse(latest_message) 
