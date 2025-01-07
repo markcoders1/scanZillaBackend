@@ -8,6 +8,6 @@ export const defaultLimiter = rateLimit({
 	legacyHeaders: false,
 
     message: ()=>{
-        return {message: "You can only use 20 requests per Minute"}
+        return {message: "You can only use 50 requests per Minute"}
 	}
 });
