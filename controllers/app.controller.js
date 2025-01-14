@@ -168,6 +168,11 @@ function checkWordsMessage(input) {
     return regex.test(input);
 }
 
+function checkWordsCapMessage(input) {
+    const regex = /The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings:/;
+    return regex.test(input);
+}
+
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
@@ -221,7 +226,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
                     if (containsCaps) {
-                        return helper.message(`The given value contains the following words that are in all caps: ||||${cappedWords.join("||")}`);
+                        return helper.message(`The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings: ||||${cappedWords.join("||")}`);
                     }
                     return value;
                 })
@@ -266,7 +271,7 @@ export const verifyText = async (req, res) => {
                         .custom((value, helper) => {
                             const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
                             if (containsCaps) {
-                                return helper.message(`The given value contains words that are in all caps: ||||${cappedWords.join("||")}`);
+                                return helper.message(`The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings: ||||${cappedWords.join("||")}`);
                             }
                             return value;
                         })
@@ -413,6 +418,8 @@ export const verifyText = async (req, res) => {
                         priorityToSet = "high";
                     } else if (checkWordsMessage(field.message)) {
                         priorityToSet = "high";
+                    }else if(checkWordsCapMessage(field.message)){
+                        priorityToSet = "low";
                     }
 
                     errObj[fieldKey].push({
@@ -523,6 +530,11 @@ export const verifyText = async (req, res) => {
                         mergedObject[key][index] = {
                             error: item,
                             priority: "high",
+                        };
+                    }else if(checkWordsCapMessage(item)){
+                        mergedObject[key][index] = {
+                            error: item,
+                            priority: "low",
                         };
                     } else {
                         mergedObject[key][index] = {
