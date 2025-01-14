@@ -193,7 +193,7 @@ function checkWordsCapMessage(input) {
     return regex.test(input);
 }
 function checkRepeatedWordsMessage(input) {
-    const regex = /The given value contains repeated words/;
+    const regex = /The given value contains the following repeated words/;
     return regex.test(input);
 }
 
@@ -229,7 +229,7 @@ export const verifyText = async (req, res) => {
                 .custom((value,helper)=>{
                     const words = findRepeatedWords(value)
                     if(words.length>0){
-                        return helper.message(`The given value contains repeated words: |||| ${words.join('||')}`)
+                        return helper.message(`The given value contains the following repeated words: |||| ${words.join('||')}`)
                     }
                     return value
                 })
@@ -471,15 +471,15 @@ export const verifyText = async (req, res) => {
         const errors = [];
 
         // Collect promises for each condition
-        // if (title !== "") {
-        //     errors.push(analyzeValue(title, "title"));
-        // }
-        // if (description !== "") {
-        //     errors.push(analyzeValue(description, "description"));
-        // }
-        // if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
-        //     errors.push(analyzeValue(bulletpoints, "bullets"));
-        // }
+        if (title !== "") {
+            errors.push(analyzeValue(title, "title"));
+        }
+        if (description !== "") {
+            errors.push(analyzeValue(description, "description"));
+        }
+        if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
+            errors.push(analyzeValue(bulletpoints, "bullets"));
+        }
 
         console.log(errors);
 
