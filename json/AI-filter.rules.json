@@ -5,6 +5,6 @@
         "if the tool says something irrelevant about the text, then filter it out"
     ],
     "formats":[
-        "for now, there is no need to follow any formats, simply rate the error given about the text a scale from 1-10 based on relevancy, remove it if its irrelevant"
+        "for now, there is no need to follow any formats, remove it if its irrelevant"
     ]
 }

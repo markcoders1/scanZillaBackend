@@ -129,7 +129,8 @@ export const analyzeValue = async (value,assistant) => {
 export const createAssistant = async () => {
     try{
         const assistant = openai.beta.assistants.create({
-            model:"gpt-4o-2024-08-06"
+            model:"gpt-4o-2024-08-06",
+            name:"assistant Validator"
         })
         return assistant
     }catch(error){

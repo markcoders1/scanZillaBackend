@@ -111,6 +111,26 @@ function containsAllCapsWords(str, allowedAbbreviations) {
     return { containsCaps, cappedWords };
 }
 
+function findRepeatedWords(input) {
+    const ignoredWords = new Set([
+        "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
+    ]);
+    
+    const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word));
+    const wordCount = new Map();
+    const repeatedWords = new Set();
+    
+    for (const word of words) {
+      if (wordCount.has(word)) {
+        repeatedWords.add(word);
+      } else {
+        wordCount.set(word, 1);
+      }
+    }
+    
+    return Array.from(repeatedWords);
+  }
+
 // function detectNumberWords(text) {
 //     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 //     const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
@@ -172,6 +192,10 @@ function checkWordsCapMessage(input) {
     const regex = /The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings:/;
     return regex.test(input);
 }
+function checkRepeatedWordsMessage(input) {
+    const regex = /The given value contains repeated words/;
+    return regex.test(input);
+}
 
 export const verifyText = async (req, res) => {
     try {
@@ -201,6 +225,13 @@ export const verifyText = async (req, res) => {
                         return helper.message(`This text only consists of whitespace, please Enter a Value`);
                     }
                     return value;
+                })
+                .custom((value,helper)=>{
+                    const words = findRepeatedWords(value)
+                    if(words.length>0){
+                        return helper.message(`The given value contains repeated words: |||| ${words.join('||')}`)
+                    }
+                    return value
                 })
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
@@ -418,6 +449,8 @@ export const verifyText = async (req, res) => {
                         priorityToSet = "high";
                     } else if (checkWordsMessage(field.message)) {
                         priorityToSet = "high";
+                    }else if(checkRepeatedWordsMessage(field.message)){
+                        priorityToSet = "high";
                     }else if(checkWordsCapMessage(field.message)){
                         priorityToSet = "low";
                     }
@@ -438,15 +471,15 @@ export const verifyText = async (req, res) => {
         const errors = [];
 
         // Collect promises for each condition
-        if (title !== "") {
-            errors.push(analyzeValue(title, "title"));
-        }
-        if (description !== "") {
-            errors.push(analyzeValue(description, "description"));
-        }
-        if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
-            errors.push(analyzeValue(bulletpoints, "bullets"));
-        }
+        // if (title !== "") {
+        //     errors.push(analyzeValue(title, "title"));
+        // }
+        // if (description !== "") {
+        //     errors.push(analyzeValue(description, "description"));
+        // }
+        // if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
+        //     errors.push(analyzeValue(bulletpoints, "bullets"));
+        // }
 
         console.log(errors);
 
@@ -536,7 +569,12 @@ export const verifyText = async (req, res) => {
                             error: item,
                             priority: "low",
                         };
-                    } else {
+                    }else if(checkRepeatedWordsMessage(item)){
+                        mergedObject[key][index] = {
+                            error: item,
+                            priority: "high",
+                        };
+                    }else {
                         mergedObject[key][index] = {
                             error: item,
                             priority: "medium",
