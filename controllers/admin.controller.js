@@ -54,6 +54,35 @@ const bulletsSchema = z.object({
     ),
 });
 
+const responseValidatorSchema = z.object({
+    TE:z.array(
+        z.object({
+            error:z.string(),
+            priority:z.enum(["low","medium","high"])
+        })
+    ),
+    DE:z.array(
+        z.object({
+            error:z.string(),
+            priority:z.enum(["low","medium","high"])
+        })
+    ),
+    BE:z.array(
+        z.object({
+            point:z.number(),
+            error:z.string(),
+            priority:z.enum(["low","medium","high"])
+        })
+    ),
+    KE:z.array(
+        z.object({
+            error:z.string(),
+            priority:z.enum(["low","medium","high"])
+        })
+    ),
+    abuse:z.boolean()
+});
+
 dotenv.config();
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -399,35 +428,54 @@ export const updateAssInstructions = async (req, res) => {
 
         const updates = [];
         if (titleDo || titleDont || true) {
-            // live
-            // updates.push(updatefunc('asst_3nOxuR6z7N3xY1ZC1WKYAIhe','title',titleSchema))
-
-            // staging
             updates.push(updatefunc("asst_Pt5hHWrKSBhRpG2HujTTGAPS", "title", titleSchema));
         }
         if (descriptionDo || descriptionDont || true) {
-            // live
-            // updates.push(updatefunc('asst_GokOIlMbjA1jlvKb8pLNMR51','description',descriptionSchema))
-
-            // staging
             updates.push(updatefunc("asst_6XjxcgjvaKIEzX9jHYb0f8BX", "description", descriptionSchema));
         }
         if (bulletsDo || bulletsDont || true) {
-            // live
-            // updates.push(updatefunc('asst_vZhSQFlyB4lcTEaJhk0FitZa','bullets',bulletsSchema))
-
-            // staging
             updates.push(updatefunc("asst_BZVT36g8vtZn9pF8tyfW04zP", "bullets", bulletsSchema));
         }
         const update = await Promise.all(updates);
         console.log("update");
 
-        res.status(200).json({ success: true, message: "AI rules changed successfully", update });
+        return res.status(200).json({ success: true, message: "AI rules changed successfully", update });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
+
+export const updateAssistantValidator = async (req,res) => {
+    try{
+        const assId = "asst_ITq8VRILS0QQi8AagLmEAgjJ"
+        const {fixed,rules,formats} = req.body
+        const instructions = JSON.parse(await fs.readFile("json/AI-filter.rules.json", "utf8"));
+
+        instructions.fixed = fixed  || instructions.fixed
+        instructions.rules = rules  || instructions.rules
+        instructions.formats = formats || instructions.formats
+        
+
+        await fs.writeFile("json/AI-filter.rules.json", JSON.stringify(instructions, null, 2), "utf8");
+
+        const updatefunc = async () => {
+            return await openai.beta.assistants.update(assId, {
+                instructions: `${instructions.fixed} || RULES: RULE ${instructions.rules.join(" RULE ")} || FORMATS: FORMAT ${instructions.formats.join(" FORMAT ")}`,
+                response_format: zodResponseFormat(responseValidatorSchema, `assistantValidator`),
+                model: "gpt-4o-2024-08-06",
+                temperature: 0.6,
+            });
+        };
+
+        const assistant = await updatefunc()
+
+        return res.status(200).json({ success: true, message: "AI rules changed successfully",assistant });
+    }catch(err){
+        console.log(err)
+        return res.status(200).json({success:false,message:"could not update the assistant validator"})
+    }
+}
 
 export const makeAdmin = async (req, res) => {
     try {
@@ -733,7 +781,7 @@ export const creditsUsed = async (req, res) => {
 
 export const createAssistants = async (req, res) => {
     try {
-        const assistant = createAssistant();
+        const assistant = await createAssistant();
         return res.status(200).json({ success: true, message: "assistant created successfully", assistant });
     } catch (err) {
         console.log(err);

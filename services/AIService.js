@@ -126,9 +126,53 @@ export const analyzeValue = async (value,assistant) => {
     }
 }
 
+// const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+
+export const analyzeResponse = async (errors,values)=>{
+    try{
+
+        const {title, description, bulletpoints, keywords} = values
+
+        let assId = "asst_ITq8VRILS0QQi8AagLmEAgjJ"
+
+        const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId,temperature:0.1});
+        console.log( thread_id );
+        let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
+        
+        while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
+        }
+
+        const message = await createMessage(thread_id,"user",`TITLE: ${title}, DESCRIPTION: ${description}, BULLETPOINTS: BULLET: ${bulletpoints.join(" BULLET ")}, KEYWORDS: ${keywords}, RESPONSE: ${JSON.stringify(errors)}`);
+        
+        let run = await createRun(thread_id, assId);
+        console.log(`run created: ${run.id} at ${thread_id}`);
+        
+        while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
+            console.log(run.status)
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+        }
+
+        let message_response = await openai.beta.threads.messages.list(thread_id);
+        const messages = message_response.data;
+
+        let latest_message = messages[0]?.content[0]?.text?.value;
+
+        let valToSend = JSON.parse(latest_message) 
+        
+        return valToSend;
+
+    }catch(err){
+        console.log(err);
+        return {}
+    }
+}
+
 export const createAssistant = async () => {
     try{
-        const assistant = openai.beta.assistants.create({
+        const assistant = await openai.beta.assistants.create({
             model:"gpt-4o-2024-08-06",
             name:"assistant Validator"
         })

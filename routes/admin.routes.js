@@ -30,6 +30,7 @@ import {
     getTotalUsers,
     analysisgraph,
     getUser,
+    updateAssistantValidator,
 } from "../controllers/admin.controller.js";
 
 const upload = multer({ dest: "./" });
@@ -87,8 +88,10 @@ router.route("/makeAdmin").get(verifyJWT, verifyAdmin, makeAdmin);
 
 router.route("/getCredits").get(verifyJWT, verifyAdmin, creditsUsed);
 
-// router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
+router.route("/assistant/validator").get(updateAssistantValidator)
 
-// router.route("/getAssistants").get(getAssistants);
+router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
+
+router.route("/getAssistants").get(getAssistants);
 
 export default router;

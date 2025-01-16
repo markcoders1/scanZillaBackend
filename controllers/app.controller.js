@@ -8,7 +8,7 @@ import { User } from "../models/user.model.js";
 import { ProcessedEvent } from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
-import { analyzeValue } from "../services/AIService.js";
+import { analyzeResponse, analyzeValue } from "../services/AIService.js";
 import axios from "axios";
 
 const transporter = transporterConstructor();
@@ -212,7 +212,6 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
                         return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
@@ -242,7 +241,6 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
                         return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
@@ -281,7 +279,6 @@ export const verifyText = async (req, res) => {
                         .custom((value, helper) => {
                             const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                             if (containsWords) {
-                                // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
                                 return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                             }
                             return value;
@@ -325,7 +322,6 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        // return helper.message(`The text contains the following blacklisted words: (${usedWords.map((word) => " " + word)} )`);
                         return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
@@ -470,7 +466,6 @@ export const verifyText = async (req, res) => {
 
         const errors = [];
 
-        // Collect promises for each condition
         if (title !== "") {
             errors.push(analyzeValue(title, "title"));
         }
@@ -506,7 +501,7 @@ export const verifyText = async (req, res) => {
             BE: parsedMessage.bullets || [],
         };
 
-        const mergedObject = mergeObjects(errObj, changedObject);
+        let mergedObject = mergeObjects(errObj, changedObject);
 
         //head reccomendations
 
@@ -584,7 +579,11 @@ export const verifyText = async (req, res) => {
             });
         });
 
-        return res.status(200).json({ message: "Text verified", error: mergedObject, reccomendations, success: true });
+        const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+
+        console.log(newResponse)
+
+        return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true, bulletpoints });
     } catch (error) {
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
