@@ -527,17 +527,6 @@ export const verifyText = async (req, res) => {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
 
-        const newHistory = await History.create({
-            userID: req.user.id,
-            title,
-            description,
-            bullets: bulletpoints,
-            keywords,
-            error: mergedObject,
-            reccomendations,
-            credits: creditPrice,
-        });
-
         if (title !== "" && mergedObject.TE.length === 0) {
             mergedObject.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
@@ -581,7 +570,24 @@ export const verifyText = async (req, res) => {
 
         const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
 
-        console.log(newResponse)
+        if(newResponse.abuse){
+            newResponse.TE = []
+            newResponse.BE = []
+            newResponse.DE = []
+            newResponse.KE = []
+        }
+
+
+        const newHistory = await History.create({
+            userID: req.user.id,
+            title,
+            description,
+            bullets: bulletpoints,
+            keywords,
+            error: newResponse,
+            reccomendations,
+            credits: creditPrice,
+        });
 
         return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true, bulletpoints });
     } catch (error) {
