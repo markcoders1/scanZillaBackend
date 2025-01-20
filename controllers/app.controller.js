@@ -213,7 +213,7 @@ function checkWordsCapMessage(input) {
     return regex.test(input);
 }
 function checkRepeatedWordsMessage(input) {
-    const regex = /The given value contains the following repeated words/;
+    const regex = /The below text contains the following repeated words (more than twice):/;
     return regex.test(input);
 }
 
@@ -248,7 +248,7 @@ export const verifyText = async (req, res) => {
                 .custom((value,helper)=>{
                     const words = findRepeatedWords(value)
                     if(words.length>0){
-                        return helper.message(`The given value contains the following repeated words: |||| ${words.join('||')}`)
+                        return helper.message(`The below text contains the following repeated words (more than twice):: |||| ${words.join('||')}`)
                     }
                     return value
                 })
