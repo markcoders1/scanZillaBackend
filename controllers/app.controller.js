@@ -111,6 +111,27 @@ function containsAllCapsWords(str, allowedAbbreviations) {
     return { containsCaps, cappedWords };
 }
 
+// function findRepeatedWords(input) {
+    // const ignoredWords = new Set([
+    //     "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
+    // ]);
+    
+//     const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word));
+//     const wordCount = new Map();
+//     const repeatedWords = new Set();
+    
+//     for (const word of words) {
+//       if (wordCount.has(word)) {
+//         repeatedWords.add(word);
+//       } else {
+//         wordCount.set(word, 1);
+//       }
+//     }
+    
+//     return Array.from(repeatedWords);
+// }
+
+
 function findRepeatedWords(input) {
     const ignoredWords = new Set([
         "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
@@ -121,15 +142,14 @@ function findRepeatedWords(input) {
     const repeatedWords = new Set();
     
     for (const word of words) {
-      if (wordCount.has(word)) {
-        repeatedWords.add(word);
-      } else {
-        wordCount.set(word, 1);
-      }
+        wordCount.set(word, (wordCount.get(word) || 0) + 1);
+        if (wordCount.get(word) > 2) {
+            repeatedWords.add(word);
+        }
     }
     
     return Array.from(repeatedWords);
-  }
+}
 
 // function detectNumberWords(text) {
 //     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
