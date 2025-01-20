@@ -547,19 +547,6 @@ export const verifyText = async (req, res) => {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
 
-        if (title !== "" && mergedObject.TE.length === 0) {
-            mergedObject.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
-        }
-        if (description !== "" && mergedObject.DE.length === 0) {
-            mergedObject.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
-        }
-        if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
-            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none", point: "-1" });
-        }
-        if (keywords !== "" && mergedObject.KE.length === 0) {
-            mergedObject.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
-        }
-
         Object.keys(mergedObject).forEach((key) => {
             mergedObject[key].forEach((item, index) => {
                 if (typeof item == "string") {
@@ -589,6 +576,20 @@ export const verifyText = async (req, res) => {
         });
 
         const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+
+
+        if (title !== "" && mergedObject.TE.length === 0) {
+            mergedObject.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        }
+        if (description !== "" && mergedObject.DE.length === 0) {
+            mergedObject.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        }
+        if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
+            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none", point: "-1" });
+        }
+        if (keywords !== "" && mergedObject.KE.length === 0) {
+            mergedObject.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        }
 
         if(newResponse.abuse){
             newResponse.TE = []
