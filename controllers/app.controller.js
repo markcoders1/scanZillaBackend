@@ -578,17 +578,17 @@ export const verifyText = async (req, res) => {
         const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
 
 
-        if (title !== "" && mergedObject.TE.length === 0) {
-            mergedObject.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        if (title !== "" && newResponse.TE.length === 0) {
+            newResponse.TE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
-        if (description !== "" && mergedObject.DE.length === 0) {
-            mergedObject.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        if (description !== "" && newResponse.DE.length === 0) {
+            newResponse.DE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
-        if (bulletpoints.length > 0 && bulletpoints[0] !== "" && mergedObject.BE.length === 0) {
-            mergedObject.BE.push({ error: "No issues found, you're good to go.", priority: "none", point: "-1" });
+        if (bulletpoints.length > 0 && bulletpoints[0] !== "" && newResponse.BE.length === 0) {
+            newResponse.BE.push({ error: "No issues found, you're good to go.", priority: "none", point: "-1" });
         }
-        if (keywords !== "" && mergedObject.KE.length === 0) {
-            mergedObject.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
+        if (keywords !== "" && newResponse.KE.length === 0) {
+            newResponse.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
 
         if(newResponse.abuse){
