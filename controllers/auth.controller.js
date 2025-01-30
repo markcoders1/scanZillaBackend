@@ -26,7 +26,7 @@ export const test = (req, res) => {
 export const createUser = async (req, res) => {
     try {
         const { email, password, userName } = req.body;
-        const userSearch = await User.findOne({ $or: [{ email: email }, { userName: userName }] });
+        const userSearch = await User.findOne({ $or: [{ email: email }] });
 
         if (userSearch) return res.status(400).json({ message: "User already exists." });
 

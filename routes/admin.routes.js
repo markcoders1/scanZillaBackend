@@ -88,7 +88,7 @@ router.route("/makeAdmin").get(verifyJWT, verifyAdmin, makeAdmin);
 
 router.route("/getCredits").get(verifyJWT, verifyAdmin, creditsUsed);
 
-router.route("/assistant/validator").get(updateAssistantValidator)
+// router.route("/assistant/validator").get(updateAssistantValidator)
 
 router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
 
