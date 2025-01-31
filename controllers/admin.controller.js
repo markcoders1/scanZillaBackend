@@ -213,7 +213,7 @@ export const getUserPurchases = async (req, res) => {
 export const getUserHistory = async (req, res) => {
     try {
         const { userId } = req.query;
-        const Histories = await History.find({ userID: userId });
+        const Histories = await History.find({ userID: userId }).sort({"_id":-1});
         res.status(200).json(Histories);
     } catch (err) {
         console.log(err);
