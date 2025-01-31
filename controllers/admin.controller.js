@@ -213,7 +213,7 @@ export const getUserPurchases = async (req, res) => {
 export const getUserHistory = async (req, res) => {
     try {
         const { userId } = req.query;
-        const Histories = await History.find({ userID: userId }).sort({"_id":-1});
+        const Histories = await History.find({ userID: userId }).sort({ createdAt: -1 });
         res.status(200).json(Histories);
     } catch (err) {
         console.log(err);
@@ -367,7 +367,7 @@ export const analysisgraph = async (req, res) => {
     try {
         const now = new Date();
         const disMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        let histories = await History.find({ createdAt: { $gte: disMonth } });
+        let histories = await History.find({ createdAt: { $gte: disMonth } }).sort({ createdAt: -1 });
         histories = histories.map((e) => {
             const date = new Date(e.createdAt);
             return date.getDate();
@@ -755,7 +755,7 @@ export const creditsUsed = async (req, res) => {
             // Find records created on this specific day, within the current month
             const dailyAnalysis = await History.find({
                 createdAt: { $gte: d, $lt: nextDay },
-            }).lean();
+            }).sort({ createdAt: -1 }).lean();
 
             let credits = 0;
             dailyAnalysis.forEach(({ title, description, bullets }) => {
