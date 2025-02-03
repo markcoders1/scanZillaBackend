@@ -1058,13 +1058,53 @@ export const asin = async (req, res) => {
         }
         result = result?.data?.products[0];
         let category
+        
+        const values = await fs.readFile("json/rules.json","utf-8",null)
+        const categories = Object.keys(JSON.parse(values))
+
         if(result?.categoryTree){
             category = result?.categoryTree[0]?.name||""
+            // category = "Other"
         }else{
             category = ""
         }
 
-        res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: "Values Filled in Successfully." });
+        if(!categories.includes(category)){
+            category = ""
+        }
+        console.log(category)
+        let errorToSend = []
+        if(!result?.title){
+            errorToSend.push("Title")
+        }
+        if(!result?.description){
+            errorToSend.push("Description")
+        }
+        if(!result?.features){
+            errorToSend.push("Bullet Points")
+        }
+        if(category == ""){
+            errorToSend.push("category")
+        }
+        
+        // errorToSend = errorToSend.join("")
+        let message = "Values Filled in Successfully"
+        if(errorToSend.length>0){
+
+            if(errorToSend.length == 1){
+                message = `${errorToSend.pop()} not found.`
+            }else{
+                let val = [errorToSend.pop(),errorToSend.pop()]
+
+                message = `${errorToSend.join(', ')}${errorToSend.length>2?", ":""}${val[1]} and ${val[0]} not found.`
+            }
+            
+
+        }else{
+            message +="."
+        }
+
+        res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: message });
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, error: error.message, message: "Value Autofill Failed." });

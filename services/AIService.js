@@ -22,7 +22,7 @@ async function createMessage(thread_id, role, content) {
         thread_id,
         {
             role,
-            content,
+            content
         }
     );
     return threadMessages;
@@ -108,6 +108,7 @@ export const analyzeValue = async (value,assistant) => {
         // console.log(messages)
         latest_message = messages[0]?.content[0]?.text?.value;
 
+        // console.log(JSON.parse(messages,null,4))
         let valToSend = JSON.parse(latest_message) 
 
         if(assistant !== "bullets"){
@@ -126,7 +127,7 @@ export const analyzeValue = async (value,assistant) => {
     }
 }
 
-// const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+// const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})w
 
 export const analyzeResponse = async (errors,values)=>{
     try{

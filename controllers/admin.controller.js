@@ -464,7 +464,7 @@ export const updateAssistantValidator = async (req,res) => {
                 instructions: `${instructions.fixed} || RULES: RULE ${instructions.rules.join(" RULE ")} || FORMATS: FORMAT ${instructions.formats.join(" FORMAT ")}`,
                 response_format: zodResponseFormat(responseValidatorSchema, `assistantValidator`),
                 model: "gpt-4o-2024-08-06",
-                temperature: 0.6,
+                temperature: 0.2,
             });
         };
 
@@ -481,6 +481,9 @@ export const makeAdmin = async (req, res) => {
     try {
         const { userId } = req.query;
         const user = await User.findById(userId);
+        if(user._id.toString()==req.user.id){
+            return res.status(200).json({success:false,message:"you can't remove your own admin access"})
+        }
         user.role == "user" ? (user.role = "admin") : (user.role = "user");
         user.save();
         res.status(200).json({ success: true, message: `user toggled ${user.role} successfully`, role: user.role });
@@ -798,3 +801,14 @@ export const getAssistants = async (req, res) => {
         return res.status(500).json({ error: "Server error." });
     }
 };
+
+export const getThread = async (req,res) => {
+    try{
+        let thread = await openai.beta.threads.messages.list(req.body.thread);
+        
+        return res.status(200).json({thread})
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({ error: "Server error." });
+    }
+}
