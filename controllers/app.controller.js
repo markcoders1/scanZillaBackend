@@ -220,6 +220,7 @@ function checkRepeatedWordsMessage(input) {
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
+        let initCategory = category
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
         if (!Object.keys(obj).includes(category)){
@@ -257,7 +258,7 @@ export const verifyText = async (req, res) => {
                 })
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max": `Title for category: "${category}" must be up to ${obj[category]} characters long`,
+                    "string.max": `Title for category: "${initCategory}" must be up to ${obj[category]} characters long`,
                 }),
 
             description: Joi.string()
@@ -530,7 +531,7 @@ export const verifyText = async (req, res) => {
 
         let reccomendations = [];
         if (title && title.length <= 0.9 * obj[category]) {
-            reccomendations.push(`Title can be Indexed up to ${obj[category]} for the ${category} category.`);
+            reccomendations.push(`Title can be Indexed up to ${obj[category]} for the ${initCategory} category.`);
         }
         if (description && description.length <= 0.9 * obj.descriptionCharacters) {
             reccomendations.push(`Description can be indexed up to ${obj.descriptionCharacters} characters.`);
