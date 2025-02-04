@@ -1069,9 +1069,6 @@ export const asin = async (req, res) => {
             category = ""
         }
 
-        if(!categories.includes(category)){
-            category = ""
-        }
         console.log(category)
         let errorToSend = []
         if(!result?.title){
