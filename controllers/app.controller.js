@@ -222,6 +222,9 @@ export const verifyText = async (req, res) => {
         let { title, description, bulletpoints, keywords, category } = req.body;
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
+        if (!Object.keys(obj).includes(category)){
+            category = "Other"
+        }
 
         let blacklistedWords = await loadBlacklistedWords();
 
@@ -1064,7 +1067,6 @@ export const asin = async (req, res) => {
 
         if(result?.categoryTree){
             category = result?.categoryTree[0]?.name||""
-            // category = "Other"
         }else{
             category = ""
         }
@@ -1084,7 +1086,6 @@ export const asin = async (req, res) => {
             errorToSend.push("category")
         }
         
-        // errorToSend = errorToSend.join("")
         let message = "Values Filled in Successfully"
         if(errorToSend.length>0){
 
