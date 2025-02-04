@@ -60,40 +60,6 @@ const containsBlacklistedWord = (paragraph, blacklistedWords) => {
     return { containsWords, usedWords };
 };
 
-// const correctCapitalisations = (paragraph) => {
-//     console.log(paragraph);
-//     const exceptions = ["a","an","the","accordingly","after","also","before","besides","consequently","conversely","finally","furthermore","hence","however","indeed","instead","likewise","meanwhile","moreover","nevertheless","next","nonetheless","otherwise","similarly","still","subsequently","then","therefore","thus","for","and","nor","but","or","yet","so","about","like","above","near","across","of","after","off","against","on","along","onto","among","opposite","around","out","as","outside","at","over","before","past","behind","round","below","since","beneath","than","beside","through","between","to","beyond","towards","by","under","despite","underneath","down","unlike","during","until","except","up","for","upon","from","via","in","with","inside","within","into","without",];
-//     const fixed = paragraph.split("-").join(" ");
-//     const words = fixed.split(" ");
-
-//     let check = true;
-//     let checkArray = [];
-
-//     for (let i = 0; i < words.length; i++) {
-//         const word = words[i];
-//         const lowerWord = word.toLowerCase();
-
-//         if (word) {
-//             if (exceptions.includes(lowerWord)) {
-//                 if (word !== lowerWord) {
-//                     checkArray.push(word);
-//                     check = false;
-//                 }
-//             } else {
-//                 if (
-//                     word[0] !== word[0].toUpperCase() ||
-//                     word.slice(1) !== word.slice(1).toLowerCase()
-//                 ) {
-//                     checkArray.push(word);
-//                     check = false;
-//                 }
-//             }
-//         }
-//     }
-
-//     return { check, checkArray };
-// };
-
 function containsAllCapsWords(str, allowedAbbreviations) {
     const words = str.split(" ");
     let cappedWords = [];
@@ -111,25 +77,6 @@ function containsAllCapsWords(str, allowedAbbreviations) {
     return { containsCaps, cappedWords };
 }
 
-// function findRepeatedWords(input) {
-    // const ignoredWords = new Set([
-    //     "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
-    // ]);
-    
-//     const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word));
-//     const wordCount = new Map();
-//     const repeatedWords = new Set();
-    
-//     for (const word of words) {
-//       if (wordCount.has(word)) {
-//         repeatedWords.add(word);
-//       } else {
-//         wordCount.set(word, 1);
-//       }
-//     }
-    
-//     return Array.from(repeatedWords);
-// }
 
 
 function findRepeatedWords(input) {
@@ -637,27 +584,6 @@ export const generateThread = async (req, res) => {
         return res.json(err);
     }
 };
-
-// async function createRun(thread_id, assistantId) {
-//     const run = await openai.beta.threads.runs.create(thread_id, {
-//         assistant_id: assistantId,
-//     });
-
-//     return run;
-// }
-
-// async function createMessage(thread_id, role, content) {
-//     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-//     const threadMessages = await openai.beta.threads.messages.create(
-//         thread_id,
-//         {
-//             role,
-//             content,
-//         }
-//     );
-//     return threadMessages;
-// }
 
 export const getUserHistory = async (req, res) => {
     try {
