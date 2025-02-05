@@ -163,6 +163,14 @@ function checkRepeatedWordsMessage(input) {
     const regex = /The below text contains the following repeated words (more than twice):/;
     return regex.test(input);
 }
+function checkBulletFlag(input){
+    const regex = /Length of all bullet points collectively should be less than/;
+    return regex.test(input);
+}
+function punctuationError(input){
+    const regex = /These Characters Are Not Allowed/;
+    return regex.test(input);
+}
 
 export const verifyText = async (req, res) => {
     try {
@@ -411,11 +419,12 @@ export const verifyText = async (req, res) => {
 
                 if (field.path[0] == "bulletpoints") {
                     let priorityToSet = "medium";
-
+                    let send = false
                     if (checkLengthMessage(field.message)) {
                         priorityToSet = "high";
                     } else if (checkWordsMessage(field.message)) {
                         priorityToSet = "high";
+                        send = true
                     }else if(checkRepeatedWordsMessage(field.message)){
                         priorityToSet = "high";
                     }else if(checkWordsCapMessage(field.message)){
@@ -423,15 +432,51 @@ export const verifyText = async (req, res) => {
                     }
 
                     errObj[fieldKey].push({
-                        point: field.path[1] + 1,
+                        point: field.path[1] + 1 || -1,
                         error: field.message,
                         priority: priorityToSet,
+                        send
                     });
                 } else {
                     errObj[fieldKey].push(field.message);
                 }
             });
         }
+
+        // setting an error object and priority for all errors
+        Object.keys(errObj).forEach((key) => {
+            errObj[key].forEach((item, index) => {
+                if (typeof item == "string") {
+                    if (checkLengthMessage(item) || checkWordsMessage(item)) {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send:false
+                        };
+                    }else if(checkWordsCapMessage(item)){
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "low",
+                            send:false
+                        };
+                    }else if(checkRepeatedWordsMessage(item)){
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send:false
+                        };
+                    }else {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "medium",
+                            send:false
+                        };
+                    }
+                }
+            });
+        });
+
+        console.log(errObj)
 
         //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
@@ -446,8 +491,6 @@ export const verifyText = async (req, res) => {
         if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
             errors.push(analyzeValue(bulletpoints, "bullets"));
         }
-
-        console.log(errors);
 
         // Run all promises in parallel using Promise.all
         const parsedMessage = {}; // Initialize parsedMessage
@@ -498,35 +541,8 @@ export const verifyText = async (req, res) => {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
 
-        Object.keys(mergedObject).forEach((key) => {
-            mergedObject[key].forEach((item, index) => {
-                if (typeof item == "string") {
-                    if (checkLengthMessage(item) || checkWordsMessage(item)) {
-                        mergedObject[key][index] = {
-                            error: item,
-                            priority: "high",
-                        };
-                    }else if(checkWordsCapMessage(item)){
-                        mergedObject[key][index] = {
-                            error: item,
-                            priority: "low",
-                        };
-                    }else if(checkRepeatedWordsMessage(item)){
-                        mergedObject[key][index] = {
-                            error: item,
-                            priority: "high",
-                        };
-                    }else {
-                        mergedObject[key][index] = {
-                            error: item,
-                            priority: "medium",
-                        };
-                    }
-                }
-            });
-        });
-
-        const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+        // const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
+        const newResponse = mergedObject
 
 
         if (title !== "" && newResponse.TE.length === 0) {

@@ -3,7 +3,6 @@
   "rules": [
     "if the tool says something irrelevant about the text, then filter it out",
     "It is your utmost priority that the user does not attempt to abuse the tool, if abuse is detected, you must remove all points, and not foreward anything to the user, and report it through the abuse field",
-    "all errors regarding punctuation marks are low severity",
     "make sure that the tool is not being nitpicky, in such case, delete the error",
     "make sure is not spewing irrelevant errors that do not apply to the input values, in such case, delete the error",
     "the priority of the errors should be based on the risk factor of how likely your account will be banned, so most errors will be either low or medium priority, unless users attempt to do something sketchy",
