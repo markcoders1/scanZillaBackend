@@ -494,6 +494,7 @@ export const verifyText = async (req, res) => {
             KE: mergedObject.KE.filter((obj) => !obj.send),
         };
 
+        console.log("starting review")
         let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
 
         aiFilter = {
@@ -528,35 +529,47 @@ export const verifyText = async (req, res) => {
             abuse: aiFilter.abuse,
         };
 
-        aiFilter = {
-            TE: aiFilter?.TE.map((e) => {
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
-                }
-                return e;
-            }),
-            DE: aiFilter?.DE.map((e) => {
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
-                }
-                return e;
-            }),
-            BE: aiFilter?.BE.map((e) => {
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
-                }
-                return e;
-            }),
-            KE: aiFilter?.KE.map((e) => {
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
-                }
-                return e;
-            }),
-            abuse: aiFilter.abuse,
-        };
+        let newResponse = mergeObjects(allFalse, aiFilter);
 
-        const newResponse = mergeObjects(allFalse, aiFilter);
+        newResponse = {
+            TE: newResponse?.TE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                if("send" in e ){
+                    delete e.send
+                }
+                return e;
+            }),
+            DE: newResponse?.DE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                if("send" in e ){
+                    delete e.send
+                }
+                return e;
+            }),
+            BE: newResponse?.BE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                if("send" in e ){
+                    delete e.send
+                }
+                return e;
+            }),
+            KE: newResponse?.KE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                if("send" in e ){
+                    delete e.send
+                }
+                return e;
+            }),
+            abuse: newResponse.abuse,
+        };
 
 
         if (title !== "" && newResponse.TE.length === 0) {

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import { error } from "console";
 dotenv.config()
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
@@ -195,7 +196,15 @@ export const analyzeResponse = async (errors,values)=>{
 
         let latest_message = messages[0]?.content[0]?.text?.value;
 
-        let valToSend = JSON.parse(latest_message) 
+        let valToSend
+
+        try{
+            valToSend = JSON.parse(latest_message) 
+
+        }catch(err){
+            console.log(err)
+            valToSend = errors
+        }
         
         return valToSend;
 
