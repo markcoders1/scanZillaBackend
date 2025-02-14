@@ -54,7 +54,7 @@ function removeDuplicates(errors) {
 export const analyzeValue = async (value,assistant) => {
     try{
 
-        let latest_message;
+        let latest_message = "{}";
         let assId
 
         if(assistant == 'title'){
@@ -96,33 +96,66 @@ export const analyzeValue = async (value,assistant) => {
         let run = await createRun(thread_id, assId);
         console.log(`run created: ${run.id} at ${thread_id} for ${assistant}`);
         
+        let counter = 0
         while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
-            console.log(run.status)
+            console.log(run.status,assistant +" "+ ++counter)
             await new Promise((resolve) => setTimeout(resolve, 1000));
             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
         }
+        console.log(run.status,assistant +" "+ ++counter)
 
         let message_response = await openai.beta.threads.messages.list(thread_id);
         const messages = message_response.data;
 
-        // console.log(messages)
-        latest_message = messages[0]?.content[0]?.text?.value;
+        for (const message of messages) {
+            if (message.role === "assistant") {
+                latest_message = message.content[0]?.text?.value;
+                break;
+            }
+        }
 
-        // console.log(JSON.parse(messages,null,4))
-        let valToSend = JSON.parse(latest_message) 
+        let valToSend = {}
+        try{
+            valToSend = JSON.parse(latest_message)
+        }catch(err){
+            console.log(err)
+            valToSend = {}
+        }
 
         if(assistant !== "bullets"){
-            valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> ({priority:e.priority , error:e.error.replace("- ","")}))
+            try{
+                valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> {
+                    if(e.error.startsWith("-")){
+                        e.error = e.error.substring(1)
+                    }
+                    return {priority:e.priority , error:e.error}
+                })
+            }catch(err){
+                console.log(err)
+                valToSend = [{priority:"low" , error:""}]
+            }
         }else{
-            valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> ({priority:e.priority , error:e.error.replace("- ",""),point:e.point}))
+            try{
+                valToSend = valToSend[Object.keys(valToSend)[0]].map(e=> {
+                    if(e.error.startsWith("-")){
+                        e.error = str.substring(1)
+                    }
+                    return {priority:e.priority , error:e.error, point:e.point}
+                })
+            }catch(err){
+                console.log(err)
+                valToSend = [{priority:"low" , error:"", point:"-1"}]
+            }
         }
 
         valToSend = valToSend.filter(e=>e?.error != "");
         valToSend = removeDuplicates(valToSend);
 
+        console.log(!!valToSend)
         return {valToSend,assistant};
     }catch(err){
-        console.log(assistant,err);
+        console.log(assistant);
+        console.log(err)
         return {}
     }
 }
@@ -141,6 +174,7 @@ export const analyzeResponse = async (errors,values)=>{
         let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
         
         while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
+            console.log(threadrun.status)
             await new Promise((resolve) => setTimeout(resolve, 1000));
             threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
         }

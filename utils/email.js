@@ -4,13 +4,13 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-export const transporterConstructor = () => {
+export const transporterConstructor = (user,pass) => {
   const transporter = nodemailer.createTransport({
     service: "Gmail",
 
     auth: {
-      user: process.env.APP_EMAIL,
-      pass: process.env.APP_PASS,
+      user,
+      pass
     },
   });
   return transporter;

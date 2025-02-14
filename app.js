@@ -4,8 +4,6 @@ import morgan from "morgan";
 import authRouter from "./routes/auth.routes.js"
 import appRouter from "./routes/app.routes.js"
 import adminRouter from "./routes/admin.routes.js"
-import { BuyCreditWebhook } from "./controllers/app.controller.js";
-import bodyParser from 'body-parser'
 import { defaultLimiter } from "./middleware/limit.middleware.js";
 
 const app = express();

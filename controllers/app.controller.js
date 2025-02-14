@@ -9,112 +9,16 @@ import { ProcessedEvent } from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
 import { analyzeResponse, analyzeValue } from "../services/AIService.js";
+import { joinStrings, mergeObjects } from "../utils/functions.js";
+import { findInvalidCharacters, loadAllowedAbbreviations, loadBlacklistedWords, containsAllCapsWords, containsBlacklistedWord, containsDemographic, findRepeatedWords } from "../utils/customChecks.js";
+import { checkLengthMessage, checkWordsMessage, checkWordsCapMessage, checkRepeatedWordsMessage, checkBulletFlag, punctuationError,checkDemographic } from "../utils/stringChecks.js";
 import axios from "axios";
 
-const transporter = transporterConstructor();
+const transporter = transporterConstructor(process.env.APP_EMAIL, process.env.APP_PASS);
 
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-const openai = new OpenAI(process.env.OPENAI_API_KEY);
-
-const assId = "asst_J8gYM42wapsrXpntcCLMe8wJ";
-
-function findInvalidCharacters(input, regex) {
-    let invalidChars = [];
-
-    for (let char of input) {
-        if (!regex.test(char) && !invalidChars.includes(char)) {
-            invalidChars.push(char);
-        }
-    }
-    return invalidChars.join(" ");
-}
-const loadBlacklistedWords = async () => {
-    const data = await fs.readFile("BW1242.csv", "utf-8");
-    const words = [...new Set(data.split(/\r?\n/).map((word) => word.toLowerCase()))];
-    return words;
-};
-const loadAllowedAbbreviations = async () => {
-    const data = await fs.readFile("AA1242.csv", "utf-8");
-    const words = [...new Set(data.split(/\r?\n/).map((word) => word.toUpperCase()))];
-    return words;
-};
-
-const containsBlacklistedWord = (paragraph, blacklistedWords) => {
-    const lowerCaseParagraph = paragraph.toLowerCase();
-    let usedWords = [];
-    let containsWords = false;
-
-    for (const phrase of blacklistedWords) {
-        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
-        if (regex.test(lowerCaseParagraph) && !/^\s*$/.test(phrase)) {
-            usedWords.push(phrase);
-            containsWords = true;
-        }
-    }
-
-    usedWords = [...new Set(usedWords)];
-
-    return { containsWords, usedWords };
-};
-
-function containsAllCapsWords(str, allowedAbbreviations) {
-    const words = str.split(" ");
-    let cappedWords = [];
-    let containsCaps = false;
-
-    let allowedWords = [...allowedAbbreviations];
-
-    for (let word of words) {
-        if (/^[A-Z]+$/.test(word) && word.length > 2 && !allowedWords.includes(word)) {
-            cappedWords.push(word);
-            containsCaps = true;
-        }
-    }
-    cappedWords = [...new Set(cappedWords)];
-    return { containsCaps, cappedWords };
-}
-
-
-
-function findRepeatedWords(input) {
-    const ignoredWords = new Set([
-        "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
-    ]);
-    
-    const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word));
-    const wordCount = new Map();
-    const repeatedWords = new Set();
-    
-    for (const word of words) {
-        wordCount.set(word, (wordCount.get(word) || 0) + 1);
-        if (wordCount.get(word) > 2) {
-            repeatedWords.add(word);
-        }
-    }
-    
-    return Array.from(repeatedWords);
-}
-
-// function detectNumberWords(text) {
-//     const singleDigits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-//     const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-//     const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-//     const hundreds = ["hundred"];
-//     const thousands = ["thousand"];
-
-//     const allNumberWords = [...singleDigits, ...teens, ...tens, ...hundreds, ...thousands];
-
-//     const lowerText = text.toLowerCase();
-
-//     const numberWordPattern = new RegExp(`\\b(${allNumberWords.join("|")})\\b`, "gi");
-
-//     const matches = lowerText.match(numberWordPattern);
-
-//     return matches !== null;
-// }
 
 const obj = JSON.parse(await fs.readFile("json/rules.json", "utf8"));
 
@@ -129,57 +33,14 @@ const supportEmailJoi = Joi.object({
     content: Joi.string().required(),
 });
 
-function mergeObjects(obj1, obj2) {
-    const merged = { ...obj1 };
-
-    for (const key in obj2) {
-        if (Array.isArray(obj2[key])) {
-            merged[key] = Array.isArray(merged[key]) ? merged[key].concat(obj2[key]) : obj2[key];
-        } else if (typeof obj2[key] === "boolean") {
-            merged[key] = merged[key] === undefined ? obj2[key] : merged[key] || obj2[key];
-        } else if (!(key in merged)) {
-            merged[key] = obj2[key];
-        }
-    }
-
-    return merged;
-}
-
-function checkLengthMessage(input) {
-    const regex = /length must be less than or equal to \d{1,5} characters long to be fully indexed/;
-    return regex.test(input);
-}
-
-function checkWordsMessage(input) {
-    const regex = /The given value contains the following blacklisted words:/;
-    return regex.test(input);
-}
-
-function checkWordsCapMessage(input) {
-    const regex = /The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings:/;
-    return regex.test(input);
-}
-function checkRepeatedWordsMessage(input) {
-    const regex = /The below text contains the following repeated words (more than twice):/;
-    return regex.test(input);
-}
-function checkBulletFlag(input){
-    const regex = /Length of all bullet points collectively should be less than/;
-    return regex.test(input);
-}
-function punctuationError(input){
-    const regex = /These Characters Are Not Allowed/;
-    return regex.test(input);
-}
-
 export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
-        let initCategory = category
+        let initCategory = category;
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
-        if (!Object.keys(obj).includes(category)){
-            category = "Other"
+        if (!Object.keys(obj).includes(category)) {
+            category = "Other";
         }
 
         let blacklistedWords = await loadBlacklistedWords();
@@ -191,7 +52,22 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        console.log(modifiedWords)
+                        return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
+                    }
+                    return value;
+                })
+                .custom((value, helper) => {
+                    const { containsWords, usedWords } = containsDemographic(value);
+
+                    let join = "is"
+                    if (usedWords.length>=2) join = "are"
+
+                    const demographics = joinStrings(usedWords)
+
+                    if (containsWords) {
+                        return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
                     }
                     return value;
                 })
@@ -204,12 +80,12 @@ export const verifyText = async (req, res) => {
                     }
                     return value;
                 })
-                .custom((value,helper)=>{
-                    const words = findRepeatedWords(value)
-                    if(words.length>0){
-                        return helper.message(`The below text contains the following repeated words (more than twice):: |||| ${words.join('||')}`)
+                .custom((value, helper) => {
+                    const words = findRepeatedWords(value);
+                    if (words.length > 0) {
+                        return helper.message(`The below text contains the following repeated words (more than twice):: |||| ${words.join("||")}`);
                     }
-                    return value
+                    return value;
                 })
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
@@ -220,7 +96,22 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        console.log(modifiedWords)
+                        return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
+                    }
+                    return value;
+                })
+                .custom((value, helper) => {
+                    const { containsWords, usedWords } = containsDemographic(value);
+
+                    let join = "is"
+                    if (usedWords.length>=2) join = "are"
+
+                    const demographics = joinStrings(usedWords)
+
+                    if (containsWords) {
+                        return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
                     }
                     return value;
                 })
@@ -229,7 +120,7 @@ export const verifyText = async (req, res) => {
                 .max(obj.descriptionCharacters)
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max":`Description length must be less than or equal to ${obj.descriptionCharacters} characters long to be fully indexed`
+                    "string.max": `Description length must be less than or equal to ${obj.descriptionCharacters} characters long to be fully indexed`,
                 })
                 .custom((value, helper) => {
                     const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
@@ -258,7 +149,9 @@ export const verifyText = async (req, res) => {
                         .custom((value, helper) => {
                             const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                             if (containsWords) {
-                                return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
+                                const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                                console.log(modifiedWords)
+                                return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
                             }
                             return value;
                         })
@@ -268,12 +161,25 @@ export const verifyText = async (req, res) => {
                             }
                             return value;
                         })
+                        .custom((value, helper) => {
+                            const { containsWords, usedWords } = containsDemographic(value);
+        
+                            let join = "is"
+                            if (usedWords.length>=2) join = "are"
+        
+                            const demographics = joinStrings(usedWords)
+        
+                            if (containsWords) {
+                                return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
+                            }
+                            return value;
+                        })
                         .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
                         .min(0)
                         .max(obj.bulletCharacters)
                         .messages({
                             "string.pattern.base": "These Characters Are Not Allowed",
-                            "string.max":`Bullet length must be less than or equal to ${obj.bulletCharacters} characters long to be fully indexed`
+                            "string.max": `Bullet length must be less than or equal to ${obj.bulletCharacters} characters long to be fully indexed`,
                         })
                         .custom((value, helper) => {
                             const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
@@ -301,6 +207,8 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
+                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        console.log(modifiedWords)
                         return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
                     return value;
@@ -419,23 +327,29 @@ export const verifyText = async (req, res) => {
 
                 if (field.path[0] == "bulletpoints") {
                     let priorityToSet = "medium";
-                    let send = false
+                    let send = false;
                     if (checkLengthMessage(field.message)) {
                         priorityToSet = "high";
                     } else if (checkWordsMessage(field.message)) {
                         priorityToSet = "high";
-                        send = true
-                    }else if(checkRepeatedWordsMessage(field.message)){
+                        send = true;
+                    } else if (checkRepeatedWordsMessage(field.message)) {
                         priorityToSet = "high";
-                    }else if(checkWordsCapMessage(field.message)){
+                    } else if (checkWordsCapMessage(field.message)) {
                         priorityToSet = "low";
+                    }else if (checkBulletFlag(field.message)){
+                        priorityToSet = "high"
+                    }else if(punctuationError(field.message)){
+                        priorityToSet = "low"
+                    }else if(checkDemographic(field.message)){
+                        priorityToSet = "high"
                     }
 
                     errObj[fieldKey].push({
                         point: field.path[1] + 1 || -1,
                         error: field.message,
                         priority: priorityToSet,
-                        send
+                        send,
                     });
                 } else {
                     errObj[fieldKey].push(field.message);
@@ -447,36 +361,60 @@ export const verifyText = async (req, res) => {
         Object.keys(errObj).forEach((key) => {
             errObj[key].forEach((item, index) => {
                 if (typeof item == "string") {
-                    if (checkLengthMessage(item) || checkWordsMessage(item)) {
+                    if (checkLengthMessage(item)) {
                         errObj[key][index] = {
                             error: item,
                             priority: "high",
-                            send:false
+                            send: false,
                         };
-                    }else if(checkWordsCapMessage(item)){
+                    } else if (checkWordsMessage(item)) {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send: true,
+                        };
+                    } else if (checkWordsCapMessage(item)) {
                         errObj[key][index] = {
                             error: item,
                             priority: "low",
-                            send:false
+                            send: false,
                         };
-                    }else if(checkRepeatedWordsMessage(item)){
+                    } else if (checkRepeatedWordsMessage(item)) {
                         errObj[key][index] = {
                             error: item,
                             priority: "high",
-                            send:false
+                            send: false,
                         };
-                    }else {
+                    } else if (checkBulletFlag(item)) {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send: false,
+                        };
+                    } else if (punctuationError(item)) {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "low",
+                            send: false,
+                        };
+                    } else if (checkDemographic(item)) {
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send: false,
+                        };
+                    } else {
                         errObj[key][index] = {
                             error: item,
                             priority: "medium",
-                            send:false
+                            send: false,
                         };
                     }
                 }
             });
         });
 
-        console.log(errObj)
+        // console.log(errObj)
 
         //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
@@ -507,13 +445,15 @@ export const verifyText = async (req, res) => {
                 console.error("Error processing values:", error);
             });
 
-        // console.log("parsedMessage", parsedMessage);
-
         const changedObject = {
-            TE: parsedMessage.title || [],
-            DE: parsedMessage.description || [],
-            BE: parsedMessage.bullets || [],
+            TE: parsedMessage.title.map((e) => ({ ...e, send: true })) || [],
+            DE: parsedMessage.description.map((e) => ({ ...e, send: true })) || [],
+            BE: parsedMessage.bullets.map((e) => ({ ...e, send: true })) || [],
         };
+
+        if(Object.keys(parsedMessage).length>0){
+            console.log("'\x1b[32m%s\x1b[0m'","messages parsed")
+        }
 
         let mergedObject = mergeObjects(errObj, changedObject);
 
@@ -541,8 +481,82 @@ export const verifyText = async (req, res) => {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
 
-        // const newResponse = await analyzeResponse(mergedObject,{title, description, bulletpoints, keywords})
-        const newResponse = mergedObject
+        let allTrue = {
+            TE: mergedObject.TE.filter((obj) => obj.send),
+            DE: mergedObject.DE.filter((obj) => obj.send),
+            BE: mergedObject.BE.filter((obj) => obj.send),
+            KE: mergedObject.KE.filter((obj) => obj.send),
+        };
+        let allFalse = {
+            TE: mergedObject.TE.filter((obj) => !obj.send),
+            DE: mergedObject.DE.filter((obj) => !obj.send),
+            BE: mergedObject.BE.filter((obj) => !obj.send),
+            KE: mergedObject.KE.filter((obj) => !obj.send),
+        };
+
+        let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
+
+        aiFilter = {
+            TE: aiFilter?.TE.filter((e) => {
+                let filter = true;
+                filter = e.error.includes("ALL CAPS");
+                filter = e.error.includes("all caps") || filter;
+                filter = !filter;
+                return filter;
+            }),
+            DE: aiFilter?.DE.filter((e) => {
+                let filter = true;
+                filter = e.error.includes("ALL CAPS");
+                filter = e.error.includes("all caps") || filter;
+                filter = !filter;
+                return filter;
+            }),
+            BE: aiFilter?.BE.filter((e) => {
+                let filter = true;
+                filter = e.error.includes("ALL CAPS");
+                filter = e.error.includes("all caps") || filter;
+                filter = !filter;
+                return filter;
+            }),
+            KE: aiFilter?.KE.filter((e) => {
+                let filter = true;
+                filter = e.error.includes("ALL CAPS");
+                filter = e.error.includes("all caps") || filter;
+                filter = !filter;
+                return filter;
+            }),
+            abuse: aiFilter.abuse,
+        };
+
+        aiFilter = {
+            TE: aiFilter?.TE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                return e;
+            }),
+            DE: aiFilter?.DE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                return e;
+            }),
+            BE: aiFilter?.BE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                return e;
+            }),
+            KE: aiFilter?.KE.map((e) => {
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                }
+                return e;
+            }),
+            abuse: aiFilter.abuse,
+        };
+
+        const newResponse = mergeObjects(allFalse, aiFilter);
 
 
         if (title !== "" && newResponse.TE.length === 0) {
@@ -558,13 +572,12 @@ export const verifyText = async (req, res) => {
             newResponse.KE.push({ error: "No issues found, you're good to go.", priority: "none" });
         }
 
-        if(newResponse.abuse){
-            newResponse.TE = []
-            newResponse.BE = []
-            newResponse.DE = []
-            newResponse.KE = []
+        if (newResponse.abuse) {
+            newResponse.TE = [];
+            newResponse.BE = [];
+            newResponse.DE = [];
+            newResponse.KE = [];
         }
-
 
         const newHistory = await History.create({
             userID: req.user.id,
@@ -577,7 +590,7 @@ export const verifyText = async (req, res) => {
             credits: creditPrice,
         });
 
-        return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true, bulletpoints });
+        return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true });
     } catch (error) {
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
@@ -585,19 +598,6 @@ export const verifyText = async (req, res) => {
             console.log(error);
             return res.status(400).json({ message: "Something went wrong, Please try again or contact support", success: false });
         }
-    }
-};
-
-export const generateThread = async (req, res) => {
-    try {
-        const emptyThread = await openai.beta.threads.createAndRun({
-            assistant_id: assId,
-        });
-
-        return res.json({ thread: emptyThread });
-    } catch (err) {
-        console.log(err);
-        return res.json(err);
     }
 };
 
@@ -1003,46 +1003,43 @@ export const asin = async (req, res) => {
             return res.status(400).json({ success: false, message: "product not found please try another ASIN code." });
         }
         result = result?.data?.products[0];
-        let category
-        
-        const values = await fs.readFile("json/rules.json","utf-8",null)
-        const categories = Object.keys(JSON.parse(values))
+        let category;
 
-        if(result?.categoryTree){
-            category = result?.categoryTree[0]?.name||""
-        }else{
-            category = ""
+        const values = await fs.readFile("json/rules.json", "utf-8", null);
+        const categories = Object.keys(JSON.parse(values));
+
+        if (result?.categoryTree) {
+            category = result?.categoryTree[0]?.name || "";
+        } else {
+            category = "";
         }
 
-        console.log(category)
-        let errorToSend = []
-        if(!result?.title){
-            errorToSend.push("Title")
+        console.log(category);
+        let errorToSend = [];
+        if (!result?.title) {
+            errorToSend.push("Title");
         }
-        if(!result?.description){
-            errorToSend.push("Description")
+        if (!result?.description) {
+            errorToSend.push("Description");
         }
-        if(!result?.features){
-            errorToSend.push("Bullet Points")
+        if (!result?.features) {
+            errorToSend.push("Bullet Points");
         }
-        if(category == ""){
-            errorToSend.push("category")
+        if (category == "") {
+            errorToSend.push("category");
         }
-        
-        let message = "Values Filled in Successfully"
-        if(errorToSend.length>0){
 
-            if(errorToSend.length == 1){
-                message = `${errorToSend.pop()} not found.`
-            }else{
-                let val = [errorToSend.pop(),errorToSend.pop()]
+        let message = "Values Filled in Successfully";
+        if (errorToSend.length > 0) {
+            if (errorToSend.length == 1) {
+                message = `${errorToSend.pop()} not found.`;
+            } else {
+                let val = [errorToSend.pop(), errorToSend.pop()];
 
-                message = `${errorToSend.join(', ')}${errorToSend.length>2?", ":""}${val[1]} and ${val[0]} not found.`
+                message = `${errorToSend.join(", ")}${errorToSend.length > 2 ? ", " : ""}${val[1]} and ${val[0]} not found.`;
             }
-            
-
-        }else{
-            message +="."
+        } else {
+            message += ".";
         }
 
         res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: message });
