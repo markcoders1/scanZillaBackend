@@ -445,11 +445,13 @@ export const verifyText = async (req, res) => {
                 console.error("Error processing values:", error);
             });
 
+        console.log(JSON.stringify(parsedMessage,null,4))
         const changedObject = {
-            TE: parsedMessage.title.map((e) => ({ ...e, send: true })) || [],
-            DE: parsedMessage.description.map((e) => ({ ...e, send: true })) || [],
-            BE: parsedMessage.bullets.map((e) => ({ ...e, send: true })) || [],
+            TE: "title" in parsedMessage ? parsedMessage.title.map((e) => ({ ...e, send: true })) : [],
+            DE: "description" in parsedMessage ? parsedMessage.description.map((e) => ({ ...e, send: true })) : [],
+            BE: "bullets" in parsedMessage ? parsedMessage.bullets.map((e) => ({ ...e, send: true })) : [],
         };
+
 
         if(Object.keys(parsedMessage).length>0){
             console.log("'\x1b[32m%s\x1b[0m'","messages parsed")
