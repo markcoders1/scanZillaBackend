@@ -13,15 +13,27 @@ import { stringify } from "csv-stringify/sync";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createAssistant } from "../services/AIService.js";
+import { transporterConstructor } from "../utils/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const responseSchema = z.object({
-    titleErrors: z.array(z.string()),
-    descriptionErrors: z.array(z.string()),
-    bulletPointErrors: z.array(z.string()),
-});
+const devTransporter = transporterConstructor(process.env.DEV_EMAIL,process.env.DEV_PASS)
+const errorMailConstructor = (humanError,error) => {
+    return {
+        to: "haris.markcoders@gmail.com",
+        subject: "Error Alert",
+        text: `
+        something crashed:
+        
+        ${humanError}
+
+
+        ${error}
+        
+        `,
+    }
+}
 
 const titleSchema = z.object({
     // titleErrors: z.array(z.string())
@@ -92,8 +104,9 @@ export const getAllUsers = async (req, res) => {
     try {
         const result = await User.find().select("-password -refreshToken -__v");
         return res.status(200).json(result);
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("get all users",err))
         res.status(400).json({ error });
     }
 };
@@ -106,7 +119,8 @@ export const toggleUserAccount = async (req, res) => {
         user.active = !user.active;
         await user.save();
         return res.status(200).json({ message: "user account toggled successfully" });
-    } catch (error) {
+    } catch (err) {
+        devTransporter.sendMail(errorMailConstructor("toggle user account",err))
         return res.status(400).json({
             message: "Something went wrong, Please contact management.",
         });
@@ -125,8 +139,9 @@ export const getUser = async (req, res) => {
         }
         console.log(user);
         return res.status(200).json(user);
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("get user",err))
         res.status(400).json({ error });
     }
 };
@@ -173,8 +188,9 @@ export const changeRules = async (req, res) => {
         await fs.writeFile("json/rules.json", JSON.stringify(obj, null, 2), "utf8");
 
         res.status(200).send({ message: "Rules updated successfully." });
-    } catch (error) {
-        console.error("Error updating rules:", error);
+    } catch (err) {
+        console.error("Error updating rules:", err);
+        devTransporter.sendMail(errorMailConstructor("change rules",err))
         res.status(500).send({ message: "Error updating rules." });
     }
 };
@@ -184,6 +200,7 @@ export const getTotalUsers = async (req, res) => {
         const users = await User.countDocuments({ role: "user", active: true });
         res.status(200).json({ users });
     } catch (err) {
+        devTransporter.sendMail(errorMailConstructor("get total users",err))
         return res.status(500).json({ message: "Something went wrong, Please try again or contact support." });
     }
 };
@@ -206,6 +223,7 @@ export const getUserPurchases = async (req, res) => {
         return res.status(200).json({ success: true, payments });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -217,6 +235,7 @@ export const getUserHistory = async (req, res) => {
         res.status(200).json(Histories);
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -275,6 +294,7 @@ export const getIncome = async (req, res) => {
         res.status(200).json({ value, result });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -311,6 +331,7 @@ export const changeOfferPricing = async (req, res) => {
         res.status(200).json({ success: true });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -333,6 +354,7 @@ export const giveUserCredits = async (req, res) => {
         return res.status(200).json({ success: true, userCredits: user.credits, message: `You have successfully sent ${credits} credits to user: ${user.userName}` });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -359,6 +381,7 @@ export const takeUserCredits = async (req, res) => {
         return res.status(200).json({ success: true, userCredits: user.credits, message: `You have successfully removed ${credits} credits from user: ${user.userName}` });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -387,8 +410,9 @@ export const analysisgraph = async (req, res) => {
         }));
 
         res.status(200).json(result);
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -397,8 +421,9 @@ export const getAssInstructions = async (req, res) => {
     try {
         const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
         res.status(200).json({ title: instructions.title, description: instructions.description, bullets: instructions.bullets });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -440,8 +465,9 @@ export const updateAssInstructions = async (req, res) => {
         console.log("update");
 
         return res.status(200).json({ success: true, message: "AI rules changed successfully", update });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",error))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -473,6 +499,7 @@ export const updateAssistantValidator = async (req,res) => {
         return res.status(200).json({ success: true, message: "AI rules changed successfully",assistant });
     }catch(err){
         console.log(err)
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(200).json({success:false,message:"could not update the assistant validator"})
     }
 }
@@ -487,8 +514,9 @@ export const makeAdmin = async (req, res) => {
         user.role == "user" ? (user.role = "admin") : (user.role = "user");
         user.save();
         res.status(200).json({ success: true, message: `user toggled ${user.role} successfully`, role: user.role });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -499,8 +527,9 @@ const getWordsFromFile = async (filepath) => {
         const fileContent = await fs.readFile(path);
         const words = parse(fileContent).map((row) => row[0]);
         return words;
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         throw new Error("Failed to read words from file");
     }
 };
@@ -511,8 +540,9 @@ const writeWordsToFile = async (words) => {
         await fs.writeFile("BW1242.csv", data, (err) => {
             if (err) console.log(err);
         });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         throw new Error("Failed to write words to file");
     }
 };
@@ -521,8 +551,9 @@ export const getWords = async (req, res) => {
     try {
         const words = await getWordsFromFile("BW1242.csv");
         res.status(200).json(words);
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ error: "Failed to read words from file" });
     }
 };
@@ -549,8 +580,9 @@ export const addWords = async (req, res) => {
         words.sort();
         await writeWordsToFile(words);
         return res.status(201).json({ success: true, message: "Word added successfully.", words });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Failed to add word to file." });
     }
 };
@@ -575,8 +607,9 @@ export const removeWords = async (req, res) => {
         words = words.filter((word) => word !== wordToRemove);
         await writeWordsToFile(words);
         res.status(200).json({ message: "Word removed successfully" });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ error: "Failed to remove word from file" });
     }
 };
@@ -610,8 +643,9 @@ export const uploadCsv = async (req, res) => {
         await writeWordsToFile(words);
 
         res.status(200).json({ message: "Uploaded CSV successfully.", words });
-    } catch (error) {
-        console.error("Error uploading CSV:", error);
+    } catch (err) {
+        console.error("Error uploading CSV:", err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ message: "Internal server error.", success: false });
     }
 };
@@ -619,8 +653,9 @@ export const uploadCsv = async (req, res) => {
 export const downloadCsv = async (req, res) => {
     try {
         res.download("./BW1242.csv");
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
     }
 };
 
@@ -630,8 +665,9 @@ const writeAbbWordsToFile = async (words) => {
         await fs.writeFile("AA1242.csv", data, (err) => {
             if (err) console.log(err);
         });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         throw new Error("Failed to write words to file");
     }
 };
@@ -640,8 +676,9 @@ export const getAbbWords = async (req, res) => {
     try {
         const words = await getWordsFromFile("AA1242.csv");
         res.status(200).json(words);
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ error: "Failed to read words from file." });
     }
 };
@@ -668,8 +705,9 @@ export const addAbbWords = async (req, res) => {
         words.sort();
         await writeAbbWordsToFile(words);
         return res.status(201).json({ success: true, message: "Word added successfully.", words });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Failed to add word to file." });
     }
 };
@@ -694,8 +732,9 @@ export const removeAbbWords = async (req, res) => {
         words = words.filter((word) => word !== wordToRemove.toUpperCase());
         await writeAbbWordsToFile(words);
         res.status(200).json({ message: "Word removed successfully." });
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ error: "Failed to remove word from file." });
     }
 };
@@ -729,8 +768,9 @@ export const uploadAbbCsv = async (req, res) => {
         await writeAbbWordsToFile(words);
 
         res.status(200).json({ message: "Uploaded CSV successfully.", words });
-    } catch (error) {
-        console.error("Error uploading CSV:", error);
+    } catch (err) {
+        console.error("Error uploading CSV:", err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         res.status(500).json({ message: "Internal server error.", success: false });
     }
 };
@@ -738,8 +778,9 @@ export const uploadAbbCsv = async (req, res) => {
 export const downloadAbbCsv = async (req, res) => {
     try {
         res.download("./AA1242.csv");
-    } catch (error) {
-        console.log(error);
+    } catch (err) {
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        console.log(err);
     }
 };
 
@@ -778,6 +819,7 @@ export const creditsUsed = async (req, res) => {
         return res.status(200).json({ results, totalCreditsUsed });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -788,6 +830,7 @@ export const createAssistants = async (req, res) => {
         return res.status(200).json({ success: true, message: "assistant created successfully", assistant });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -798,6 +841,7 @@ export const getAssistants = async (req, res) => {
         return res.status(200).json(assistants.body.data);
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -809,6 +853,7 @@ export const getThread = async (req,res) => {
         return res.status(200).json({thread})
     }catch(err){
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 }

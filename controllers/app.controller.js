@@ -10,11 +10,27 @@ import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
 import { analyzeResponse, analyzeValue } from "../services/AIService.js";
 import { joinStrings, mergeObjects } from "../utils/functions.js";
-import { findInvalidCharacters, loadAllowedAbbreviations, loadBlacklistedWords, containsAllCapsWords, containsBlacklistedWord, containsDemographic, findRepeatedWords } from "../utils/customChecks.js";
-import { checkLengthMessage, checkWordsMessage, checkWordsCapMessage, checkRepeatedWordsMessage, checkBulletFlag, punctuationError,checkDemographic } from "../utils/stringChecks.js";
+import { findInvalidCharacters, loadAllowedAbbreviations, loadBlacklistedWords, containsAllCapsWords, containsBlacklistedWord, containsDemographic, findRepeatedWords, containsHoliday } from "../utils/customChecks.js";
+import { checkLengthMessage, checkWordsMessage, checkWordsCapMessage, checkRepeatedWordsMessage, checkBulletFlag, punctuationError,checkDemographic, checkHoliday } from "../utils/stringChecks.js";
 import axios from "axios";
 
 const transporter = transporterConstructor(process.env.APP_EMAIL, process.env.APP_PASS);
+const devTransporter = transporterConstructor(process.env.DEV_EMAIL,process.env.DEV_PASS)
+const errorMailConstructor = (humanError,error) => {
+    return {
+        to: "haris.markcoders@gmail.com",
+        subject: "Error Alert",
+        text: `
+        something crashed:
+        
+        ${humanError}
+
+
+        ${error}
+        
+        `,
+    }
+}
 
 dotenv.config();
 
@@ -68,6 +84,19 @@ export const verifyText = async (req, res) => {
 
                     if (containsWords) {
                         return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
+                    }
+                    return value;
+                })
+                .custom((value, helper) => {
+                    const { containsWords, usedWords } = containsHoliday(value);
+
+                    let join = "is"
+                    if (usedWords.length>=2) join = "are"
+
+                    const Holidays = joinStrings(usedWords)
+
+                    if (containsWords) {
+                        return helper.message(`Holiday Related Words like: ${Holidays} ${join} Considered Promotional and ${join} forbidden.`);
                     }
                     return value;
                 })
@@ -403,6 +432,12 @@ export const verifyText = async (req, res) => {
                             priority: "high",
                             send: false,
                         };
+                    }else if(checkHoliday(item)){
+                        errObj[key][index] = {
+                            error: item,
+                            priority: "high",
+                            send: false,
+                        };
                     } else {
                         errObj[key][index] = {
                             error: item,
@@ -445,7 +480,6 @@ export const verifyText = async (req, res) => {
                 console.error("Error processing values:", error);
             });
 
-        console.log(JSON.stringify(parsedMessage,null,4))
         const changedObject = {
             TE: "title" in parsedMessage ? parsedMessage.title.map((e) => ({ ...e, send: true })) : [],
             DE: "description" in parsedMessage ? parsedMessage.description.map((e) => ({ ...e, send: true })) : [],
@@ -536,7 +570,10 @@ export const verifyText = async (req, res) => {
         newResponse = {
             TE: newResponse?.TE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                }
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -545,7 +582,10 @@ export const verifyText = async (req, res) => {
             }),
             DE: newResponse?.DE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                }
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -554,7 +594,10 @@ export const verifyText = async (req, res) => {
             }),
             BE: newResponse?.BE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                }
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -563,7 +606,10 @@ export const verifyText = async (req, res) => {
             }),
             KE: newResponse?.KE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replace(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                }
+                if (e.error.includes("!-!")) {
+                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -607,6 +653,7 @@ export const verifyText = async (req, res) => {
 
         return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true });
     } catch (error) {
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
         } else {
@@ -638,6 +685,7 @@ export const getUserHistory = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -648,6 +696,7 @@ export const getUser = async (req, res) => {
         res.status(200).json({ user });
     } catch (error) {
         console.log(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
     }
 };
 
@@ -698,6 +747,7 @@ export const buyCredits = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
     }
 };
 
@@ -728,6 +778,7 @@ export const addPaymentMethod = async (req, res) => {
         });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -760,6 +811,7 @@ export const BuyCreditWebhook = async (req, res) => {
         return res.status(200).json({ success: true, credits: user.credits });
     } catch (error) {
         console.error(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -788,6 +840,7 @@ export const getPurchaseHistory = async (req, res) => {
 
         return res.status(200).json({ success: true, payments });
     } catch (error) {
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -797,6 +850,7 @@ export const numberOfAnalysed = async (req, res) => {
         const count = await History.countDocuments({ userID: req.user.id });
         res.status(200).json({ success: true, count });
     } catch (error) {
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -821,6 +875,7 @@ export const getCardInfo = async (req, res) => {
         });
         res.status(200).json({ cards });
     } catch (error) {
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -845,6 +900,7 @@ export const toggleAutoCredit = async (req, res) => {
             message: `Auto credits: ${uac ? "off" : "on"}.`,
         });
     } catch (err) {
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         console.log(err);
     }
 };
@@ -876,6 +932,7 @@ export const getGraphData = async (req, res) => {
         res.status(200).json(result);
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
     }
 };
 
@@ -885,6 +942,7 @@ export const getOffers = async (req, res) => {
         res.status(200).json({ success: true, offers });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again later or contact support",
         });
@@ -897,6 +955,7 @@ export const getRules = async (req, res) => {
         res.status(200).json(obj);
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -937,6 +996,7 @@ export const paymentEmail = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -973,6 +1033,7 @@ export const supportEmail = async (req, res) => {
         });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -998,6 +1059,7 @@ export const changeName = async (req, res) => {
         return res.status(200).json({ success: true, user });
     } catch (err) {
         console.log(err);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -1060,6 +1122,7 @@ export const asin = async (req, res) => {
         res.status(200).json({ success: true, title: result?.title, description: result?.description, bullets: result?.features, category, message: message });
     } catch (error) {
         console.log(error);
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         res.status(500).json({ success: false, error: error.message, message: "Value Autofill Failed." });
     }
 };

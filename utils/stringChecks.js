@@ -29,3 +29,9 @@ export const checkDemographic = (input) => {
     const regex = /properly supported with the necessary documents and approvals for your product./;
     return regex.test(input);
 }
+
+export const checkHoliday = (input) => {
+    const regex = /Holiday Related Words/;
+    const regex2 = /are Considered Promotional and is forbidden./;
+    return regex.test(input)&&regex2.test(input);
+}

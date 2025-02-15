@@ -58,6 +58,25 @@ export const containsDemographic = (paragraph) =>{
     return { containsWords, usedWords };
 }
 
+export const containsHoliday = (paragraph) =>{
+    const demographics = ["New Year's Day","Valentine's Day","Mother's Day","Father's Day","Christmas Day","Easter Sunday","Thanksgiving Day","Halloween","Independence Day","Labor Day","Memorial Day","Martin Luther King Jr. Day","Presidents' Day","St. Patrick's Day","Cinco de Mayo","Hanukkah","Diwali","Ramadan","Eid al-Fitr","Eid al-Adha","Chinese New Year","Thanksgiving Friday","Boxing Day","Groundhog Day","April Fool's Day","Earth Day","Veterans Day","Columbus Day","Juneteenth","Canada Day","Australia Day","Bastille Day","Day of the Dead","Mardi Gras","Ash Wednesday","Good Friday","Passover","Rosh Hashanah","Yom Kippur","Kwanzaa","International Women's Day","Children's Day","Teacher's Day","Grandparents' Day","Arbor Day","National Siblings Day","National Pet Day","World Health Day","World Environment Day","International Workers' Day","christmas"]
+    const lowerCaseParagraph = paragraph.toLowerCase();
+    let usedWords = [];
+    let containsWords = false;
+
+    for (const phrase of demographics) {
+        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
+        if (regex.test(lowerCaseParagraph) && !/^\s*$/.test(phrase)) {
+            usedWords.push(phrase);
+            containsWords = true;
+        }
+    }
+
+    usedWords = [...new Set(usedWords)];
+
+    return { containsWords, usedWords };
+}
+
 export const containsAllCapsWords = (str, allowedAbbreviations) => {
     const words = str.split(" ");
     let cappedWords = [];
