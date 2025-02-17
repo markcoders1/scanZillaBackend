@@ -19,6 +19,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const devTransporter = transporterConstructor(process.env.DEV_EMAIL,process.env.DEV_PASS)
+const clientMailTransporter = transporterConstructor(process.env.APP_EMAIL,process.env.APP_PASS)
+
+const clientErrorMailConstructor = (humanError,error) => {
+    return {
+        to: process.env.APP_EMAIL,
+        subject: "Error Alert",
+        text: `
+        something crashed:
+        
+        ${humanError}
+
+
+        ${error}
+        
+        `,
+    }
+}
 const errorMailConstructor = (humanError,error) => {
     return {
         to: "haris.markcoders@gmail.com",
@@ -121,6 +138,7 @@ export const toggleUserAccount = async (req, res) => {
         return res.status(200).json({ message: "user account toggled successfully" });
     } catch (err) {
         devTransporter.sendMail(errorMailConstructor("toggle user account",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(400).json({
             message: "Something went wrong, Please contact management.",
         });
@@ -142,6 +160,7 @@ export const getUser = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("get user",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(400).json({ error });
     }
 };
@@ -191,6 +210,7 @@ export const changeRules = async (req, res) => {
     } catch (err) {
         console.error("Error updating rules:", err);
         devTransporter.sendMail(errorMailConstructor("change rules",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).send({ message: "Error updating rules." });
     }
 };
@@ -201,6 +221,7 @@ export const getTotalUsers = async (req, res) => {
         res.status(200).json({ users });
     } catch (err) {
         devTransporter.sendMail(errorMailConstructor("get total users",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again or contact support." });
     }
 };
@@ -223,7 +244,8 @@ export const getUserPurchases = async (req, res) => {
         return res.status(200).json({ success: true, payments });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -235,7 +257,8 @@ export const getUserHistory = async (req, res) => {
         res.status(200).json(Histories);
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -294,7 +317,8 @@ export const getIncome = async (req, res) => {
         res.status(200).json({ value, result });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -331,7 +355,8 @@ export const changeOfferPricing = async (req, res) => {
         res.status(200).json({ success: true });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -354,7 +379,8 @@ export const giveUserCredits = async (req, res) => {
         return res.status(200).json({ success: true, userCredits: user.credits, message: `You have successfully sent ${credits} credits to user: ${user.userName}` });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -381,7 +407,8 @@ export const takeUserCredits = async (req, res) => {
         return res.status(200).json({ success: true, userCredits: user.credits, message: `You have successfully removed ${credits} credits from user: ${user.userName}` });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -412,7 +439,8 @@ export const analysisgraph = async (req, res) => {
         res.status(200).json(result);
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -423,7 +451,8 @@ export const getAssInstructions = async (req, res) => {
         res.status(200).json({ title: instructions.title, description: instructions.description, bullets: instructions.bullets });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -467,7 +496,8 @@ export const updateAssInstructions = async (req, res) => {
         return res.status(200).json({ success: true, message: "AI rules changed successfully", update });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",error))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -499,7 +529,8 @@ export const updateAssistantValidator = async (req,res) => {
         return res.status(200).json({ success: true, message: "AI rules changed successfully",assistant });
     }catch(err){
         console.log(err)
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(200).json({success:false,message:"could not update the assistant validator"})
     }
 }
@@ -516,7 +547,8 @@ export const makeAdmin = async (req, res) => {
         res.status(200).json({ success: true, message: `user toggled ${user.role} successfully`, role: user.role });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
@@ -529,7 +561,8 @@ const getWordsFromFile = async (filepath) => {
         return words;
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         throw new Error("Failed to read words from file");
     }
 };
@@ -542,7 +575,8 @@ const writeWordsToFile = async (words) => {
         });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         throw new Error("Failed to write words to file");
     }
 };
@@ -553,7 +587,8 @@ export const getWords = async (req, res) => {
         res.status(200).json(words);
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ error: "Failed to read words from file" });
     }
 };
@@ -582,7 +617,8 @@ export const addWords = async (req, res) => {
         return res.status(201).json({ success: true, message: "Word added successfully.", words });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Failed to add word to file." });
     }
 };
@@ -609,7 +645,8 @@ export const removeWords = async (req, res) => {
         res.status(200).json({ message: "Word removed successfully" });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ error: "Failed to remove word from file" });
     }
 };
@@ -645,7 +682,8 @@ export const uploadCsv = async (req, res) => {
         res.status(200).json({ message: "Uploaded CSV successfully.", words });
     } catch (err) {
         console.error("Error uploading CSV:", err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ message: "Internal server error.", success: false });
     }
 };
@@ -655,7 +693,8 @@ export const downloadCsv = async (req, res) => {
         res.download("./BW1242.csv");
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
     }
 };
 
@@ -667,7 +706,8 @@ const writeAbbWordsToFile = async (words) => {
         });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         throw new Error("Failed to write words to file");
     }
 };
@@ -678,7 +718,8 @@ export const getAbbWords = async (req, res) => {
         res.status(200).json(words);
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ error: "Failed to read words from file." });
     }
 };
@@ -707,7 +748,8 @@ export const addAbbWords = async (req, res) => {
         return res.status(201).json({ success: true, message: "Word added successfully.", words });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Failed to add word to file." });
     }
 };
@@ -734,7 +776,8 @@ export const removeAbbWords = async (req, res) => {
         res.status(200).json({ message: "Word removed successfully." });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ error: "Failed to remove word from file." });
     }
 };
@@ -770,7 +813,8 @@ export const uploadAbbCsv = async (req, res) => {
         res.status(200).json({ message: "Uploaded CSV successfully.", words });
     } catch (err) {
         console.error("Error uploading CSV:", err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         res.status(500).json({ message: "Internal server error.", success: false });
     }
 };
@@ -779,7 +823,8 @@ export const downloadAbbCsv = async (req, res) => {
     try {
         res.download("./AA1242.csv");
     } catch (err) {
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         console.log(err);
     }
 };
@@ -819,7 +864,8 @@ export const creditsUsed = async (req, res) => {
         return res.status(200).json({ results, totalCreditsUsed });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -830,7 +876,8 @@ export const createAssistants = async (req, res) => {
         return res.status(200).json({ success: true, message: "assistant created successfully", assistant });
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -841,7 +888,8 @@ export const getAssistants = async (req, res) => {
         return res.status(200).json(assistants.body.data);
     } catch (err) {
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 };
@@ -853,7 +901,8 @@ export const getThread = async (req,res) => {
         return res.status(200).json({thread})
     }catch(err){
         console.log(err);
-        devTransporter.sendMail(errorMailConstructor("something went wrong",err))
+        devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ error: "Server error." });
     }
 }

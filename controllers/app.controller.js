@@ -16,6 +16,24 @@ import axios from "axios";
 
 const transporter = transporterConstructor(process.env.APP_EMAIL, process.env.APP_PASS);
 const devTransporter = transporterConstructor(process.env.DEV_EMAIL,process.env.DEV_PASS)
+const clientMailTransporter = transporterConstructor(process.env.APP_EMAIL,process.env.APP_PASS)
+
+const clientErrorMailConstructor = (humanError,error) => {
+    return {
+        to: process.env.APP_EMAIL,
+        subject: "Error Alert",
+        text: `
+        something crashed:
+        
+        ${humanError}
+
+
+        ${error}
+        
+        `,
+    }
+}
+
 const errorMailConstructor = (humanError,error) => {
     return {
         to: "haris.markcoders@gmail.com",
@@ -654,6 +672,7 @@ export const verifyText = async (req, res) => {
         return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true });
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
         } else {
@@ -686,6 +705,7 @@ export const getUserHistory = async (req, res) => {
     } catch (error) {
         console.log(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -697,6 +717,7 @@ export const getUser = async (req, res) => {
     } catch (error) {
         console.log(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
     }
 };
 
@@ -748,6 +769,7 @@ export const buyCredits = async (req, res) => {
     } catch (error) {
         console.log(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
     }
 };
 
@@ -779,6 +801,7 @@ export const addPaymentMethod = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -812,6 +835,7 @@ export const BuyCreditWebhook = async (req, res) => {
     } catch (error) {
         console.error(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -841,6 +865,7 @@ export const getPurchaseHistory = async (req, res) => {
         return res.status(200).json({ success: true, payments });
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -851,6 +876,7 @@ export const numberOfAnalysed = async (req, res) => {
         res.status(200).json({ success: true, count });
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -876,6 +902,7 @@ export const getCardInfo = async (req, res) => {
         res.status(200).json({ cards });
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         console.log(error);
     }
 };
@@ -901,6 +928,7 @@ export const toggleAutoCredit = async (req, res) => {
         });
     } catch (err) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         console.log(err);
     }
 };
@@ -933,6 +961,7 @@ export const getGraphData = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
     }
 };
 
@@ -943,6 +972,7 @@ export const getOffers = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again later or contact support",
         });
@@ -956,6 +986,7 @@ export const getRules = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -997,6 +1028,7 @@ export const paymentEmail = async (req, res) => {
     } catch (error) {
         console.log(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -1034,6 +1066,7 @@ export const supportEmail = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -1060,6 +1093,7 @@ export const changeName = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
+        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({
             message: "Something went wrong, Please try again or contact support",
         });
@@ -1123,6 +1157,7 @@ export const asin = async (req, res) => {
     } catch (error) {
         console.log(error);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
+clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
         res.status(500).json({ success: false, error: error.message, message: "Value Autofill Failed." });
     }
 };
