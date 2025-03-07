@@ -130,7 +130,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const words = findRepeatedWords(value);
                     if (words.length > 0) {
-                        return helper.message(`The below text contains the following repeated words (more than twice):: |||| ${words.join("||")}`);
+                        return helper.message(`The below text contains the following repeated words (more than twice): |||| ${words.join("||")}`);
                     }
                     return value;
                 })
@@ -556,6 +556,8 @@ export const verifyText = async (req, res) => {
                 let filter = true;
                 filter = e.error.includes("ALL CAPS");
                 filter = e.error.includes("all caps") || filter;
+                filter = e.error.includes("Capitalized") || filter;
+                filter = e.error.includes("capitalized") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -563,6 +565,8 @@ export const verifyText = async (req, res) => {
                 let filter = true;
                 filter = e.error.includes("ALL CAPS");
                 filter = e.error.includes("all caps") || filter;
+                filter = e.error.includes("Capitalized") || filter;
+                filter = e.error.includes("capitalized") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -570,6 +574,8 @@ export const verifyText = async (req, res) => {
                 let filter = true;
                 filter = e.error.includes("ALL CAPS");
                 filter = e.error.includes("all caps") || filter;
+                filter = e.error.includes("Capitalized") || filter;
+                filter = e.error.includes("capitalized") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -577,6 +583,8 @@ export const verifyText = async (req, res) => {
                 let filter = true;
                 filter = e.error.includes("ALL CAPS");
                 filter = e.error.includes("all caps") || filter;
+                filter = e.error.includes("Capitalized") || filter;
+                filter = e.error.includes("capitalized") || filter;
                 filter = !filter;
                 return filter;
             }),
