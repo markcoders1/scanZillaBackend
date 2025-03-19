@@ -520,17 +520,13 @@ export const verifyText = async (req, res) => {
         if (description && description.length <= 0.9 * obj.descriptionCharacters) {
             reccomendations.push(`Description can be indexed up to ${obj.descriptionCharacters} characters.`);
         }
-        let bulletReccomend = false;
-        bulletpoints.forEach((e) => {
-            if (e && e.length <= 0.9 * obj.bulletCharacters) {
-                bulletReccomend = true;
-            }
-        });
-        if (bulletReccomend) {
-            reccomendations.push(`Ensure the total character count for all bullet points combined does not exceed 1000, while each individual bullet point remains within the ${obj.bulletCharacters}-character indexing limit.`);
-        }
         let bulletString = "";
         bulletpoints.forEach((e) => (bulletString = bulletString + e));
+        let limit = obj.totalBulletsLength*0.9
+        console.log(bulletString.length)
+        if (bulletString.length<limit) {
+            reccomendations.push(`Ensure the total character count for all bullet points combined does not exceed ${obj.totalBulletsLength}, while each individual bullet point remains within the ${obj.bulletCharacters}-character indexing limit.`);
+        }
         if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
@@ -548,7 +544,6 @@ export const verifyText = async (req, res) => {
             KE: mergedObject.KE.filter((obj) => !obj.send),
         };
 
-        console.log("starting review")
         let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
 
         aiFilter = {

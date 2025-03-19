@@ -3,10 +3,17 @@ import jwt from "jsonwebtoken";
 import Joi from "joi";
 import { transporterConstructor, generateOTP } from "../utils/email.js";
 import { getAuth } from "firebase-admin/auth";
-
+import fs from "fs"
+import { fileURLToPath } from 'url';
+import path from "path"
 import admin from "firebase-admin";
 
-import serviceAccount from "../utils/serviceAccountKey.json" assert { type: "json" };
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const filePath = path.resolve(__dirname, '../utils/serviceAccountKey.json');
+let serviceAccount = fs.readFileSync(filePath,"utf-8")
+serviceAccount = JSON.parse(serviceAccount)
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
