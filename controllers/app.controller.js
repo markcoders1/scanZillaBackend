@@ -86,7 +86,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
                         console.log(modifiedWords)
                         return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
                     }
@@ -143,7 +143,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
                         console.log(modifiedWords)
                         return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
                     }
@@ -196,7 +196,7 @@ export const verifyText = async (req, res) => {
                         .custom((value, helper) => {
                             const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                             if (containsWords) {
-                                const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                                const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
                                 console.log(modifiedWords)
                                 return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
                             }
@@ -254,7 +254,7 @@ export const verifyText = async (req, res) => {
                 .custom((value, helper) => {
                     const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
                     if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  consider replacing with !-!")
+                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
                         console.log(modifiedWords)
                         return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
                     }
@@ -271,6 +271,7 @@ export const verifyText = async (req, res) => {
                 })
                 .messages({
                     "string.pattern.base": "These Characters Are Not Allowed",
+                    "string.max":"This field's length must be less than or equal to 250 characters long to fully indexed."
                 }),
 
             category: Joi.string().required().min(0).max(200).messages({
@@ -553,6 +554,8 @@ export const verifyText = async (req, res) => {
                 filter = e.error.includes("all caps") || filter;
                 filter = e.error.includes("Capitalized") || filter;
                 filter = e.error.includes("capitalized") || filter;
+                filter = e.error.includes("measurements") || filter;
+                filter = e.error.includes("Measurements") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -562,6 +565,8 @@ export const verifyText = async (req, res) => {
                 filter = e.error.includes("all caps") || filter;
                 filter = e.error.includes("Capitalized") || filter;
                 filter = e.error.includes("capitalized") || filter;
+                filter = e.error.includes("measurements") || filter;
+                filter = e.error.includes("Measurements") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -571,6 +576,8 @@ export const verifyText = async (req, res) => {
                 filter = e.error.includes("all caps") || filter;
                 filter = e.error.includes("Capitalized") || filter;
                 filter = e.error.includes("capitalized") || filter;
+                filter = e.error.includes("measurements") || filter;
+                filter = e.error.includes("Measurements") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -580,6 +587,8 @@ export const verifyText = async (req, res) => {
                 filter = e.error.includes("all caps") || filter;
                 filter = e.error.includes("Capitalized") || filter;
                 filter = e.error.includes("capitalized") || filter;
+                filter = e.error.includes("measurements") || filter;
+                filter = e.error.includes("Measurements") || filter;
                 filter = !filter;
                 return filter;
             }),
@@ -591,10 +600,10 @@ export const verifyText = async (req, res) => {
         newResponse = {
             TE: newResponse?.TE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -603,10 +612,10 @@ export const verifyText = async (req, res) => {
             }),
             DE: newResponse?.DE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -615,10 +624,10 @@ export const verifyText = async (req, res) => {
             }),
             BE: newResponse?.BE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
@@ -627,10 +636,10 @@ export const verifyText = async (req, res) => {
             }),
             KE: newResponse?.KE.map((e) => {
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" Consider replacing with !-!", "") };
+                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
                 }
                 if("send" in e ){
                     delete e.send
