@@ -596,9 +596,13 @@ export const verifyText = async (req, res) => {
         };
 
         let newResponse = mergeObjects(allFalse, aiFilter);
+        const regex = /perfect/i;
 
         newResponse = {
             TE: newResponse?.TE.map((e) => {
+                if(regex.test(e.error)){
+                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
+                }
                 if (e.error.includes("!-!")) {
                     return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
@@ -611,6 +615,9 @@ export const verifyText = async (req, res) => {
                 return e;
             }),
             DE: newResponse?.DE.map((e) => {
+                if(regex.test(e.error)){
+                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
+                }
                 if (e.error.includes("!-!")) {
                     return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
@@ -623,6 +630,9 @@ export const verifyText = async (req, res) => {
                 return e;
             }),
             BE: newResponse?.BE.map((e) => {
+                if(regex.test(e.error)){
+                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
+                }
                 if (e.error.includes("!-!")) {
                     return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
@@ -635,6 +645,9 @@ export const verifyText = async (req, res) => {
                 return e;
             }),
             KE: newResponse?.KE.map((e) => {
+                if(regex.test(e.error)){
+                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
+                }
                 if (e.error.includes("!-!")) {
                     return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
                 }
@@ -684,7 +697,7 @@ export const verifyText = async (req, res) => {
         return res.status(200).json({ message: "Text verified", error: newResponse, reccomendations, success: true });
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
-        clientMailTransporter(clientErrorMailConstructor("Something went wrong",error))
+        clientMailTransporter.sendMail(clientErrorMailConstructor("Something went wrong",error))
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
         } else {
