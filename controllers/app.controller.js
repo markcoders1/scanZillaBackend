@@ -604,10 +604,10 @@ export const verifyText = async (req, res) => {
                     return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
-                }
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
+                    let temp = e.error;
+                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
+                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
+                    return { ...e, error: temp };
                 }
                 if("send" in e ){
                     delete e.send
@@ -619,10 +619,10 @@ export const verifyText = async (req, res) => {
                     return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
-                }
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
+                    let temp = e.error;
+                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
+                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
+                    return { ...e, error: temp };
                 }
                 if("send" in e ){
                     delete e.send
@@ -630,14 +630,15 @@ export const verifyText = async (req, res) => {
                 return e;
             }),
             BE: newResponse?.BE.map((e) => {
+                console.log(e)
                 if(regex.test(e.error)){
                     return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
-                }
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
+                    let temp = e.error;
+                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
+                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
+                    return { ...e, error: temp };
                 }
                 if("send" in e ){
                     delete e.send
@@ -649,10 +650,10 @@ export const verifyText = async (req, res) => {
                     return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
                 }
                 if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - consider replacing with !-!", "") };
-                }
-                if (e.error.includes("!-!")) {
-                    return { ...e, error: e.error.replaceAll(" - Consider replacing with !-!", "") };
+                    let temp = e.error;
+                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
+                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
+                    return { ...e, error: temp };
                 }
                 if("send" in e ){
                     delete e.send
