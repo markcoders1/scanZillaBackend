@@ -1,5 +1,4 @@
 import Joi from "joi";
-import OpenAI from "openai";
 import dotenv from "dotenv";
 import fs from "fs/promises";
 import { History } from "../models/history.model.js";
@@ -8,11 +7,21 @@ import { User } from "../models/user.model.js";
 import { ProcessedEvent } from "../models/webhook.model.js";
 import { Offer } from "../models/offers.model.js";
 import { transporterConstructor } from "../utils/email.js";
-import { analyzeResponse, analyzeValue } from "../services/AIService.js";
-import { joinStrings, mergeObjects } from "../utils/functions.js";
-import { findInvalidCharacters, loadAllowedAbbreviations, loadBlacklistedWords, containsAllCapsWords, containsBlacklistedWord, containsDemographic, findRepeatedWords, containsHoliday } from "../utils/customChecks.js";
-import { checkLengthMessage, checkWordsMessage, checkWordsCapMessage, checkRepeatedWordsMessage, checkBulletFlag, punctuationError,checkDemographic, checkHoliday } from "../utils/stringChecks.js";
+import { analyzeValue,reAnalyzeValue,wordReplacer } from "../services/AIService.js";
+import { mergeObjects } from "../utils/functions.js";
+import { findInvalidCharacters } from "../utils/customChecks.js";
+import { 
+    checkLengthMessage,
+    checkWordsMessage,
+    checkWordsCapMessage,
+    checkRepeatedWordsMessage,
+    checkBulletFlag,
+    punctuationError,
+    checkDemographic,
+    checkHoliday 
+} from "../utils/stringChecks.js";
 import axios from "axios";
+import { joiCreator } from "../services/joiService.js";
 
 const transporter = transporterConstructor(process.env.APP_EMAIL, process.env.APP_PASS);
 const devTransporter = transporterConstructor(process.env.DEV_EMAIL,process.env.DEV_PASS)
@@ -71,213 +80,14 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
+        let ai = true;
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
         if (!Object.keys(obj).includes(category)) {
             category = "Other";
         }
 
-        let blacklistedWords = await loadBlacklistedWords();
-
-        let allowedAbbreviations = await loadAllowedAbbreviations();
-
-        const verifyTextJoi = Joi.object({
-            title: Joi.string()
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
-                    if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
-                        console.log(modifiedWords)
-                        return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsDemographic(value);
-
-                    let join = "is"
-                    if (usedWords.length>=2) join = "are"
-
-                    const demographics = joinStrings(usedWords)
-
-                    if (containsWords) {
-                        return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsHoliday(value);
-
-                    let join = "is"
-                    if (usedWords.length>=2) join = "are"
-
-                    const Holidays = joinStrings(usedWords)
-
-                    if (containsWords) {
-                        return helper.message(`Holiday Related Words like: ${Holidays} ${join} Considered Promotional and ${join} forbidden.`);
-                    }
-                    return value;
-                })
-                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
-                .min(0)
-                .max(obj[category] + 1)
-                .custom((value, helper) => {
-                    if (value.length > 0 && /^\s*$/.test(value)) {
-                        return helper.message(`This text only consists of whitespace, please Enter a Value`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    const words = findRepeatedWords(value);
-                    if (words.length > 0) {
-                        return helper.message(`The below text contains the following repeated words (more than twice): |||| ${words.join("||")}`);
-                    }
-                    return value;
-                })
-                .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max": `Title for category: "${initCategory}" must be up to ${obj[category]} characters long`,
-                }),
-
-            description: Joi.string()
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
-                    if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
-                        console.log(modifiedWords)
-                        return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsDemographic(value);
-
-                    let join = "is"
-                    if (usedWords.length>=2) join = "are"
-
-                    const demographics = joinStrings(usedWords)
-
-                    if (containsWords) {
-                        return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
-                    }
-                    return value;
-                })
-                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
-                .min(0)
-                .max(obj.descriptionCharacters)
-                .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max": `Description length must be less than or equal to ${obj.descriptionCharacters} characters long to be fully indexed`,
-                })
-                .custom((value, helper) => {
-                    const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
-                    if (containsCaps) {
-                        return helper.message(`The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings: ||||${cappedWords.join("||")}`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    if (value.length > 0 && /^\s*$/.test(value)) {
-                        return helper.message(`This text only consists of whitespace, please Enter a Value.`);
-                    }
-                    return value;
-                })
-                .custom((value, helper) => {
-                    if (category !== "Books" && /<(?!\/br>)[^>]+>/.test(value)) {
-                        return helper.message("Only </br> tags are allowed");
-                    }
-                    return value;
-                }),
-
-            bulletpoints: Joi.array()
-                .items(
-                    Joi.string()
-                        .allow("")
-                        .custom((value, helper) => {
-                            const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
-                            if (containsWords) {
-                                const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
-                                console.log(modifiedWords)
-                                return helper.message(`The given value contains the following blacklisted words: ||||${modifiedWords.join("||")}`);
-                            }
-                            return value;
-                        })
-                        .custom((value, helper) => {
-                            if (value.length > 0 && /^\s*$/.test(value)) {
-                                return helper.message(`This text only consists of whitespace, please Enter a Value.`);
-                            }
-                            return value;
-                        })
-                        .custom((value, helper) => {
-                            const { containsWords, usedWords } = containsDemographic(value);
-        
-                            let join = "is"
-                            if (usedWords.length>=2) join = "are"
-        
-                            const demographics = joinStrings(usedWords)
-        
-                            if (containsWords) {
-                                return helper.message(`Ensure ${demographics} ${join} properly supported with the necessary documents and approvals for your product.`);
-                            }
-                            return value;
-                        })
-                        .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
-                        .min(0)
-                        .max(obj.bulletCharacters)
-                        .messages({
-                            "string.pattern.base": "These Characters Are Not Allowed",
-                            "string.max": `Bullet length must be less than or equal to ${obj.bulletCharacters} characters long to be fully indexed`,
-                        })
-                        .custom((value, helper) => {
-                            const { containsCaps, cappedWords } = containsAllCapsWords(value, allowedAbbreviations);
-                            if (containsCaps) {
-                                return helper.message(`The given value contains words in ALL CAPS. Please correct them unless they are brand names or common spellings: ||||${cappedWords.join("||")}`);
-                            }
-                            return value;
-                        })
-                )
-                .custom((value, helper) => {
-                    if (value.join("").length > obj.totalBulletsLength) {
-                        return helper.message(`Length of all bullet points collectively should be less than ${obj.totalBulletsLength} to be fully indexed.`);
-                    }
-                    return value;
-                })
-                .min(0)
-                .max(obj.bulletNum)
-                .label("bulletpoints")
-                .messages({
-                    "array.base": "Bulletpoints must be an array of strings",
-                    "array.includes": "Each bulletpoint must be a valid string according to the specified rules",
-                }),
-
-            keywords: Joi.string()
-                .custom((value, helper) => {
-                    const { containsWords, usedWords } = containsBlacklistedWord(value, blacklistedWords);
-                    if (containsWords) {
-                        const modifiedWords = usedWords.map(e=>e + "  - Consider replacing with !-!")
-                        console.log(modifiedWords)
-                        return helper.message(`The given value contains the following blacklisted words: ||||${usedWords.join("||")}`);
-                    }
-                    return value;
-                })
-                .regex(/^[ -~‚„…ˆŠŽ‘’“”•\–\—˜šžŸºÀ-ÿ]*$/)
-                .min(0)
-                .max(obj.searchTerms)
-                .custom((value, helper) => {
-                    if (value.length > 0 && /^\s*$/.test(value)) {
-                        return helper.message(`This text only consists of whitespace, please Enter a Value.`);
-                    }
-                    return value;
-                })
-                .messages({
-                    "string.pattern.base": "These Characters Are Not Allowed",
-                    "string.max":"This field's length must be less than or equal to 250 characters long to fully indexed."
-                }),
-
-            category: Joi.string().required().min(0).max(200).messages({
-                "string.pattern.base": "These Characters Are Not Allowed",
-            }),
-        });
+        const verifyTextJoi = await joiCreator(initCategory,category)
 
         bulletpoints = bulletpoints.map((e) => {
             return e.value;
@@ -290,8 +100,6 @@ export const verifyText = async (req, res) => {
         bulletpoints = bulletpoints.map((e) => e.replace(/[\x00-\x1F]/g, ""));
         keywords = keywords.replace(/[\x00-\x1F]/g, "");
         category = category.replace(/[\x00-\x1F]/g, "");
-
-        let collectiveString = title + description + bulletpoints.join("") + keywords;
 
         const calcStringCost = (stringToCalc) => (stringToCalc ? 1 : 0);
 
@@ -419,7 +227,7 @@ export const verifyText = async (req, res) => {
                         errObj[key][index] = {
                             error: item,
                             priority: "high",
-                            send: true,
+                            send: false,
                         };
                     } else if (checkWordsCapMessage(item)) {
                         errObj[key][index] = {
@@ -468,20 +276,20 @@ export const verifyText = async (req, res) => {
             });
         });
 
-        // console.log(errObj)
-
         //head if a field's key-value pair in errObj does not exist, add it using the analyzeValue() function
 
         const errors = [];
 
-        if (title !== "") {
-            errors.push(analyzeValue(title, "title"));
-        }
-        if (description !== "") {
-            errors.push(analyzeValue(description, "description"));
-        }
-        if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
-            errors.push(analyzeValue(bulletpoints, "bullets"));
+        if(ai === true){
+            if (title !== "") {
+                errors.push(analyzeValue(title, "title"));
+            }
+            if (description !== "") {
+                errors.push(analyzeValue(description, "description"));
+            }
+            if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
+                errors.push(analyzeValue(bulletpoints, "bullets"));
+            }
         }
 
         // Run all promises in parallel using Promise.all
@@ -524,7 +332,6 @@ export const verifyText = async (req, res) => {
         let bulletString = "";
         bulletpoints.forEach((e) => (bulletString = bulletString + e));
         let limit = obj.totalBulletsLength*0.9
-        console.log(bulletString.length)
         if (bulletString.length<limit) {
             reccomendations.push(`Ensure the total character count for all bullet points combined does not exceed ${obj.totalBulletsLength}, while each individual bullet point remains within the ${obj.bulletCharacters}-character indexing limit.`);
         }
@@ -545,123 +352,66 @@ export const verifyText = async (req, res) => {
             KE: mergedObject.KE.filter((obj) => !obj.send),
         };
 
-        let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
+        let aiFilter = {}
+        if(ai == true){
+            aiFilter = await reAnalyzeValue(allTrue, title, description, bulletpoints, keywords)
+        }else{
+            aiFilter = allTrue
+        }
 
-        aiFilter = {
-            TE: aiFilter?.TE.filter((e) => {
-                let filter = true;
-                filter = e.error.includes("ALL CAPS");
-                filter = e.error.includes("all caps") || filter;
-                filter = e.error.includes("Capitalized") || filter;
-                filter = e.error.includes("capitalized") || filter;
-                filter = e.error.includes("measurements") || filter;
-                filter = e.error.includes("Measurements") || filter;
-                filter = !filter;
-                return filter;
-            }),
-            DE: aiFilter?.DE.filter((e) => {
-                let filter = true;
-                filter = e.error.includes("ALL CAPS");
-                filter = e.error.includes("all caps") || filter;
-                filter = e.error.includes("Capitalized") || filter;
-                filter = e.error.includes("capitalized") || filter;
-                filter = e.error.includes("measurements") || filter;
-                filter = e.error.includes("Measurements") || filter;
-                filter = !filter;
-                return filter;
-            }),
-            BE: aiFilter?.BE.filter((e) => {
-                let filter = true;
-                filter = e.error.includes("ALL CAPS");
-                filter = e.error.includes("all caps") || filter;
-                filter = e.error.includes("Capitalized") || filter;
-                filter = e.error.includes("capitalized") || filter;
-                filter = e.error.includes("measurements") || filter;
-                filter = e.error.includes("Measurements") || filter;
-                filter = !filter;
-                return filter;
-            }),
-            KE: aiFilter?.KE.filter((e) => {
-                let filter = true;
-                filter = e.error.includes("ALL CAPS");
-                filter = e.error.includes("all caps") || filter;
-                filter = e.error.includes("Capitalized") || filter;
-                filter = e.error.includes("capitalized") || filter;
-                filter = e.error.includes("measurements") || filter;
-                filter = e.error.includes("Measurements") || filter;
-                filter = !filter;
-                return filter;
-            }),
-            abuse: aiFilter.abuse,
-        };
 
         let newResponse = mergeObjects(allFalse, aiFilter);
-        const regex = /perfect/i;
 
-        newResponse = {
-            TE: newResponse?.TE.map((e) => {
-                if(regex.test(e.error)){
-                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
-                }
-                if (e.error.includes("!-!")) {
-                    let temp = e.error;
-                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
-                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
-                    return { ...e, error: temp };
-                }
-                if("send" in e ){
-                    delete e.send
-                }
-                return e;
-            }),
-            DE: newResponse?.DE.map((e) => {
-                if(regex.test(e.error)){
-                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
-                }
-                if (e.error.includes("!-!")) {
-                    let temp = e.error;
-                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
-                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
-                    return { ...e, error: temp };
-                }
-                if("send" in e ){
-                    delete e.send
-                }
-                return e;
-            }),
-            BE: newResponse?.BE.map((e) => {
-                console.log(e)
-                if(regex.test(e.error)){
-                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
-                }
-                if (e.error.includes("!-!")) {
-                    let temp = e.error;
-                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
-                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
-                    return { ...e, error: temp };
-                }
-                if("send" in e ){
-                    delete e.send
-                }
-                return e;
-            }),
-            KE: newResponse?.KE.map((e) => {
-                if(regex.test(e.error)){
-                    return { ...e, error: e.error.replace(/(\bperfect\b)\s*-\s*consider replacing with !-!/gi, '$1 - consider replacing with ideal')};
-                }
-                if (e.error.includes("!-!")) {
-                    let temp = e.error;
-                    temp = e.error.replaceAll(" - consider replacing with !-!", "")
-                    temp = temp.replaceAll(" - Consider replacing with !-!", "")
-                    return { ...e, error: temp };
-                }
-                if("send" in e ){
-                    delete e.send
-                }
-                return e;
-            }),
-            abuse: newResponse.abuse,
-        };
+
+        newResponse = await (async () => {
+            // Process each array in parallel
+            const [TE, DE, BE, KE] = await Promise.all([
+                Promise.all(newResponse?.TE?.map(async (e) => {
+                    if (e?.error?.includes("||||")) {
+                        e.error = await wordReplacer(e.error);
+                    }
+                    if ("send" in e) {
+                        delete e.send;
+                    }
+                    return e;
+                }) || []),
+                Promise.all(newResponse?.DE?.map(async (e) => {
+                    if (e?.error?.includes("||||")) {
+                        e.error = await wordReplacer(e.error);
+                    }
+                    if ("send" in e) {
+                        delete e.send;
+                    }
+                    return e;
+                }) || []),
+                Promise.all(newResponse?.BE?.map(async (e) => {
+                    if (e?.error?.includes("||||")) {
+                        e.error = await wordReplacer(e.error);
+                    }
+                    if ("send" in e) {
+                        delete e.send;
+                    }
+                    return e;
+                }) || []),
+                Promise.all(newResponse?.KE?.map(async (e) => {
+                    if (e?.error?.includes("||||")) {
+                        e.error = await wordReplacer(e.error);
+                    }
+                    if ("send" in e) {
+                        delete e.send;
+                    }
+                    return e;
+                }) || [])
+            ]);
+        
+            return {
+                TE,
+                DE,
+                BE,
+                KE,
+                abuse: newResponse?.abuse
+            };
+        })();
 
 
         if (title !== "" && newResponse.TE.length === 0) {
@@ -699,10 +449,10 @@ export const verifyText = async (req, res) => {
     } catch (error) {
         devTransporter.sendMail(errorMailConstructor("Something went wrong",error))
         clientMailTransporter.sendMail(clientErrorMailConstructor("Something went wrong",error))
+        console.log(error)
         if (error.code == "authentication_required") {
             return res.status(200).json({ message: "Not enough credits, autopay failed, authentication required", success: false });
         } else {
-            console.log(error);
             return res.status(400).json({ message: "Something went wrong, Please try again or contact support", success: false });
         }
     }

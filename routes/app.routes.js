@@ -20,6 +20,8 @@ import {
     changeName,
     asin,
 } from "../controllers/app.controller.js";
+import { generateAssistant, updateAssistant } from "../services/ai.code.js";
+import { wordReplacer } from "../services/AIService.js";
 // import { deleteAssistant, listAssistants,retreiveRun,getMessages } from "../ignore/ai.code.js";
 // import { generateAssistant,getMessages, retreiveRun } from "../ai.code.js";
 
@@ -59,13 +61,13 @@ router.route("/supportEmail").post(verifyJWT, supportEmail);
 
 router.route("/changeName").post(verifyJWT, changeName);
 
-router.route("/temp").get(async (req, res) => {
-    const values = await History.find();
-    let filtered = values.filter((e) => true);
-    return res.json({ filtered });
-});
-
 router.route("/prefill/:asin").get(asin);
+
+router.route("/temp").get(wordReplacer)
+
+// router.route("/temp").get(updateAssistant)
+
+// router.route("/temp").get(generateAssistant);
 
 // router.route('/getHistory').get(getHistory)
 

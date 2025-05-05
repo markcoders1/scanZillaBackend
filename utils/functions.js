@@ -25,3 +25,4 @@ export const mergeObjects = (obj1, obj2) => {
 
     return merged;
 }
+

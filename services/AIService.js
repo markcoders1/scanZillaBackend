@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import { error } from "console";
+import { Word } from "../models/words.model.js";
+import { loadBlacklistedWords } from "../utils/customChecks.js";
 dotenv.config()
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
@@ -103,7 +104,6 @@ export const analyzeValue = async (value,assistant) => {
             await new Promise((resolve) => setTimeout(resolve, 1000));
             run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
         }
-        console.log(run.status,assistant +" "+ ++counter)
 
         let message_response = await openai.beta.threads.messages.list(thread_id);
         const messages = message_response.data;
@@ -152,7 +152,6 @@ export const analyzeValue = async (value,assistant) => {
         valToSend = valToSend.filter(e=>e?.error != "");
         valToSend = removeDuplicates(valToSend);
 
-        console.log(!!valToSend)
         return {valToSend,assistant};
     }catch(err){
         console.log(assistant);
@@ -224,4 +223,144 @@ export const createAssistant = async () => {
     }catch(error){
         throw new Error(error)
     }
+}
+
+export const reAnalyzeValue = async (allTrue, title, description, bulletpoints, keywords ) => {
+
+    let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
+
+        
+    aiFilter = {
+        TE: aiFilter?.TE.filter((e) => {
+            let filter = true;
+            filter = e.error.includes("ALL CAPS");
+            filter = e.error.includes("all caps") || filter;
+            filter = e.error.includes("Capitalized") || filter;
+            filter = e.error.includes("capitalized") || filter;
+            filter = e.error.includes("measurements") || filter;
+            filter = e.error.includes("Measurements") || filter;
+            filter = !filter;
+            return filter;
+        }),
+        DE: aiFilter?.DE.filter((e) => {
+            let filter = true;
+            filter = e.error.includes("ALL CAPS");
+            filter = e.error.includes("all caps") || filter;
+            filter = e.error.includes("Capitalized") || filter;
+            filter = e.error.includes("capitalized") || filter;
+            filter = e.error.includes("measurements") || filter;
+            filter = e.error.includes("Measurements") || filter;
+            filter = !filter;
+            return filter;
+        }),
+        BE: aiFilter?.BE.filter((e) => {
+            let filter = true;
+            filter = e.error.includes("ALL CAPS");
+            filter = e.error.includes("all caps") || filter;
+            filter = e.error.includes("Capitalized") || filter;
+            filter = e.error.includes("capitalized") || filter;
+            filter = e.error.includes("measurements") || filter;
+            filter = e.error.includes("Measurements") || filter;
+            filter = !filter;
+            return filter;
+        }),
+        KE: aiFilter?.KE.filter((e) => {
+            let filter = true;
+            filter = e.error.includes("ALL CAPS");
+            filter = e.error.includes("all caps") || filter;
+            filter = e.error.includes("Capitalized") || filter;
+            filter = e.error.includes("capitalized") || filter;
+            filter = e.error.includes("measurements") || filter;
+            filter = e.error.includes("Measurements") || filter;
+            filter = !filter;
+            return filter;
+        }),
+        abuse: aiFilter.abuse,
+    };
+    return aiFilter
+}
+
+const wordSuggestor = async (word) => {
+    let latest_message = "{}";
+    const assId = "asst_PVwcSfMVtEqUPJXw64yJtELa"
+    const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId,temperature:0.1});
+    console.log("words", thread_id);
+    let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
+    
+    while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
+    }
+
+    const message = await createMessage(thread_id,"user",word);
+    
+    let run = await createRun(thread_id, assId);
+    console.log(`run created: ${run.id} at ${thread_id} for words`);
+    
+    let counter = 0
+    while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
+        console.log(run.status,"words" +" "+ ++counter)
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        run = await openai.beta.threads.runs.retrieve(thread_id, run.id);
+    }
+
+    let message_response = await openai.beta.threads.messages.list(thread_id);
+    const messages = message_response.data;
+
+    for (const message of messages) {
+        if (message.role === "assistant") {
+            latest_message = message.content[0]?.text?.value;
+            break;
+        }
+    }
+
+    let valToSend = {}
+    try{
+        valToSend = JSON.parse(latest_message)
+    }catch(err){
+        console.log(err)
+        valToSend = {}
+    }
+
+    // console.log(valToSend)
+    return valToSend;
+}
+
+export const wordReplacer = async (string)=>{
+    console.log(string)
+    let blacklistedWords = await loadBlacklistedWords();
+    let words = string.split("||||")[1].split("||");
+    let newWords = [];
+    for (let i = 0; i < words.length; i++) {
+        const element = words[i];
+        const doc = await Word.findOne({word:element})
+        if(doc){
+            newWords.push(doc);
+        }else{
+            const suggestedwords = await wordSuggestor(element)
+            const filteredWords = suggestedwords.words.filter(word => !blacklistedWords.includes(word));
+            if(filteredWords.length !=0){
+                const newDoc = await Word.create({
+                    word:element,
+                    replacement:filteredWords,
+                    isBrand:suggestedwords.isBrand
+                })
+                newWords.push(newDoc)
+            }
+        }
+    }
+    let newError = "The given value contains the following blacklisted words: ||||"
+    
+    newWords = newWords.map((e) => {
+        if (e.isBrand) {
+            return e.word;
+        }
+
+        const shuffled = [...e.replacement].sort(() => 0.5 - Math.random());
+        const selectedReplacements = shuffled.slice(0, 4);
+    
+        return `${e.word} - Consider replacing with ${selectedReplacements.join(', ')}`;
+    });
+    newError = newError + newWords.join("||")
+    return newError
 }

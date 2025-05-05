@@ -91,7 +91,7 @@ router.route("/getCredits").get(verifyJWT, verifyAdmin, creditsUsed);
 
 router.route("/assistant/validator").get(updateAssistantValidator)
 
-router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
+// router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
 
 router.route("/getAssistants").get(getAssistants);
 
