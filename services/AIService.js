@@ -352,7 +352,8 @@ export const wordReplacer = async (string)=>{
     let newError = "The given value contains the following blacklisted words: ||||"
     
     newWords = newWords.map((e) => {
-        if (e.isBrand) {
+        let tempword = e.word
+        if (tempword.toLowerCase()!=="perfect") {
             return e.word;
         }
 
