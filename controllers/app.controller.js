@@ -80,7 +80,7 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
-        let ai = true;
+        let ai = false;
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
         if (!Object.keys(obj).includes(category)) {
@@ -332,7 +332,7 @@ export const verifyText = async (req, res) => {
         let bulletString = "";
         bulletpoints.forEach((e) => (bulletString = bulletString + e));
         let limit = obj.totalBulletsLength*0.9
-        if (bulletString.length<limit) {
+        if (bulletString.length<limit && bulletString != "") {
             reccomendations.push(`Ensure the total character count for all bullet points combined does not exceed ${obj.totalBulletsLength}, while each individual bullet point remains within the ${obj.bulletCharacters}-character indexing limit.`);
         }
         if (keywords && keywords.length <= 0.9 * obj.searchTerms) {
@@ -367,7 +367,7 @@ export const verifyText = async (req, res) => {
             // Process each array in parallel
             const [TE, DE, BE, KE] = await Promise.all([
                 Promise.all(newResponse?.TE?.map(async (e) => {
-                    if (e?.error?.includes("||||")) {
+                    if (checkWordsMessage(e?.error)) {
                         e.error = await wordReplacer(e.error);
                     }
                     if ("send" in e) {
@@ -376,7 +376,7 @@ export const verifyText = async (req, res) => {
                     return e;
                 }) || []),
                 Promise.all(newResponse?.DE?.map(async (e) => {
-                    if (e?.error?.includes("||||")) {
+                    if (checkWordsMessage(e?.error)) {
                         e.error = await wordReplacer(e.error);
                     }
                     if ("send" in e) {
@@ -385,7 +385,7 @@ export const verifyText = async (req, res) => {
                     return e;
                 }) || []),
                 Promise.all(newResponse?.BE?.map(async (e) => {
-                    if (e?.error?.includes("||||")) {
+                    if (checkWordsMessage(e?.error)) {
                         e.error = await wordReplacer(e.error);
                     }
                     if ("send" in e) {
@@ -394,7 +394,7 @@ export const verifyText = async (req, res) => {
                     return e;
                 }) || []),
                 Promise.all(newResponse?.KE?.map(async (e) => {
-                    if (e?.error?.includes("||||")) {
+                    if (checkWordsMessage(e?.error)) {
                         e.error = await wordReplacer(e.error);
                     }
                     if ("send" in e) {
@@ -594,7 +594,7 @@ export const BuyCreditWebhook = async (req, res) => {
         if (webhookCall) {
             return res.status(200).json({ message: "Webhook already called" });
         }
-
+        
         webhookCall = await ProcessedEvent.create({ id: details.id });
 
         const user = await User.findOne({ customerId: details.customer });

@@ -22,14 +22,14 @@ export const loadAllowedAbbreviations = async () => {
 };
 
 export const containsBlacklistedWord = (paragraph, blacklistedWords) => {
-    console.log("text: ",typeof paragraph, paragraph)
     const lowerCaseParagraph = paragraph.toLowerCase();
     let usedWords = [];
     let containsWords = false;
 
     for (const phrase of blacklistedWords) {
-        const regex = new RegExp(`\\b${phrase.toLowerCase()}\\b`, "g");
-        if (regex.test(lowerCaseParagraph) && !/^\s*$/.test(phrase)) {
+        if (/^\s*$/.test(phrase)) continue;
+        const regex = new RegExp(`(?<![\\w-])${phrase.toLowerCase()}(?![\\w-])`, "gi");
+        if (regex.test(lowerCaseParagraph)) {
             usedWords.push(phrase);
             containsWords = true;
         }
