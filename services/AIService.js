@@ -261,6 +261,7 @@ export const reAnalyzeValue = async (allTrue, title, description, bulletpoints, 
             filter = e.error.includes("capitalized") || filter;
             filter = e.error.includes("measurements") || filter;
             filter = e.error.includes("Measurements") || filter;
+            filter = e.error !== "" || filter;
             filter = !filter;
             return filter;
         }),
