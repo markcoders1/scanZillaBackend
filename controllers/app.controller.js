@@ -84,7 +84,7 @@ export const verifyText = async (req, res) => {
         let active = false;
         if(!active){
             return res.status(400).json({
-                message: "tool is under maintenance, please try again at a later time",
+                message: "Tool is under maintenance, please try again at a later time",
                 success: false,
             });
         }
