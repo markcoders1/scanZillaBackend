@@ -83,6 +83,9 @@ const generateAccessAndRefreshToken = async (userId) => {
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        let maintenance = true
+
+        if(maintenance)return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
 
         const user = await User.findOne({ email: email });
         if (!user) {
