@@ -12,7 +12,7 @@ import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createAssistant } from "../services/AIService.js";
+import { createAssistant, purgeAssistant, updatefunc, backupInstructions } from "../services/AIService.js";
 import { transporterConstructor } from "../utils/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -460,35 +460,17 @@ export const getAssInstructions = async (req, res) => {
 export const updateAssInstructions = async (req, res) => {
     try {
         const { titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont } = req.body;
-        const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
-
-        instructions.title.Dos = titleDo || instructions.title.Dos;
-        instructions.title.Donts = titleDont || instructions.title.Donts;
-        instructions.description.Dos = descriptionDo || instructions.description.Dos;
-        instructions.description.Donts = descriptionDont || instructions.description.Donts;
-        instructions.bullets.Dos = bulletsDo || instructions.bullets.Dos;
-        instructions.bullets.Donts = bulletsDont || instructions.bullets.Donts;
-
-        await fs.writeFile("json/AI.rules.json", JSON.stringify(instructions, null, 2), "utf8");
-
-        const updatefunc = async (assId, valUpdate, schema) => {
-            return await openai.beta.assistants.update(assId, {
-                instructions: `${instructions.fixed}       here are the dos and donts for the ${valUpdate}:     DOs: ${instructions[valUpdate].Dos.join("-")}      DONTs: ${instructions[valUpdate].Donts.join("-")}`,
-                response_format: zodResponseFormat(schema, `${valUpdate}`),
-                model: "gpt-4o-2024-08-06",
-                temperature: 0.6,
-            });
-        };
+        let instructions = await backupInstructions(titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont);
 
         const updates = [];
         if (titleDo || titleDont || true) {
-            updates.push(updatefunc("asst_Pt5hHWrKSBhRpG2HujTTGAPS", "title", titleSchema));
+            updates.push(updatefunc("asst_Pt5hHWrKSBhRpG2HujTTGAPS", "title", titleSchema,instructions));
         }
         if (descriptionDo || descriptionDont || true) {
-            updates.push(updatefunc("asst_6XjxcgjvaKIEzX9jHYb0f8BX", "description", descriptionSchema));
+            updates.push(updatefunc("asst_6XjxcgjvaKIEzX9jHYb0f8BX", "description", descriptionSchema,instructions));
         }
         if (bulletsDo || bulletsDont || true) {
-            updates.push(updatefunc("asst_BZVT36g8vtZn9pF8tyfW04zP", "bullets", bulletsSchema));
+            updates.push(updatefunc("asst_BZVT36g8vtZn9pF8tyfW04zP", "bullets", bulletsSchema,instructions));
         }
         const update = await Promise.all(updates);
         console.log("update");
@@ -497,10 +479,54 @@ export const updateAssInstructions = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
-        clientMailTransporter(clientErrorMailConstructor("Something went wrong",err))
+        // clientMailTransporter.sendMail(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
+
+export const updateAssInstructionsV2 = async () =>{
+    const { titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont } = req.body;
+    await backupInstructions(titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont);
+    const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
+
+    const fields = ["title", "description", "bullets"];
+    const assistants = JSON.parse(await fs.readFile("json/assistants.json", "utf8"));
+    
+    for (let i = 0; i < fields.length; i++) {
+        const field = fields[i];
+        let numDoInstructions = instructions[field].Dos.length
+        let numDontInstructions = instructions[field].Donts.length
+        let numDoAssistants = Math.ceil( numDoInstructions / 3);
+        let numDontAssistants = Math.ceil(numDontInstructions / 3)
+    
+        assistants[field].forEach(e => purgeAssistant(e, field));
+    
+        assistants[field] = [];
+        let assistantIndex = 0
+        for (let k = 0; k < numDoAssistants ; k++) {
+            let assistant = await createAssistant(field, k + 1);
+            assistants[field].push(assistant.id);
+        }
+        for (let k = 0; k < numDontAssistants; k++) {
+            let assistant = await createAssistant(field, k + 1);
+            assistants[field].push(assistant.id);
+        }
+
+        //array.slice
+        for (let k = 0; k < numDoAssistants; k++) {
+            
+            
+        }
+
+    }
+
+    await fs.writeFile("json/assistants.json", JSON.stringify(assistants, null, 2), "utf8");
+
+    
+
+
+
+}
 
 export const updateAssistantValidator = async (req,res) => {
     try{

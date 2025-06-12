@@ -81,6 +81,13 @@ export const verifyText = async (req, res) => {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
         let ai = true;
+        let active = false;
+        if(!active){
+            return res.status(400).json({
+                message: "tool is under maintenance, please try again at a later time",
+                success: false,
+            });
+        }
 
         if (!category) return res.status(400).json({ success: false, message: "Category is required" });
         if (!Object.keys(obj).includes(category)) {

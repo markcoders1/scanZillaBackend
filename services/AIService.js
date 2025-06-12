@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 import { Word } from "../models/words.model.js";
 import { loadBlacklistedWords } from "../utils/customChecks.js";
+import fs from "fs/promises";
+import { zodResponseFormat } from "openai/helpers/zod.mjs";
 dotenv.config()
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
@@ -213,11 +215,13 @@ export const analyzeResponse = async (errors,values)=>{
     }
 }
 
-export const createAssistant = async () => {
+export const createAssistant = async (field,int) => {
     try{
         const assistant = await openai.beta.assistants.create({
             model:"gpt-4o-2024-08-06",
-            name:"assistant Validator"
+            name:`assistant ${field} Validator ${int}`,
+            temperature:0.4,
+            top_p:0.8
         })
         return assistant
     }catch(error){
@@ -365,4 +369,34 @@ export const wordReplacer = async (string)=>{
     });
     newError = newError + newWords.join("||")
     return newError
+}
+
+export const updatefunc = async (assId, valUpdate, schema,instructions) => {
+    return await openai.beta.assistants.update(assId, {
+        instructions: `${instructions.fixed}   here are the dos and donts for the ${valUpdate}:  DOs: ${instructions[valUpdate].Dos.join("-")}      DONTs: ${instructions[valUpdate].Donts.join("-")}`,
+        response_format: zodResponseFormat(schema, `${valUpdate}`),
+        model: "gpt-4o-2024-08-06",
+        temperature: 0.6,
+    });
+};
+
+export const backupInstructions = async (titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont) => {
+    const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
+
+    instructions.title.Dos = titleDo || instructions.title.Dos;
+    instructions.title.Donts = titleDont || instructions.title.Donts;
+    instructions.description.Dos = descriptionDo || instructions.description.Dos;
+    instructions.description.Donts = descriptionDont || instructions.description.Donts;
+    instructions.bullets.Dos = bulletsDo || instructions.bullets.Dos;
+    instructions.bullets.Donts = bulletsDont || instructions.bullets.Donts;
+
+    await fs.writeFile("json/AI.rules.json", JSON.stringify(instructions, null, 2), "utf8");
+    return instructions
+}
+
+export const purgeAssistant = async (assistantId,field) => {
+    let assistants = JSON.parse(await fs.readFile("json/assistants.json", "utf8"));
+    assistants[field] = assistants[field].filter(e=>e!=assistantId)
+    await fs.writeFile("json/assistants.json", JSON.stringify(assistants, null, 2), "utf8");
+    await openai.beta.assistants.del(assistantId)
 }
