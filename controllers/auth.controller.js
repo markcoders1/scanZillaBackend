@@ -85,11 +85,22 @@ export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if(maintenance)return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
-
+        
         const user = await User.findOne({ email: email });
         if (!user) {
             return res.status(400).send({ message: "User not found.", success: false, errorType: "email" });
+        }
+
+        if(
+            maintenance
+            && user.role !== "admin"
+            && user.email !== "amz@blazecopywriting.com"
+            && user.email !== "fairmarket1984@gmail.com"
+            && user.email !== "tomerlevin21@gmail.com"
+            && user.email !== "muhammadharis571@gmail.com"
+            // && user.email !== "bee@bee.com"
+        ){
+            return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
         }
 
         if (!user.active) {
