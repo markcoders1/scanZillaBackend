@@ -357,6 +357,9 @@ export const verifyText = async (req, res) => {
             reccomendations.push(`Search Terms (Generic Keywords) can be indexed up to ${obj.searchTerms}.`);
         }
 
+
+        console.log("mergedObject",mergedObject)
+        
         let allTrue = {
             TE: mergedObject.TE.filter((obj) => obj.send),
             DE: mergedObject.DE.filter((obj) => obj.send),

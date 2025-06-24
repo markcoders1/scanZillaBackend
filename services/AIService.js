@@ -214,8 +214,6 @@ export const createAssistant = async (field,int,addition) => {
 export const reAnalyzeValue = async (allTrue, title, description, bulletpoints, keywords ) => {
 
     let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
-
-    console.log("aiFilter",aiFilter)
         
     aiFilter = {
         TE: aiFilter?.TE.filter((e) => {
