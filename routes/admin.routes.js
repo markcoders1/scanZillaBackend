@@ -33,7 +33,8 @@ import {
     changeOfferPricing,
     updateAssInstructions,
     updateAssInstructionsV2,
-    updateAssistantValidator
+    updateAssistantValidator,
+    getModels
 } from "../controllers/admin.controller.js";
 
 const upload = multer({ dest: "./" });
@@ -102,5 +103,7 @@ router.route("/getAssistants").get(getAssistants);
 router.route("/checkAssistant").get(checkAssistant);
 
 router.route("/getThread").post(getThread);
+
+router.route("/getModels").get(getModels);
 
 export default router;

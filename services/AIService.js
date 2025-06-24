@@ -63,7 +63,10 @@ export const analyzeValue = async (value,assistant,assId) => {
         console.log(assistant, thread_id);
         let threadrun = await openai.beta.threads.runs.retrieve(thread_id, id);
         
+        let counter = 0
         while (threadrun.status === "running" ||threadrun.status === "queued" ||threadrun.status === "in_progress") {
+
+            console.log(threadrun.status,assistant + " " + ++counter)
             await new Promise((resolve) => setTimeout(resolve, 1000));
             threadrun = await openai.beta.threads.runs.retrieve(thread_id,threadrun.id);
         }
@@ -82,7 +85,7 @@ export const analyzeValue = async (value,assistant,assId) => {
         let run = await createRun(thread_id, assId);
         console.log(`run created: ${run.id} at ${thread_id} for ${assistant}`);
         
-        let counter = 0
+        counter = 0
         while (run.status === "running" ||run.status === "queued" ||run.status === "in_progress") {
             console.log(run.status,assistant +" "+ ++counter)
             await new Promise((resolve) => setTimeout(resolve, 1000));

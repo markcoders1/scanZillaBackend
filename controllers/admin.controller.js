@@ -14,6 +14,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createAssistant, purgeAssistant, updatefunc, backupInstructions, updatefuncDos, updatefuncDonts } from "../services/AIService.js";
 import { transporterConstructor } from "../utils/email.js";
+export { getModels } from "../services/ai.code.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -58,3 +58,13 @@ export const updateAssistant = async (req,res) => {
         return res.status(200).json({success:false,message:"could not update the assistant validator"})
     }
 }
+
+export const getModels = async (req,res) => {
+    try{
+        const models = await openai.models.list()
+        return res.status(200).json(models)
+    }catch(err){
+        console.log(err)
+        return res.status(200).json({success:false,message:"could not get the models"})
+    }
+}
