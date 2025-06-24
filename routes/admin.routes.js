@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
+import { verifyJWT, verifyAdmin,verifyMaintenance } from "../middleware/app.middleware.js";
 import {
     getUser,
     getWords,
@@ -44,7 +44,7 @@ router.route("/words").get(getWords);
 
 router.route("/words").post(addWords);
 
-router.route("/words").delete(verifyJWT, verifyAdmin, removeWords);
+router.route("/words").delete(verifyJWT, verifyMaintenance, verifyAdmin, removeWords);
 
 router.route("/csv").post(upload.single("file"), uploadCsv);
 
@@ -54,45 +54,45 @@ router.route("/abbwords").get(getAbbWords);
 
 router.route("/abbwords").post(addAbbWords);
 
-router.route("/abbwords").delete(verifyJWT, verifyAdmin, removeAbbWords);
+router.route("/abbwords").delete(verifyJWT, verifyMaintenance, verifyAdmin, removeAbbWords);
 
 router.route("/abbcsv").post(upload.single("file"), uploadAbbCsv);
 
 router.route("/abbcsv").get(downloadAbbCsv);
 
-router.route("/getAllUsers").get(verifyJWT, verifyAdmin, getAllUsers);
+router.route("/getAllUsers").get(verifyJWT, verifyMaintenance, verifyAdmin, getAllUsers);
 
-router.route("/toggleUserAccount").get(verifyJWT, verifyAdmin, toggleUserAccount);
+router.route("/toggleUserAccount").get(verifyJWT, verifyMaintenance, verifyAdmin, toggleUserAccount);
 
-router.route("/getspecificUser").get(verifyJWT, verifyAdmin, getUser);
+router.route("/getspecificUser").get(verifyJWT, verifyMaintenance, verifyAdmin, getUser);
 
-router.route("/rules").post(verifyJWT, verifyAdmin, changeRules);
+router.route("/rules").post(verifyJWT, verifyMaintenance, verifyAdmin, changeRules);
 
-router.route("/gethistory").get(verifyJWT, verifyAdmin, getUserHistory);
+router.route("/gethistory").get(verifyJWT, verifyMaintenance, verifyAdmin, getUserHistory);
 
-router.route("/getuserpurchases").get(verifyJWT, verifyAdmin, getUserPurchases);
+router.route("/getuserpurchases").get(verifyJWT, verifyMaintenance, verifyAdmin, getUserPurchases);
 
-router.route("/getTotalUsers").get(verifyJWT, verifyAdmin, getTotalUsers);
+router.route("/getTotalUsers").get(verifyJWT, verifyMaintenance, verifyAdmin, getTotalUsers);
 
-router.route("/getIncome").get(verifyJWT, verifyAdmin, getIncome);
+router.route("/getIncome").get(verifyJWT, verifyMaintenance, verifyAdmin, getIncome);
 
-router.route("/offers").post(verifyJWT, verifyAdmin, changeOfferPricing);
+router.route("/offers").post(verifyJWT, verifyMaintenance, verifyAdmin, changeOfferPricing);
 
-router.route("/givecredits").post(verifyJWT, verifyAdmin, giveUserCredits);
+router.route("/givecredits").post(verifyJWT, verifyMaintenance, verifyAdmin, giveUserCredits);
 
-router.route("/takecredits").post(verifyJWT, verifyAdmin, takeUserCredits);
+router.route("/takecredits").post(verifyJWT, verifyMaintenance, verifyAdmin, takeUserCredits);
 
-router.route("/analysisgraph").get(verifyJWT, verifyAdmin, analysisgraph);
+router.route("/analysisgraph").get(verifyJWT, verifyMaintenance, verifyAdmin, analysisgraph);
 
-router.route("/assistant").get(verifyJWT, verifyAdmin, getAssInstructions);
+router.route("/assistant").get(verifyJWT, verifyMaintenance, verifyAdmin, getAssInstructions);
 
-// router.route("/assistant").post(verifyJWT, verifyAdmin, updateAssInstructions);
+// router.route("/assistant").post(verifyJWT, verifyMaintenance, verifyAdmin, updateAssInstructions);
 
-router.route("/assistant").post(verifyJWT, verifyAdmin, updateAssInstructionsV2);
+router.route("/assistant").post(verifyJWT, verifyMaintenance, verifyAdmin, updateAssInstructionsV2);
 
-router.route("/makeAdmin").get(verifyJWT, verifyAdmin, makeAdmin);
+router.route("/makeAdmin").get(verifyJWT, verifyMaintenance, verifyAdmin, makeAdmin);
 
-router.route("/getCredits").get(verifyJWT, verifyAdmin, creditsUsed);
+router.route("/getCredits").get(verifyJWT, verifyMaintenance, verifyAdmin, creditsUsed);
 
 router.route("/assistant/validator").get(updateAssistantValidator)
 
