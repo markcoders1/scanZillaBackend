@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../middleware/app.middleware.js";
+import { verifyJWT, verifyMaintenance } from "../middleware/app.middleware.js";
 import { History } from "../models/history.model.js";
 import {
     verifyText,
@@ -27,39 +27,39 @@ import { wordReplacer } from "../services/AIService.js";
 
 const router = Router();
 
-router.route("/verifyText").post(verifyJWT, verifyText);
+router.route("/verifyText").post(verifyJWT,verifyMaintenance, verifyText);
 
-router.route("/getUserHistory").get(verifyJWT, getUserHistory);
+router.route("/getUserHistory").get(verifyJWT,verifyMaintenance,  getUserHistory);
 
-router.route("/buycredits").post(verifyJWT, buyCredits);
+router.route("/buycredits").post(verifyJWT,verifyMaintenance, buyCredits);
 
 router.route("/buycreditwebhook").post(BuyCreditWebhook);
 
-router.route("/getpurchasehistory").get(verifyJWT, getPurchaseHistory);
+router.route("/getpurchasehistory").get(verifyJWT,verifyMaintenance, getPurchaseHistory);
 
-router.route("/getAnalysedNum").get(verifyJWT, numberOfAnalysed);
+router.route("/getAnalysedNum").get(verifyJWT,verifyMaintenance, numberOfAnalysed);
 
-router.route("/getcardinfo").get(verifyJWT, getCardInfo);
+router.route("/getcardinfo").get(verifyJWT,verifyMaintenance, getCardInfo);
 
-router.route("/toggleautocredit").get(verifyJWT, toggleAutoCredit);
+router.route("/toggleautocredit").get(verifyJWT,verifyMaintenance, toggleAutoCredit);
 
-router.route("/getHistoryGraph").get(verifyJWT);
+router.route("/getHistoryGraph").get(verifyJWT,verifyMaintenance);
 
-router.route("/getUser").get(verifyJWT, getUser);
+router.route("/getUser").get(verifyJWT,verifyMaintenance, getUser);
 
-router.route("/getgraphdata").get(verifyJWT, getGraphData);
+router.route("/getgraphdata").get(verifyJWT,verifyMaintenance, getGraphData);
 
-router.route("/offers").get(verifyJWT, getOffers);
+router.route("/offers").get(verifyJWT,verifyMaintenance, getOffers);
 
-router.route("/addPaymentMethod").get(verifyJWT, addPaymentMethod);
+router.route("/addPaymentMethod").get(verifyJWT,verifyMaintenance, addPaymentMethod);
 
-router.route("/rules").get(verifyJWT, getRules);
+router.route("/rules").get(verifyJWT,verifyMaintenance, getRules);
 
 // router.route("/PaymentEmail").post(verifyJWT, paymentEmail);
 
-router.route("/supportEmail").post(verifyJWT, supportEmail);
+router.route("/supportEmail").post(verifyJWT,verifyMaintenance, supportEmail);
 
-router.route("/changeName").post(verifyJWT, changeName);
+router.route("/changeName").post(verifyJWT,verifyMaintenance, changeName);
 
 router.route("/prefill/:asin").get(asin);
 

@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 const filePath = path.resolve(__dirname, '../utils/serviceAccountKey.json');
 let serviceAccount = fs.readFileSync(filePath,"utf-8")
 serviceAccount = JSON.parse(serviceAccount)
+let maintenance = true
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -80,7 +81,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-let maintenance = true
+
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
