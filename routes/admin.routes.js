@@ -2,9 +2,11 @@ import { Router } from "express";
 import multer from "multer";
 import { verifyJWT, verifyAdmin } from "../middleware/app.middleware.js";
 import {
+    getUser,
     getWords,
     addWords,
     uploadCsv,
+    getThread,
     getIncome,
     makeAdmin,
     removeWords,
@@ -15,23 +17,23 @@ import {
     addAbbWords,
     creditsUsed,
     uploadAbbCsv,
-    giveUserCredits,
-    updateAssInstructions,
-    getUserPurchases,
-    changeOfferPricing,
-    getAssInstructions,
-    toggleUserAccount,
-    createAssistants,
-    takeUserCredits,
-    downloadAbbCsv,
-    removeAbbWords,
-    getUserHistory,
     getAssistants,
     getTotalUsers,
     analysisgraph,
-    getUser,
-    updateAssistantValidator,
-    getThread
+    checkAssistant,
+    downloadAbbCsv,
+    removeAbbWords,
+    getUserHistory,
+    deleteAssistant,
+    giveUserCredits,
+    takeUserCredits,
+    getUserPurchases,
+    toggleUserAccount,
+    getAssInstructions,
+    changeOfferPricing,
+    updateAssInstructions,
+    updateAssInstructionsV2,
+    updateAssistantValidator
 } from "../controllers/admin.controller.js";
 
 const upload = multer({ dest: "./" });
@@ -83,7 +85,9 @@ router.route("/analysisgraph").get(verifyJWT, verifyAdmin, analysisgraph);
 
 router.route("/assistant").get(verifyJWT, verifyAdmin, getAssInstructions);
 
-router.route("/assistant").post(verifyJWT, verifyAdmin, updateAssInstructions);
+// router.route("/assistant").post(verifyJWT, verifyAdmin, updateAssInstructions);
+
+router.route("/assistant").post(verifyJWT, verifyAdmin, updateAssInstructionsV2);
 
 router.route("/makeAdmin").get(verifyJWT, verifyAdmin, makeAdmin);
 
@@ -91,9 +95,11 @@ router.route("/getCredits").get(verifyJWT, verifyAdmin, creditsUsed);
 
 router.route("/assistant/validator").get(updateAssistantValidator)
 
-// router.route("/createAssistant").get(verifyJWT, verifyAdmin, createAssistants);
+router.route("/deleteAssistant").get(deleteAssistant);
 
 router.route("/getAssistants").get(getAssistants);
+
+router.route("/checkAssistant").get(checkAssistant);
 
 router.route("/getThread").post(getThread);
 

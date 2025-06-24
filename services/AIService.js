@@ -55,27 +55,9 @@ function removeDuplicates(errors) {
     return result;
 }
 
-export const analyzeValue = async (value,assistant) => {
+export const analyzeValue = async (value,assistant,assId) => {
     try{
-
         let latest_message = "{}";
-        let assId
-
-        if(assistant == 'title'){
-            assId = 'asst_Pt5hHWrKSBhRpG2HujTTGAPS'
-        }else if(assistant == 'description'){
-            assId = 'asst_6XjxcgjvaKIEzX9jHYb0f8BX'
-        }else if(assistant == 'bullets'){
-            assId = 'asst_BZVT36g8vtZn9pF8tyfW04zP'
-        }
-
-        // if(assistant == 'title'){
-        //     assId = 'asst_3nOxuR6z7N3xY1ZC1WKYAIhe'
-        // }else if(assistant == 'description'){
-        //     assId = 'asst_GokOIlMbjA1jlvKb8pLNMR51'
-        // }else if(assistant == 'bullets'){
-        //     assId = 'asst_vZhSQFlyB4lcTEaJhk0FitZa'
-        // }
 
         const { thread_id, id } = await openai.beta.threads.createAndRun({assistant_id: assId,temperature:0.1});
         console.log(assistant, thread_id);
@@ -215,11 +197,11 @@ export const analyzeResponse = async (errors,values)=>{
     }
 }
 
-export const createAssistant = async (field,int) => {
+export const createAssistant = async (field,int,addition) => {
     try{
         const assistant = await openai.beta.assistants.create({
             model:"gpt-4o-2024-08-06",
-            name:`assistant ${field} Validator ${int}`,
+            name:`assistant ${field} Validator ${int} ${addition}`,
             temperature:0.4,
             top_p:0.8
         })
@@ -233,6 +215,7 @@ export const reAnalyzeValue = async (allTrue, title, description, bulletpoints, 
 
     let aiFilter = await analyzeResponse(allTrue, { title, description, bulletpoints, keywords });
 
+    console.log("aiFilter",aiFilter)
         
     aiFilter = {
         TE: aiFilter?.TE.filter((e) => {
@@ -265,7 +248,7 @@ export const reAnalyzeValue = async (allTrue, title, description, bulletpoints, 
             filter = e.error.includes("capitalized") || filter;
             filter = e.error.includes("measurements") || filter;
             filter = e.error.includes("Measurements") || filter;
-            filter = e.error !== "" || filter;
+            filter = e.error == "" || filter;
             filter = !filter;
             return filter;
         }),
@@ -379,6 +362,22 @@ export const updatefunc = async (assId, valUpdate, schema,instructions) => {
         temperature: 0.6,
     });
 };
+export const updatefuncDos = async (assId, valUpdate, schema,instructions,fixed) => {
+    return await openai.beta.assistants.update(assId, {
+        instructions: `${fixed}   here are the dos for the ${valUpdate}:  DOs: ${instructions.join("-")}`,
+        response_format: zodResponseFormat(schema, `${valUpdate}`),
+        model: "gpt-4o-2024-08-06",
+        temperature: 0.3,
+    });
+};
+export const updatefuncDonts = async (assId, valUpdate, schema,instructions,fixed) => {
+    return await openai.beta.assistants.update(assId, {
+        instructions: `${fixed}   here are the donts for the ${valUpdate}:  DON'Ts: ${instructions.join("-")}`,
+        response_format: zodResponseFormat(schema, `${valUpdate}`),
+        model: "gpt-4o-2024-08-06",
+        temperature: 0.3,
+    });
+};
 
 export const backupInstructions = async (titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont) => {
     const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
@@ -395,8 +394,10 @@ export const backupInstructions = async (titleDo, titleDont, descriptionDo, desc
 }
 
 export const purgeAssistant = async (assistantId,field) => {
-    let assistants = JSON.parse(await fs.readFile("json/assistants.json", "utf8"));
-    assistants[field] = assistants[field].filter(e=>e!=assistantId)
-    await fs.writeFile("json/assistants.json", JSON.stringify(assistants, null, 2), "utf8");
-    await openai.beta.assistants.del(assistantId)
+    try{
+        await openai.beta.assistants.del(assistantId)
+        console.log("deleted assistant")
+    }catch(err){
+        console.log(err)
+    }
 }

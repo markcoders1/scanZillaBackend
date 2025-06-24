@@ -81,7 +81,7 @@ export const verifyText = async (req, res) => {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
         let ai = true;
-        let active = false;
+        let active = true;
         if(!active){
             return res.status(400).json({
                 message: "Tool is under maintenance, please try again at a later time",
@@ -289,13 +289,22 @@ export const verifyText = async (req, res) => {
 
         if(ai === true){
             if (title !== "") {
-                errors.push(analyzeValue(title, "title"));
+                let titleIds = JSON.parse(await fs.readFile("json/assistants.json", "utf8"))["title"];
+                for(let i = 0; i < titleIds.length; i++){
+                    errors.push(analyzeValue(title, "title", titleIds[i]));
+                }
             }
-            if (description !== "") {
-                errors.push(analyzeValue(description, "description"));
+            if (description !== "") {   
+                let descriptionIds = JSON.parse(await fs.readFile("json/assistants.json", "utf8"))["description"];
+                for(let i = 0; i < descriptionIds.length; i++){
+                    errors.push(analyzeValue(description, "description", descriptionIds[i]));
+                }
             }
             if (bulletpoints.length > 0 && bulletpoints[0] !== "") {
-                errors.push(analyzeValue(bulletpoints, "bullets"));
+                let bulletsIds = JSON.parse(await fs.readFile("json/assistants.json", "utf8"))["bullets"];
+                for(let i = 0; i < bulletsIds.length; i++){
+                    errors.push(analyzeValue(bulletpoints, "bullets", bulletsIds[i]));
+                }
             }
         }
 
@@ -326,6 +335,8 @@ export const verifyText = async (req, res) => {
         }
 
         let mergedObject = mergeObjects(errObj, changedObject);
+
+        // console.log("mergedObject",mergedObject)
 
         //head reccomendations
 
@@ -367,7 +378,11 @@ export const verifyText = async (req, res) => {
         }
 
 
+        // console.log("aiFilter",aiFilter)
+        // console.log("allFalse",allTrue)
+
         let newResponse = mergeObjects(allFalse, aiFilter);
+
 
 
         newResponse = await (async () => {

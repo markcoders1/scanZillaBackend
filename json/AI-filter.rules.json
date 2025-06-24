@@ -5,7 +5,6 @@
     "omit/delete any errors that shouldnt matter, in case the tool is being nitpicky or far too specific with the details and grammar"
   ],
   "formats": [
-    "keep the || and |||| as is, do not under any circumstances tamper with points with these symbols",
-    "in case of blacklisted words, keep the |||| and || as is, but you will suggest a different word for it, in these errors, replace the \"!-!\" with a suggested word, unless a suggested word makes no gramatical sense, remove the \"Consider replacing with !-!\" part ONLY, make sure to keep the first half of the error as is, under no circumstances are you allowed to let \"!-!\" pass through to the end"
+    "keep the || and |||| as is, do not under any circumstances tamper with points with these symbols"
   ]
 }

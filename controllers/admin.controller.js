@@ -12,7 +12,7 @@ import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createAssistant, purgeAssistant, updatefunc, backupInstructions } from "../services/AIService.js";
+import { createAssistant, purgeAssistant, updatefunc, backupInstructions, updatefuncDos, updatefuncDonts } from "../services/AIService.js";
 import { transporterConstructor } from "../utils/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,8 +51,8 @@ const errorMailConstructor = (humanError,error) => {
         `,
     }
 }
-
-const titleSchema = z.object({
+let zodSchema = {}
+zodSchema.title = z.object({
     // titleErrors: z.array(z.string())
     titleErrors: z.array(
         z.object({
@@ -62,7 +62,7 @@ const titleSchema = z.object({
     ),
 });
 
-const descriptionSchema = z.object({
+zodSchema.description = z.object({
     // descriptionErrors: z.array(z.string()),
     descriptionErrors: z.array(
         z.object({
@@ -72,7 +72,7 @@ const descriptionSchema = z.object({
     ),
 });
 
-const bulletsSchema = z.object({
+zodSchema.bullets = z.object({
     // bulletPointErrors:z.array(z.string()),
     bulletPointErrors: z.array(
         z.object({
@@ -464,13 +464,13 @@ export const updateAssInstructions = async (req, res) => {
 
         const updates = [];
         if (titleDo || titleDont || true) {
-            updates.push(updatefunc("asst_Pt5hHWrKSBhRpG2HujTTGAPS", "title", titleSchema,instructions));
+            updates.push(updatefunc("asst_Pt5hHWrKSBhRpG2HujTTGAPS", "title", zodSchema.title,instructions));
         }
         if (descriptionDo || descriptionDont || true) {
-            updates.push(updatefunc("asst_6XjxcgjvaKIEzX9jHYb0f8BX", "description", descriptionSchema,instructions));
+            updates.push(updatefunc("asst_6XjxcgjvaKIEzX9jHYb0f8BX", "description", zodSchema.description,instructions));
         }
         if (bulletsDo || bulletsDont || true) {
-            updates.push(updatefunc("asst_BZVT36g8vtZn9pF8tyfW04zP", "bullets", bulletsSchema,instructions));
+            updates.push(updatefunc("asst_BZVT36g8vtZn9pF8tyfW04zP", "bullets", zodSchema.bullets,instructions));
         }
         const update = await Promise.all(updates);
         console.log("update");
@@ -479,16 +479,14 @@ export const updateAssInstructions = async (req, res) => {
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
-        // clientMailTransporter.sendMail(clientErrorMailConstructor("Something went wrong",err))
         return res.status(500).json({ message: "Something went wrong, Please try again later or contact support." });
     }
 };
 
-export const updateAssInstructionsV2 = async () =>{
+export const updateAssInstructionsV2 = async (req,res) =>{
     const { titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont } = req.body;
-    await backupInstructions(titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont);
-    const instructions = JSON.parse(await fs.readFile("json/AI.rules.json", "utf8"));
-
+    const instructions = await backupInstructions(titleDo, titleDont, descriptionDo, descriptionDont, bulletsDo, bulletsDont);
+    
     const fields = ["title", "description", "bullets"];
     const assistants = JSON.parse(await fs.readFile("json/assistants.json", "utf8"));
     
@@ -498,34 +496,34 @@ export const updateAssInstructionsV2 = async () =>{
         let numDontInstructions = instructions[field].Donts.length
         let numDoAssistants = Math.ceil( numDoInstructions / 3);
         let numDontAssistants = Math.ceil(numDontInstructions / 3)
+
+        console.log(assistants[field])
     
         assistants[field].forEach(e => purgeAssistant(e, field));
     
         assistants[field] = [];
         let assistantIndex = 0
         for (let k = 0; k < numDoAssistants ; k++) {
-            let assistant = await createAssistant(field, k + 1);
+            let assistant = await createAssistant(field, k + 1, " do");
             assistants[field].push(assistant.id);
         }
         for (let k = 0; k < numDontAssistants; k++) {
-            let assistant = await createAssistant(field, k + 1);
+            let assistant = await createAssistant(field, k + 1," don't");
             assistants[field].push(assistant.id);
         }
 
-        //array.slice
-        for (let k = 0; k < numDoAssistants; k++) {
-            
-            
-        }
 
+        await fs.writeFile("json/assistants.json", JSON.stringify(assistants, null, 2), "utf8");
+
+        for (let k = 0; k < numDoAssistants; k++) {
+            await updatefuncDos(assistants[field][k],field,zodSchema[field],instructions[field].Dos.slice(k*3,k*3+3),instructions.fixed)
+        }
+        for (let k = 0; k < numDontAssistants; k++) {
+            await updatefuncDonts(assistants[field][numDoAssistants+k],field,zodSchema[field],instructions[field].Donts.slice(k*3,k*3+3),instructions.fixed)
+        }
     }
 
-    await fs.writeFile("json/assistants.json", JSON.stringify(assistants, null, 2), "utf8");
-
-    
-
-
-
+    return res.status(200).json({success:true,message:"AI rules changed successfully",assistants})
 }
 
 export const updateAssistantValidator = async (req,res) => {
@@ -910,8 +908,10 @@ export const createAssistants = async (req, res) => {
 
 export const getAssistants = async (req, res) => {
     try {
-        const assistants = await openai.beta.assistants.list();
-        return res.status(200).json(assistants.body.data);
+        let assistants = await openai.beta.assistants.list();
+        assistants = assistants.body.data
+        let nullAssistants = assistants.filter(e=>e.instructions==null).map(e=>({id:e.id,ins:e.instructions}))
+        return res.status(200).json(assistants);
     } catch (err) {
         console.log(err);
         devTransporter.sendMail(errorMailConstructor("Something went wrong",err))
@@ -919,6 +919,28 @@ export const getAssistants = async (req, res) => {
         return res.status(500).json({ error: "Server error." });
     }
 };
+
+export const checkAssistant = async (req,res) => {
+    try{
+        const {assistantId} = req.query;
+        const assistant = await openai.beta.assistants.retrieve(assistantId);
+        return res.status(200).json({success:true,assistant})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
+    }
+}
+
+export const deleteAssistant = async (req,res) => {
+    try{
+        const {assistantId} = req.query;
+        await purgeAssistant(assistantId);
+        return res.status(200).json({success:true,message:"Assistant deleted successfully"})
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({message:"Something went wrong, Please try again later or contact support."})
+    }
+}
 
 export const getThread = async (req,res) => {
     try{
