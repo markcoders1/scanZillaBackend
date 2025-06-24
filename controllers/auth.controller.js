@@ -80,10 +80,10 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
+let maintenance = true
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        let maintenance = true
 
         if(maintenance)return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
 
@@ -124,7 +124,7 @@ export const Oauth = async (req, res) => {
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
 
-        console.log(decodedToken);
+        if(maintenance)return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
 
         let user = await User.findOne({ email: decodedToken.email }).select("-password");
 
