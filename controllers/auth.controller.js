@@ -136,7 +136,16 @@ export const Oauth = async (req, res) => {
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
 
-        if(maintenance)return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
+        if(
+            maintenance
+            && user.role !== "admin"
+            && user.email !== "amz@blazecopywriting.com"
+            && user.email !== "fairmarket1984@gmail.com"
+            && user.email !== "tomerlevin21@gmail.com"
+            && user.email !== "muhammadharis571@gmail.com"
+        ){
+            return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" })
+        };
 
         let user = await User.findOne({ email: decodedToken.email }).select("-password");
 

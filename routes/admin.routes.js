@@ -86,8 +86,6 @@ router.route("/analysisgraph").get(verifyJWT, verifyMaintenance, verifyAdmin, an
 
 router.route("/assistant").get(verifyJWT, verifyMaintenance, verifyAdmin, getAssInstructions);
 
-// router.route("/assistant").post(verifyJWT, verifyMaintenance, verifyAdmin, updateAssInstructions);
-
 router.route("/assistant").post(verifyJWT, verifyMaintenance, verifyAdmin, updateAssInstructionsV2);
 
 router.route("/makeAdmin").get(verifyJWT, verifyMaintenance, verifyAdmin, makeAdmin);
