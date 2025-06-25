@@ -136,6 +136,16 @@ export const Oauth = async (req, res) => {
 
         const decodedToken = await getAuth().verifyIdToken(idToken);
 
+        let user = await User.findOne({ email: decodedToken.email }).select("-password");
+
+        if (!user) {
+            user = await User.create({
+                userName: decodedToken.name,
+                email: decodedToken.email,
+                password: `!${Date.now()}! !${Math.floor(Math.random() * 100)}!`,
+            });
+        }
+
         if(
             maintenance
             && user.role !== "admin"
@@ -146,16 +156,6 @@ export const Oauth = async (req, res) => {
         ){
             return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" })
         };
-
-        let user = await User.findOne({ email: decodedToken.email }).select("-password");
-
-        if (!user) {
-            user = await User.create({
-                userName: decodedToken.name,
-                email: decodedToken.email,
-                password: `!${Date.now()}! !${Math.floor(Math.random() * 100)}!`,
-            });
-        }
 
         if (!user.active) {
             return res.status(400).send({ message: "user has been blocked", success: false });
