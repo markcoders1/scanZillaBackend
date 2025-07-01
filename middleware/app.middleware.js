@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
-let maintenance = false
+let maintenance = true
 
 export const verifyJWT = async (req, res, next) => {
     try {
@@ -48,6 +48,8 @@ export const verifyMaintenance = (req, res, next) => {
         && req.user.email !== "fairmarket1984@gmail.com"
         && req.user.email !== "tomerlevin21@gmail.com"
         && req.user.email !== "muhammadharis571@gmail.com"
+        && req.user.email !== "freeeup.pelachica@gmail.com"
+        && req.user.email !== "hazelisabela.foz@gmail.com"
         // && req.user.email !== "bee@bee.com"
     ){
         return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });

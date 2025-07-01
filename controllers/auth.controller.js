@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const filePath = path.resolve(__dirname, '../utils/serviceAccountKey.json');
 let serviceAccount = fs.readFileSync(filePath,"utf-8")
 serviceAccount = JSON.parse(serviceAccount)
-let maintenance = false
+let maintenance = true
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -99,6 +99,8 @@ export const loginUser = async (req, res) => {
             && user.email !== "fairmarket1984@gmail.com"
             && user.email !== "tomerlevin21@gmail.com"
             && user.email !== "muhammadharis571@gmail.com"
+            && user.email !== "freeeup.pelachica@gmail.com"
+            && user.email !== "hazelisabela.foz@gmail.com"
             // && user.email !== "bee@bee.com"
         ){
             return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
@@ -153,6 +155,8 @@ export const Oauth = async (req, res) => {
             && user.email !== "fairmarket1984@gmail.com"
             && user.email !== "tomerlevin21@gmail.com"
             && user.email !== "muhammadharis571@gmail.com"
+            && user.email !== "freeeup.pelachica@gmail.com"
+            && user.email !== "hazelisabela.foz@gmail.com"
         ){
             return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" })
         };
