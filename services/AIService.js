@@ -205,7 +205,7 @@ export const createAssistant = async (field,int,addition) => {
         const assistant = await openai.beta.assistants.create({
             model:"gpt-4o-2024-08-06",
             name:`assistant ${field} Validator ${int} ${addition}`,
-            temperature:0.4,
+            temperature:0.1,
             top_p:0.8
         })
         return assistant
