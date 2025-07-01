@@ -50,7 +50,6 @@ export const verifyMaintenance = (req, res, next) => {
         && req.user.email !== "muhammadharis571@gmail.com"
         && req.user.email !== "freeeup.pelachica@gmail.com"
         && req.user.email !== "hazelisabela.foz@gmail.com"
-        // && req.user.email !== "bee@bee.com"
     ){
         return res.status(503).send({ message: "Scanzilla is under maintenance, please try again at a later time", success: false, errorType: "email" });
     }

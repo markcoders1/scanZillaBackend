@@ -955,3 +955,19 @@ export const getThread = async (req,res) => {
         return res.status(500).json({ error: "Server error." });
     }
 }
+
+export const deleteUserAccount = async (req, res) => {
+    try {
+        const document = await User.findByIdAndUpdate(req.params.id, {
+            userName:"deletedUser",
+            credits:0,
+            active:false,
+            email:`${req.params.id}@example.com`
+        }, { new: true, runValidators: true });
+        if (!document) return res.status(404).json({ success: false, error: "Document not found" });
+        res.status(200).json({ success: true, data: document });
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({ success: false, error: error.message });
+    }
+};

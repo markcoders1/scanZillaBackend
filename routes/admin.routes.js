@@ -6,6 +6,7 @@ import {
     getWords,
     addWords,
     uploadCsv,
+    getModels,
     getThread,
     getIncome,
     makeAdmin,
@@ -28,13 +29,13 @@ import {
     giveUserCredits,
     takeUserCredits,
     getUserPurchases,
+    deleteUserAccount,
     toggleUserAccount,
     getAssInstructions,
     changeOfferPricing,
     updateAssInstructions,
     updateAssInstructionsV2,
     updateAssistantValidator,
-    getModels
 } from "../controllers/admin.controller.js";
 
 const upload = multer({ dest: "./" });
@@ -63,6 +64,8 @@ router.route("/abbcsv").get(downloadAbbCsv);
 router.route("/getAllUsers").get(verifyJWT, verifyMaintenance, verifyAdmin, getAllUsers);
 
 router.route("/toggleUserAccount").get(verifyJWT, verifyMaintenance, verifyAdmin, toggleUserAccount);
+
+router.route("/user/:id").delete(verifyJWT, verifyMaintenance, verifyAdmin, deleteUserAccount);
 
 router.route("/getspecificUser").get(verifyJWT, verifyMaintenance, verifyAdmin, getUser);
 
