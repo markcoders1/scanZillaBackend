@@ -80,7 +80,7 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
-        let ai = false;
+        let ai = true;
         let active = true;
         if(!active){
             return res.status(400).json({
