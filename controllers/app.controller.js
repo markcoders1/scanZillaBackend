@@ -80,7 +80,7 @@ export const verifyText = async (req, res) => {
     try {
         let { title, description, bulletpoints, keywords, category } = req.body;
         let initCategory = category;
-        let ai = true;
+        let ai = false;
         let active = true;
         if(!active){
             return res.status(400).json({
@@ -107,6 +107,11 @@ export const verifyText = async (req, res) => {
         bulletpoints = bulletpoints.map((e) => e.replace(/[\x00-\x1F]/g, ""));
         keywords = keywords.replace(/[\x00-\x1F]/g, "");
         category = category.replace(/[\x00-\x1F]/g, "");
+
+        title = title.trim()
+        description = description.trim()
+        bulletpoints = bulletpoints.map(e=>e.trim())
+        keywords = keywords.trim()
 
         const calcStringCost = (stringToCalc) => (stringToCalc ? 1 : 0);
 
