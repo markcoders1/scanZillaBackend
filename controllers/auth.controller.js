@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const filePath = path.resolve(__dirname, '../utils/serviceAccountKey.json');
 let serviceAccount = fs.readFileSync(filePath,"utf-8")
 serviceAccount = JSON.parse(serviceAccount)
-let maintenance = true
+let maintenance = false
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

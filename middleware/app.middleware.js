@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
-let maintenance = true
+let maintenance = false
 
 export const verifyJWT = async (req, res, next) => {
     try {
