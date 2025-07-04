@@ -102,7 +102,7 @@ export const findRepeatedWords = (input) => {
         "and", "or", "but", "nor", "so", "for", "yet", "a", "an", "the", "in", "on", "at", "by", "to", "with", "of", "from", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "within", "upon", "under", "around", "among", "it", "had", "he", "she", "they", "we", "you", "I", "me", "him", "her", "us", "them", "my", "your", "his", "its", "their", "our", "this", "that", "these", "those", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "if", "while", "although", "because", "before", "until", "since", "whether", "though", "once", "unless", "wherever", "whenever", "both", "either", "neither", "each", "every", "some", "any", "no", "few", "several", "all", "many", "most", "none", "such"
     ]);
     
-    const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word));
+    const words = input.toLowerCase().split(/\W+/).filter(word => word && !ignoredWords.has(word) && !/^\d+$/.test(word));
     const wordCount = new Map();
     const repeatedWords = new Set();
     
